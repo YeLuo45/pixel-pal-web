@@ -1,9 +1,9 @@
 {
-  "name": "pixel-pal",
+  "name": "pixel-pal-web",
   "productName": "PixelPal",
   "version": "1.0.0",
   "description": "AI Companion Desktop App",
-  "homepage": "https://YeLuo45.github.io/pixel-pal",
+  "homepage": "https://YeLuo45.github.io/pixel-pal-web",
   "private": true,
   "type": "module",
   "main": "dist/main/main.js",
