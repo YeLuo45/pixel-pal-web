@@ -14,6 +14,7 @@ import { MultiPersonaCollaboration } from '../components/MultiPersona/MultiPerso
 import { CompanionCanvas } from '../components/PixelPal/CompanionCanvas';
 import { PluginPanel } from '../components/Plugin/PluginPanel';
 import { PluginHub } from '../components/Plugin/PluginHub';
+import { MemoryPanel } from '../components/Memory/MemoryPanel';
 import { registerBuiltinPlugins } from '../plugins';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
@@ -29,6 +30,7 @@ const PANEL_COMPONENTS = {
   team: MultiPersonaCollaboration,
   settings: Settings,
   plugin: PluginPanel,
+  memory: MemoryPanel,
 } as const;
 
 // Greeting messages library (10+ messages)

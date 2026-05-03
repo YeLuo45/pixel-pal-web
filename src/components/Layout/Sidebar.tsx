@@ -1,11 +1,12 @@
 import React from 'react';
 import { Box, Typography, Tooltip, Divider } from '@mui/material';
-import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon } from '@mui/icons-material';
+import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon, Memory as MemoryIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { PluginService } from '../../services/plugin/PluginService';
 
 const NAV_ITEMS = [
   { id: 'chat', label: 'Chat', icon: ChatIcon },
+  { id: 'memory', label: 'Memory', icon: MemoryIcon },
   { id: 'calendar', label: 'Calendar', icon: CalendarIcon },
   { id: 'tasks', label: 'Tasks', icon: TaskIcon },
   { id: 'document', label: 'Documents', icon: DocIcon },
