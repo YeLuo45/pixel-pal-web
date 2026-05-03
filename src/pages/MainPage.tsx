@@ -257,7 +257,7 @@ export const MainPage: React.FC = () => {
             onClose={() => setMobileOpen(false)}
             sx={{ '& .MuiDrawer-paper': { bgcolor: 'rgba(15, 10, 30, 0.98)', width: 200 } }}
           >
-            <Sidebar />
+            <Sidebar onNavigate={() => setMobileOpen(false)} />
           </Drawer>
         </>
       )}

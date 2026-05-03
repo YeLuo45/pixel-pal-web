@@ -269,7 +269,19 @@ export const ChatPanel: React.FC = () => {
       </Box>
 
       {/* Messages */}
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{
+        flex: 1,
+        overflowY: 'auto',
+        p: { xs: 1.5, md: 2 },
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        minHeight: 0,
+        // Center chat on wide screens
+        maxWidth: { lg: 800 },
+        mx: 'auto',
+        width: '100%',
+      }}>
         {messages.length === 0 && (
           <Box sx={{ textAlign: 'center', mt: 4, opacity: 0.5 }}>
             <Typography variant="body2" sx={{ fontSize: 13 }}>
@@ -395,8 +407,22 @@ export const ChatPanel: React.FC = () => {
 
       <Divider />
 
-      {/* Input */}
-      <Box sx={{ p: 1.5, display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+      {/* Input — sticky on mobile */}
+      <Box
+        sx={{
+          p: 1.5,
+          display: 'flex',
+          gap: 1,
+          alignItems: 'flex-end',
+          flexShrink: 0,
+          // Sticky bottom on mobile for thumb-friendly typing
+          position: { xs: 'sticky', md: 'relative' },
+          bottom: { xs: 0, md: 'auto' },
+          zIndex: { xs: 10, md: 0 },
+          bgcolor: { xs: 'rgba(15, 10, 30, 0.98)', md: 'transparent' },
+          borderTop: { xs: '1px solid rgba(255,255,255,0.06)', md: 'none' },
+        }}
+      >
         <TextField
           fullWidth
           size="small"

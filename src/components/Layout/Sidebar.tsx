@@ -17,11 +17,17 @@ const NAV_ITEMS = [
 
 interface SidebarProps {
   collapsed?: boolean;
+  onNavigate?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate }) => {
   const activePanel = useStore((s) => s.activePanel);
   const setActivePanel = useStore((s) => s.setActivePanel);
+
+  const handleNavClick = (panelId: typeof activePanel) => {
+    setActivePanel(panelId);
+    onNavigate?.();
+  };
 
   return (
     <Box
@@ -61,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
             <Tooltip key={item.id} title={collapsed ? item.label : ''} placement="right">
               <Box
                 component="button"
-                onClick={() => setActivePanel(item.id as typeof activePanel)}
+                onClick={() => handleNavClick(item.id as typeof activePanel)}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
