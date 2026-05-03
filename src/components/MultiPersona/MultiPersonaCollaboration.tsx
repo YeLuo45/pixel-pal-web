@@ -60,7 +60,6 @@ import {
   setPersonaActive,
   getTeamMembers,
   getActiveMembers,
-  getPrimaryPersona,
   setPrimaryPersona,
   setupBalancedTeam,
   getTeamDescription,
