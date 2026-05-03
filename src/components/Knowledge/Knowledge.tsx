@@ -61,14 +61,7 @@ export const KnowledgePanel: React.FC = () => {
   // Refresh stats on mount and after indexing
   useEffect(() => {
     refreshStats();
-    checkIndexedDocs();
   }, [documents]);
-
-  // Refresh indexed documents list
-  const checkIndexedDocs = () => {
-    const docs = getIndexedDocuments();
-    setIndexedDocs(new Set(docs.map(d => d.id)));
-  };
 
   const refreshStats = () => {
     const s = getKnowledgeBaseStats();
@@ -102,7 +95,6 @@ export const KnowledgePanel: React.FC = () => {
   const handleRemoveFromIndex = (docId: string) => {
     removeDocumentFromIndex(docId);
     refreshStats();
-    checkIndexedDocs();
     if (results?.chunks.some(c => c.chunk.docId === docId)) {
       // Re-run query if removed doc was in results
       if (query.trim()) handleSearch();
@@ -112,7 +104,6 @@ export const KnowledgePanel: React.FC = () => {
   const handleReindexAll = () => {
     const result = reindexAllDocuments(documents);
     refreshStats();
-    checkIndexedDocs();
     if (result.failed > 0) {
       setError(`Reindexed ${result.successful} documents, ${result.failed} failed:\n${result.errors.join('\n')}`);
     } else {
