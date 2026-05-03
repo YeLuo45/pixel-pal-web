@@ -12,6 +12,9 @@ import { Settings } from '../components/Settings/Settings';
 import { KnowledgePanel } from '../components/Knowledge/Knowledge';
 import { MultiPersonaCollaboration } from '../components/MultiPersona/MultiPersonaCollaboration';
 import { CompanionCanvas } from '../components/PixelPal/CompanionCanvas';
+import { PluginPanel } from '../components/Plugin/PluginPanel';
+import { PluginHub } from '../components/Plugin/PluginHub';
+import { registerBuiltinPlugins } from '../plugins';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
 
@@ -25,6 +28,7 @@ const PANEL_COMPONENTS = {
   email: Email,
   team: MultiPersonaCollaboration,
   settings: Settings,
+  plugin: PluginPanel,
 } as const;
 
 // Greeting messages library (10+ messages)
@@ -230,10 +234,35 @@ function useInteractionEngine() {
 
 export const MainPage: React.FC = () => {
   const activePanel = useStore((s) => s.activePanel);
+  const activePluginId = useStore((s) => s.activePluginId);
+  const setActivePluginId = useStore((s) => s.setActivePluginId);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  const ActivePanelComponent = PANEL_COMPONENTS[activePanel] || ChatPanel;
+  // Register built-in plugins once on mount
+  useEffect(() => {
+    registerBuiltinPlugins();
+  }, []);
+
+  // Resolve the active component
+  const resolvePanelComponent = () => {
+    if (activePanel === 'plugin') {
+      if (activePluginId) {
+        return () => (
+          <PluginPanel
+            pluginId={activePluginId}
+            onBack={() => {
+              setActivePluginId(null);
+            }}
+          />
+        );
+      }
+      return PluginHub;
+    }
+    return PANEL_COMPONENTS[activePanel] || ChatPanel;
+  };
+
+  const ActivePanelComponent = resolvePanelComponent();
 
   // Activate interaction engine
   useInteractionEngine();

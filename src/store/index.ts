@@ -64,8 +64,12 @@ interface AppState {
   updateLastActivity: () => void;
 
   // UI
-  activePanel: 'chat' | 'calendar' | 'tasks' | 'document' | 'knowledge' | 'email' | 'writing' | 'settings' | 'team';
+  activePanel: 'chat' | 'calendar' | 'tasks' | 'document' | 'knowledge' | 'email' | 'writing' | 'settings' | 'team' | 'plugin';
   setActivePanel: (panel: AppState['activePanel']) => void;
+
+  // Active plugin (used when activePanel === 'plugin')
+  activePluginId: string | null;
+  setActivePluginId: (id: string | null) => void;
 
   // Companion Personality & Memory
   companion: CompanionState;
@@ -275,6 +279,10 @@ export const useStore = create<AppState>()(
       // UI
       activePanel: 'chat',
       setActivePanel: (panel) => set({ activePanel: panel }),
+
+      // Active plugin
+      activePluginId: null,
+      setActivePluginId: (id) => set({ activePluginId: id }),
 
       // Companion Personality & Memory
       companion: {

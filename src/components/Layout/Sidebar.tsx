@@ -1,7 +1,8 @@
 import React from 'react';
 import { Box, Typography, Tooltip, Divider } from '@mui/material';
-import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon } from '@mui/icons-material';
+import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
+import { PluginService } from '../../services/plugin/PluginService';
 
 const NAV_ITEMS = [
   { id: 'chat', label: 'Chat', icon: ChatIcon },
@@ -23,11 +24,23 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate }) => {
   const activePanel = useStore((s) => s.activePanel);
   const setActivePanel = useStore((s) => s.setActivePanel);
+  const setActivePluginId = useStore((s) => s.setActivePluginId);
 
   const handleNavClick = (panelId: typeof activePanel) => {
-    setActivePanel(panelId);
+    if (panelId === 'plugin') {
+      // For plugin panel, just navigate to plugin hub
+      setActivePanel(panelId);
+      setActivePluginId(null);
+    } else {
+      setActivePanel(panelId);
+    }
     onNavigate?.();
   };
+
+  // Get registered plugin nav items with badges
+  const pluginNavItems = PluginService.listPlugins()
+    .filter((p) => p.capabilities.some((c) => c.type === 'panel'))
+    .map((p) => ({ id: p.id, label: p.name, icon: p.icon }));
 
   return (
     <Box
@@ -97,6 +110,73 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
                   flexShrink: 0,
                   transition: 'transform 0.15s ease',
                 }} />
+                {!collapsed && (
+                  <Typography variant="body2" sx={{ fontSize: 12, fontWeight: isActive ? 600 : 400 }}>
+                    {item.label}
+                  </Typography>
+                )}
+              </Box>
+            </Tooltip>
+          );
+        })}
+
+        {/* Plugin section divider */}
+        {pluginNavItems.length > 0 && (
+          <>
+            <Divider sx={{ opacity: 0.1, my: 0.5 }} />
+            {!collapsed && (
+              <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', px: 1.5, py: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Plugins
+              </Typography>
+            )}
+            {collapsed && <Box sx={{ height: 8 }} />}
+          </>
+        )}
+
+        {/* Plugin items */}
+        {pluginNavItems.map((item) => {
+          const isActive = activePanel === 'plugin';
+          const Icon = PluginIcon;
+          return (
+            <Tooltip key={item.id} title={collapsed ? item.label : ''} placement="right">
+              <Box
+                component="button"
+                onClick={() => {
+                  setActivePanel('plugin');
+                  setActivePluginId(item.id);
+                  onNavigate?.();
+                }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 1.5,
+                  border: 'none',
+                  cursor: 'pointer',
+                  bgcolor: isActive ? 'rgba(155,127,212,0.15)' : 'transparent',
+                  color: isActive ? 'primary.main' : 'text.secondary',
+                  transition: 'all 0.15s ease',
+                  width: '100%',
+                  textAlign: 'left',
+                  '&:hover': {
+                    bgcolor: 'rgba(155,127,212,0.1)',
+                    color: 'white',
+                    transform: 'scale(1.05)',
+                  },
+                  '&:active': {
+                    transform: 'scale(0.98)',
+                  },
+                }}
+              >
+                {item.icon && !collapsed ? (
+                  <Typography variant="body2" sx={{ fontSize: 14 }}>
+                    {item.icon}
+                  </Typography>
+                ) : (
+                  <Icon sx={{ fontSize: 18, flexShrink: 0 }} />
+                )}
                 {!collapsed && (
                   <Typography variant="body2" sx={{ fontSize: 12, fontWeight: isActive ? 600 : 400 }}>
                     {item.label}
