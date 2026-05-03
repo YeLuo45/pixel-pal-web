@@ -6,6 +6,14 @@
  * - Text-to-Speech (TTS): Speak AI responses aloud
  */
 
+// Web Speech API type declarations (not included in standard TypeScript lib)
+declare global {
+  interface Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
+}
+
 export interface VoiceState {
   isListening: boolean;
   isSpeaking: boolean;
