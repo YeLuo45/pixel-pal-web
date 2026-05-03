@@ -82,7 +82,7 @@ export const CompanionCanvas: React.FC = () => {
 
   return (
     <>
-      <PixelPal onClick={handlePetClick} />
+      <PixelPal />
       
       {currentItem && (
         <ActionToast

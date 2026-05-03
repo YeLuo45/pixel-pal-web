@@ -94,6 +94,7 @@ export function checkReminders(): void {
     const dueDate = parseISO(task.dueDate);
     const hoursUntil = differenceInHours(dueDate, new Date());
     const overdue = isPast(dueDate) && !isToday(dueDate);
+    const dueToday = isToday(dueDate);
 
     // High priority task due within 1 hour
     if (task.priority === 'high' && hoursUntil <= 1 && hoursUntil > 0) {

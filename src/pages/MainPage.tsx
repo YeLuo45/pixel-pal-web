@@ -226,7 +226,6 @@ function useInteractionEngine() {
 
 export const MainPage: React.FC = () => {
   const activePanel = useStore((s) => s.activePanel);
-  const setPetStatus = useStore((s) => s.setPetStatus);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
