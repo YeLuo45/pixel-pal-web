@@ -9,6 +9,7 @@ import { DocumentUpload } from '../components/Document/DocumentUpload';
 import { Writing } from '../components/Writing/Writing';
 import { Email } from '../components/Email/Email';
 import { Settings } from '../components/Settings/Settings';
+import { MultiPersonaCollaboration } from '../components/MultiPersona/MultiPersonaCollaboration';
 import { CompanionCanvas } from '../components/PixelPal/CompanionCanvas';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
@@ -20,6 +21,7 @@ const PANEL_COMPONENTS = {
   document: DocumentUpload,
   writing: Writing,
   email: Email,
+  team: MultiPersonaCollaboration,
   settings: Settings,
 } as const;
 
