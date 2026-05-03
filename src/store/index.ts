@@ -19,7 +19,9 @@ interface AppState {
   addMessage: (msg: Omit<Message, 'id' | 'timestamp'>) => void;
   clearMessages: () => void;
   isAIThinking: boolean;
+  aiThinkingContent: string | null;
   setAIThinking: (thinking: boolean) => void;
+  setAIThinkingContent: (content: string | null) => void;
 
   // Events / Calendar
   events: Event[];
@@ -178,7 +180,9 @@ export const useStore = create<AppState>()(
         })),
       clearMessages: () => set({ messages: [] }),
       isAIThinking: false,
+      aiThinkingContent: null,
       setAIThinking: (thinking) => set({ isAIThinking: thinking }),
+      setAIThinkingContent: (content) => set({ aiThinkingContent: content }),
 
       // Events
       events: [],

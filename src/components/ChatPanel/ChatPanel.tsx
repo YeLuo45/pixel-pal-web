@@ -36,12 +36,15 @@ const TypingIndicator: React.FC = () => {
 
 export const ChatPanel: React.FC = () => {
   const [input, setInput] = useState('');
+  const [showThinkingContent, setShowThinkingContent] = useState(false);
   const messages = useStore((s) => s.messages);
   const models = useStore((s) => s.models);
   const addMessage = useStore((s) => s.addMessage);
   const clearMessages = useStore((s) => s.clearMessages);
   const isAIThinking = useStore((s) => s.isAIThinking);
+  const aiThinkingContent = useStore((s) => s.aiThinkingContent);
   const setAIThinking = useStore((s) => s.setAIThinking);
+  const setAIThinkingContent = useStore((s) => s.setAIThinkingContent);
   const aiConfig = useStore((s) => s.aiConfig);
   const setPetStatus = useStore((s) => s.setPetStatus);
   const updateLastActivity = useStore((s) => s.updateLastActivity);
@@ -77,9 +80,12 @@ export const ChatPanel: React.FC = () => {
 
     // Set pet to thinking
     setPetStatus({ state: 'thinking', message: undefined });
+    setAIThinkingContent(null);
+    setShowThinkingContent(false);
 
     // Add placeholder for AI
     let aiContent = '';
+    let thinkingContent: string | null = null;
     let errorOccurred = false;
 
     try {
@@ -94,7 +100,22 @@ export const ChatPanel: React.FC = () => {
       // Inject companion context (personality system prompt + memory)
       const messagesWithContext = await injectCompanionContext(apiMessages);
 
-      aiContent = await chatCompletion(messagesWithContext, aiConfig);
+      const result = await chatCompletion(messagesWithContext, aiConfig);
+
+      // Extract thinking content if present (format: <thinking>...</thinking> or 【思考】...【/思考】)
+      const thinkingMatch = result.match(/<(?:think(?:ing)?|thought)>([\s\S]*?)<\/(?:think(?:ing)?|thought)>/i)
+        || result.match(/【思考】([\s\S]*?)【\/思考】/)
+        || result.match(/\[(?:思考|thinking|reasoning)\]([\s\S]*?)\[\/(?:思考|thinking|reasoning)\]/i);
+
+      if (thinkingMatch) {
+        thinkingContent = thinkingMatch[1].trim();
+        aiContent = result.replace(thinkingMatch[0], '').trim();
+        setAIThinkingContent(thinkingContent);
+      } else {
+        aiContent = result;
+        setAIThinkingContent(null);
+      }
+
       addMessage({ role: 'assistant', content: aiContent });
 
       // Auto-summarize chat to memory if enabled
@@ -185,7 +206,7 @@ export const ChatPanel: React.FC = () => {
           </Box>
         ))}
         {isAIThinking && (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: 0.5 }}>
             <Paper
               sx={{
                 p: 1.5,
@@ -196,6 +217,7 @@ export const ChatPanel: React.FC = () => {
                 boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
                 borderBottomLeftRadius: 4,
                 borderBottomRightRadius: 16,
+                width: '100%',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -204,6 +226,59 @@ export const ChatPanel: React.FC = () => {
                 </Typography>
                 <TypingIndicator />
               </Box>
+
+              {/* Thinking content toggle */}
+              {aiThinkingContent && (
+                <Box sx={{ mt: 1 }}>
+                  <Box
+                    component="button"
+                    onClick={() => setShowThinkingContent(!showThinkingContent)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'rgba(155, 127, 212, 0.8)',
+                      fontSize: 11,
+                      p: 0,
+                      '&:hover': { color: 'rgba(155, 127, 212, 1)' },
+                    }}
+                  >
+                    <Typography variant="caption" sx={{ fontSize: 10, color: 'inherit' }}>
+                      {showThinkingContent ? '▼ Hide reasoning' : '▶ Show reasoning'}
+                    </Typography>
+                  </Box>
+
+                  {showThinkingContent && (
+                    <Box
+                      sx={{
+                        mt: 1,
+                        p: 1,
+                        borderRadius: 1,
+                        bgcolor: 'rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(155, 127, 212, 0.1)',
+                        maxHeight: 120,
+                        overflowY: 'auto',
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: 11,
+                          color: 'rgba(255,255,255,0.7)',
+                          whiteSpace: 'pre-wrap',
+                          fontFamily: 'monospace',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {aiThinkingContent}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              )}
             </Paper>
           </Box>
         )}
