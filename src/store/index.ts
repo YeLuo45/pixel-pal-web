@@ -64,7 +64,7 @@ interface AppState {
   updateLastActivity: () => void;
 
   // UI
-  activePanel: 'chat' | 'calendar' | 'tasks' | 'document' | 'email' | 'writing' | 'settings' | 'team';
+  activePanel: 'chat' | 'calendar' | 'tasks' | 'document' | 'knowledge' | 'email' | 'writing' | 'settings' | 'team';
   setActivePanel: (panel: AppState['activePanel']) => void;
 
   // Companion Personality & Memory

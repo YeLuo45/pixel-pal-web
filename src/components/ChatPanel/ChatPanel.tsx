@@ -7,6 +7,7 @@ import { Send as SendIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { chatCompletion, initModelRegistry, getDefaultModel } from '../../services/ai/model-registry-adapter';
 import { injectCompanionContext, autoSummarizeChat, adjustMoodForInteraction } from '../../services/companion';
+import { queryKnowledgeBase, buildRAGContext, isDocumentIndexed, reindexAllDocuments } from '../../services/rag';
 import type { Message } from '../../types';
 
 // Three-dot typing indicator component
@@ -100,7 +101,42 @@ export const ChatPanel: React.FC = () => {
       // Inject companion context (personality system prompt + memory)
       const messagesWithContext = await injectCompanionContext(apiMessages);
 
-      const result = await chatCompletion(messagesWithContext, aiConfig);
+      // RAG Enhancement: Query knowledge base and add relevant context
+      let ragContext = '';
+      try {
+        // Check if we have indexed documents
+        const docs = useStore.getState().documents;
+        if (docs.length > 0) {
+          // Ensure documents are indexed (reindex if needed)
+          const needsReindex = docs.some(doc => !isDocumentIndexed(doc.id));
+          if (needsReindex) {
+            reindexAllDocuments(docs);
+          }
+
+          // Query the knowledge base
+          const ragResults = queryKnowledgeBase({ query: userMsg, topK: 3, minScore: 0.5 });
+          if (ragResults.chunks.length > 0) {
+            ragContext = buildRAGContext(ragResults, 2000);
+          }
+        }
+      } catch (ragErr) {
+        console.warn('[RAG] Knowledge base query failed:', ragErr);
+      }
+
+      // Add RAG context as additional system context if available
+      let finalMessages = messagesWithContext;
+      if (ragContext) {
+        const ragSystemMessage: Message = {
+          id: crypto.randomUUID(),
+          role: 'system',
+          content: `\n[KNOWLEDGE BASE - Answer using this information when relevant]\n${ragContext}\n[/KNOWLEDGE BASE]`,
+          timestamp: Date.now(),
+        };
+        // Insert RAG context right after the existing system prompt
+        finalMessages = [messagesWithContext[0], ragSystemMessage, ...messagesWithContext.slice(1)];
+      }
+
+      const result = await chatCompletion(finalMessages, aiConfig);
 
       // Extract thinking content if present (format: <thinking>...</thinking> or 【思考】...【/思考】)
       const thinkingMatch = result.match(/<(?:think(?:ing)?|thought)>([\s\S]*?)<\/(?:think(?:ing)?|thought)>/i)

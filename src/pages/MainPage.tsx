@@ -9,6 +9,7 @@ import { DocumentUpload } from '../components/Document/DocumentUpload';
 import { Writing } from '../components/Writing/Writing';
 import { Email } from '../components/Email/Email';
 import { Settings } from '../components/Settings/Settings';
+import { KnowledgePanel } from '../components/Knowledge/Knowledge';
 import { MultiPersonaCollaboration } from '../components/MultiPersona/MultiPersonaCollaboration';
 import { CompanionCanvas } from '../components/PixelPal/CompanionCanvas';
 import { useStore } from '../store';
@@ -19,6 +20,7 @@ const PANEL_COMPONENTS = {
   calendar: Calendar,
   tasks: Tasks,
   document: DocumentUpload,
+  knowledge: KnowledgePanel,
   writing: Writing,
   email: Email,
   team: MultiPersonaCollaboration,

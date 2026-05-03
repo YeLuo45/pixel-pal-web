@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Tooltip, Divider } from '@mui/material';
-import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon } from '@mui/icons-material';
+import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 
 const NAV_ITEMS = [
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { id: 'calendar', label: 'Calendar', icon: CalendarIcon },
   { id: 'tasks', label: 'Tasks', icon: TaskIcon },
   { id: 'document', label: 'Documents', icon: DocIcon },
+  { id: 'knowledge', label: 'Knowledge', icon: KnowledgeIcon },
   { id: 'writing', label: 'Writing', icon: WriteIcon },
   { id: 'email', label: 'Email', icon: EmailIcon },
   { id: 'team', label: 'Team', icon: GroupIcon },
