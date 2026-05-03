@@ -11,6 +11,7 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import type { Task } from '../../types';
 import { format, parseISO, isPast, isSameDay } from 'date-fns';
+import { triggerTaskCelebrate } from '../../services/actions/ActionTrigger';
 
 const PRIORITY_COLORS: Record<string, string> = {
   low: '#4CAF50',
@@ -47,6 +48,23 @@ export const Tasks: React.FC = () => {
       setFormData({ title: '', dueDate: '', priority: 'medium' });
     }
     setDialogOpen(true);
+  };
+
+  const handleToggleComplete = (taskId: string) => {
+    // Find task before toggle to get its state
+    const task = tasks.find((t) => t.id === taskId);
+    const wasPending = task?.status === 'pending';
+    toggleTaskComplete(taskId);
+    // Celebrate when a pending task becomes completed
+    if (wasPending && task) {
+      // Use setTimeout to let the state update first
+      setTimeout(() => {
+        const updatedTask = useStore.getState().tasks.find((t) => t.id === taskId);
+        if (updatedTask && updatedTask.status === 'completed') {
+          triggerTaskCelebrate(task);
+        }
+      }, 0);
+    }
   };
 
   const handleSave = () => {
@@ -161,7 +179,7 @@ export const Tasks: React.FC = () => {
               >
                 <Checkbox
                   checked={task.status === 'completed'}
-                  onChange={() => toggleTaskComplete(task.id)}
+                  onChange={() => handleToggleComplete(task.id)}
                   size="small"
                   sx={{ mr: 0.5, '& .MuiSvgIcon-root': { fontSize: 18 } }}
                 />

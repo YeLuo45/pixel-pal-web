@@ -5,6 +5,7 @@ import { useStore } from './store';
 import type { EmailAccount } from './types';
 import { initCompanion } from './services/companion';
 import { compactMemory } from './services/memory';
+import { checkGreeting, checkReminders } from './services/actions/ActionTrigger';
 
 const darkTheme = createTheme({
   palette: {
@@ -77,6 +78,9 @@ function App() {
       await initCompanion(companion.personaId, companion.moodId, companion.customName);
       // Compact memory if needed (runs in background)
       compactMemory().catch(() => {});
+      // Trigger proactive actions on app open
+      checkGreeting();
+      checkReminders();
     };
     init();
   }, []);

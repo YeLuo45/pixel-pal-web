@@ -10,6 +10,7 @@ import { Writing } from '../components/Writing/Writing';
 import { Email } from '../components/Email/Email';
 import { Settings } from '../components/Settings/Settings';
 import { PixelPal } from '../components/PixelPal/PixelPal';
+import { CompanionCanvas } from '../components/PixelPal/CompanionCanvas';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
 
@@ -302,7 +303,7 @@ export const MainPage: React.FC = () => {
       </Box>
 
       {/* Pixel Pet */}
-      <PixelPal onClick={handlePetClick} />
+      <CompanionCanvas />
     </Box>
   );
 };
