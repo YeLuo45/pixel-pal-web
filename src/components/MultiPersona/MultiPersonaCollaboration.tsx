@@ -1,11 +1,12 @@
 /**
  * Multi-Persona Collaboration Panel
- * 
+ *
  * UI for team management and collaborative discussion.
  * Shows team members, allows switching personas, and displays team chat.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Paper,
@@ -73,6 +74,7 @@ import type { PersonaId } from '../../services/companion/personalityTypes';
 import { getPersona } from '../../services/companion/personalityTypes';
 
 export const MultiPersonaCollaboration: React.FC = () => {
+  const { t } = useTranslation();
   const [teamExpanded, setTeamExpanded] = useState(true);
   const [addPersonaOpen, setAddPersonaOpen] = useState(false);
   const [selectedNewPersona, setSelectedNewPersona] = useState<PersonaId | ''>('');
@@ -163,7 +165,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
   };
 
   const getStatusColor = (isActive: boolean) => isActive ? 'success' : 'default';
-  const getStatusLabel = (isActive: boolean) => isActive ? 'Active' : 'Observing';
+  const getStatusLabel = (isActive: boolean) => isActive ? t('team.active') : t('team.observing');
 
   const getMessageTypeColor = (type: CollaborationMessage['type']) => {
     switch (type) {
@@ -193,16 +195,16 @@ export const MultiPersonaCollaboration: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <GroupIcon sx={{ fontSize: 18, color: 'primary.main' }} />
             <Typography variant="subtitle1" sx={{ fontSize: 14, fontWeight: 600 }}>
-              Multi-Persona Team
+              {t('team.title')}
             </Typography>
-            <Chip 
-              size="small" 
-              label={`${teamMembers.length} member${teamMembers.length !== 1 ? 's' : ''}`}
+            <Chip
+              size="small"
+              label={`${teamMembers.length} ${teamMembers.length !== 1 ? t('team.members') : t('team.members')}`}
               sx={{ height: 20, fontSize: 10 }}
             />
           </Box>
           <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <Tooltip title="Quick setup balanced team">
+            <Tooltip title={t('team.setupBalanced')}>
               <Button size="small" onClick={handleSetupBalanced} sx={{ minWidth: 0, p: 0.5 }}>
                 <SummarizeIcon sx={{ fontSize: 16 }} />
               </Button>

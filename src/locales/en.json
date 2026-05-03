@@ -135,6 +135,8 @@
     "clientIdPlaceholder": "e.g., 123456789-abc.apps.googleusercontent.com",
     "clientIdHelp": "Get one at console.cloud.google.com → APIs & Services → Credentials",
     "connectButton": "Connect Gmail",
+    "newEmail": "New Email",
+    "clientId": "Gmail Client ID",
     "compose": "Compose",
     "refresh": "Refresh",
     "to": "To",

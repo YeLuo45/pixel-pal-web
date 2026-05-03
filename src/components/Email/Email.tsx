@@ -5,6 +5,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Divider, Chip, Alert,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { Email as EmailIcon, Send as SendIcon, Refresh as RefreshIcon, ArrowBack } from '@mui/icons-material';
 import { useStore } from '../../store';
 import {
@@ -14,6 +15,7 @@ import {
 import type { EmailMessage } from '../../types';
 
 export const Email: React.FC = () => {
+  const { t } = useTranslation();
   const emailAccount = useStore((s) => s.emailAccount);
 
   const [messages, setMessages] = useState<EmailMessage[]>([]);
@@ -85,35 +87,35 @@ export const Email: React.FC = () => {
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 2, gap: 2 }}>
         <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600 }}>
-            📧 Gmail
+            📧 {t('email.title')}
           </Typography>
         </Box>
         <Paper sx={{ p: 3, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
           <EmailIcon sx={{ fontSize: 40, opacity: 0.3, mb: 2 }} />
           <Typography variant="body2" sx={{ fontSize: 13, mb: 1 }}>
-            Connect your Gmail account
+            {t('email.connect')}
           </Typography>
           <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary', display: 'block', mb: 2 }}>
-            You'll need a Gmail API Client ID from Google Cloud Console.
+            {t('email.clientIdHelp')}
             <br />
-            Your credentials are stored locally and never sent to any server.
+            {t('email.credentialsHint')}
           </Typography>
           <TextField
             fullWidth
             size="small"
-            label="Gmail Client ID"
+            label={t('email.clientId')}
             value={clientIdInput}
             onChange={(e) => setClientIdInput(e.target.value)}
-            placeholder="e.g., 123456789-abc.apps.googleusercontent.com"
+            placeholder={t('email.clientIdPlaceholder')}
             sx={{ mb: 2, '& .MuiInputBase-root': { fontSize: 12 } }}
             helperText={
               <Typography variant="caption" sx={{ fontSize: 10 }}>
-                Get one at console.cloud.google.com → APIs &amp; Services → Credentials
+                {t('email.clientIdHelp')}
               </Typography>
             }
           />
           <Button variant="contained" onClick={handleGmailAuth} fullWidth sx={{ fontSize: 12 }}>
-            Connect Gmail
+            {t('email.connectButton')}
           </Button>
         </Paper>
         {error && <Alert severity="error" sx={{ fontSize: 12 }} onClose={() => setError('')}>{error}</Alert>}
@@ -149,7 +151,7 @@ export const Email: React.FC = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 1 }}>
         <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600, flex: 1 }}>
-          📧 Gmail
+          📧 {t('email.title')}
         </Typography>
         <Chip label={emailAccount.email} size="small" sx={{ fontSize: 10, height: 20 }} />
         <IconButton size="small" onClick={loadMessages} disabled={loading}>
@@ -162,7 +164,7 @@ export const Email: React.FC = () => {
           onClick={() => setComposeOpen(true)}
           sx={{ fontSize: 11 }}
         >
-          Compose
+          {t('email.compose')}
         </Button>
       </Box>
 
@@ -209,7 +211,7 @@ export const Email: React.FC = () => {
           ))}
           {messages.length === 0 && (
             <Box sx={{ textAlign: 'center', mt: 4, opacity: 0.5 }}>
-              <Typography variant="body2" sx={{ fontSize: 13 }}>No emails found</Typography>
+              <Typography variant="body2" sx={{ fontSize: 13 }}>{t('email.noEmails')}</Typography>
             </Box>
           )}
         </List>
@@ -217,11 +219,11 @@ export const Email: React.FC = () => {
 
       {/* Compose Dialog */}
       <Dialog open={composeOpen} onClose={() => setComposeOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontSize: 15 }}>New Email</DialogTitle>
+        <DialogTitle sx={{ fontSize: 15 }}>{t('email.newEmail')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
-              label="To"
+              label={t('email.to')}
               value={composeData.to}
               onChange={(e) => setComposeData({ ...composeData, to: e.target.value })}
               size="small"
@@ -229,14 +231,14 @@ export const Email: React.FC = () => {
               autoFocus
             />
             <TextField
-              label="Subject"
+              label={t('email.subject')}
               value={composeData.subject}
               onChange={(e) => setComposeData({ ...composeData, subject: e.target.value })}
               size="small"
               fullWidth
             />
             <TextField
-              label="Body"
+              label={t('email.body')}
               value={composeData.body}
               onChange={(e) => setComposeData({ ...composeData, body: e.target.value })}
               size="small"
@@ -247,7 +249,7 @@ export const Email: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setComposeOpen(false)} size="small">Cancel</Button>
+          <Button onClick={() => setComposeOpen(false)} size="small">{t('common.cancel')}</Button>
           <Button
             onClick={handleSend}
             variant="contained"
@@ -255,7 +257,7 @@ export const Email: React.FC = () => {
             disabled={sending || !composeData.to || !composeData.subject}
             startIcon={sending ? <CircularProgress size={12} /> : <SendIcon sx={{ fontSize: 14 }} />}
           >
-            Send
+            {t('email.send')}
           </Button>
         </DialogActions>
       </Dialog>

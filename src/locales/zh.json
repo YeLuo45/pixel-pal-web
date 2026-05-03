@@ -135,6 +135,8 @@
     "clientIdPlaceholder": "例如：123456789-abc.apps.googleusercontent.com",
     "clientIdHelp": "在 console.cloud.google.com → API 和服务 → 凭据 获取",
     "connectButton": "连接 Gmail",
+    "newEmail": "新邮件",
+    "clientId": "Gmail Client ID",
     "compose": "写信",
     "refresh": "刷新",
     "to": "收件人",
