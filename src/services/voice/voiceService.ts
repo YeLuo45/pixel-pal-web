@@ -131,7 +131,11 @@ class VoiceService {
       return;
     }
 
-    this.recognition = (SpeechRecognitionAPI as unknown as { new (): ISpeechRecognition })();
+    this.recognition = new (SpeechRecognitionAPI as unknown as new () => ISpeechRecognition)();
+    if (!this.recognition) {
+      console.warn('[Voice] Speech Recognition initialization failed');
+      return;
+    }
     this.recognition.continuous = false;
     this.recognition.interimResults = true;
     this.recognition.lang = 'en-US';
