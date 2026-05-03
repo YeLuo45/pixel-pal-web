@@ -5,7 +5,6 @@
  * Each persona has its own personality, expertise, and communication style.
  */
 
-import type { Message } from '../../types';
 import type { PersonaId, PersonaConfig } from './personalityTypes';
 import { getPersona, PERSONAS } from './personalityTypes';
 import { buildCompanionSystemPrompt } from './companionService';
@@ -176,7 +175,6 @@ export function setPrimaryPersona(personaId: PersonaId): void {
  * Build system prompt for a specific persona within a team context
  */
 export async function buildTeamSystemPrompt(personaId: PersonaId): Promise<string> {
-  const persona = getPersona(personaId);
   const teamContext = buildTeamContext();
   const basePrompt = await buildCompanionSystemPrompt(teamContext);
   
@@ -350,11 +348,7 @@ export function setupBalancedTeam(primaryId: PersonaId = 'default'): void {
   // Set primary
   addPersonaToTeam(primaryId, 'primary');
   
-  // Add a few others based on primary
-  const allIds: PersonaId[] = ['default', 'playful', 'professional', 'gentle', 'witty'];
-  const others = allIds.filter(id => id !== primaryId);
-  
-  // Add one complementary persona
+  // Add one complementary persona based on primary
   if (primaryId === 'professional') {
     addPersonaToTeam('default', 'contributor');
   } else if (primaryId === 'playful') {

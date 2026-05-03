@@ -17,7 +17,6 @@ import {
   Collapse,
   Divider,
   Tooltip,
-  Badge,
   TextField,
   Select,
   MenuItem,
@@ -39,7 +38,6 @@ import {
   Add as AddIcon,
   Remove as RemoveIcon,
   Group as GroupIcon,
-  Edit as EditIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Star as StarIcon,
@@ -60,7 +58,6 @@ import {
   addPersonaToTeam,
   removePersonaFromTeam,
   setPersonaActive,
-  setPersonaRole,
   getTeamMembers,
   getActiveMembers,
   getPrimaryPersona,
@@ -72,30 +69,21 @@ import {
   getCurrentDiscussion,
   concludeDiscussion,
   clearDiscussion,
-  exportTeamState,
-  importTeamState,
 } from '../../services/companion/multiPersonaService';
 import type { PersonaId } from '../../services/companion/personalityTypes';
 import { getPersona } from '../../services/companion/personalityTypes';
 
-interface MultiPersonaCollaborationProps {
-  onTeamChat?: () => void;
-}
-
-export const MultiPersonaCollaboration: React.FC<MultiPersonaCollaborationProps> = ({ onTeamChat }) => {
+export const MultiPersonaCollaboration: React.FC = () => {
   const [teamExpanded, setTeamExpanded] = useState(true);
   const [addPersonaOpen, setAddPersonaOpen] = useState(false);
   const [selectedNewPersona, setSelectedNewPersona] = useState<PersonaId | ''>('');
   const [chatExpanded, setChatExpanded] = useState(false);
   const [localDiscussion, setLocalDiscussion] = useState<TeamDiscussion | null>(null);
   const [teamInput, setTeamInput] = useState('');
-  const [isTeamThinking, setIsTeamThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const companion = useStore((s) => s.companion);
   const setPersona = useStore((s) => s.setPersona);
-  const messages = useStore((s) => s.messages);
-  const addMessage = useStore((s) => s.addMessage);
 
   // Sync with current discussion
   useEffect(() => {
@@ -115,7 +103,6 @@ export const MultiPersonaCollaboration: React.FC<MultiPersonaCollaborationProps>
   const availablePersonas = getAvailablePersonasForTeam();
   const teamMembers = getTeamMembers();
   const activeMembers = getActiveMembers();
-  const primaryMember = getPrimaryPersona();
   const teamConfig = getTeamConfig();
 
   const handleAddPersona = () => {
@@ -268,7 +255,6 @@ export const MultiPersonaCollaboration: React.FC<MultiPersonaCollaborationProps>
           {teamMembers.length > 0 ? (
             <List dense disablePadding>
               {teamMembers.map(member => {
-                const personaInfo = getPersona(member.personaId);
                 return (
                   <ListItem
                     key={member.personaId}
