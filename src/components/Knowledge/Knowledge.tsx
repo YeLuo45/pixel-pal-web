@@ -45,8 +45,10 @@ import {
   type RAGQueryResult,
   type RAGStats,
 } from '../../services/rag';
+import { useTranslation } from 'react-i18next';
 
 export const KnowledgePanel: React.FC = () => {
+  const { t } = useTranslation();
   const documents = useStore((s) => s.documents);
 
   const [query, setQuery] = useState('');
@@ -144,13 +146,13 @@ export const KnowledgePanel: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
             <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600 }}>
-              🧠 Knowledge Base
+              🧠 {t('knowledge.title')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-              RAG-powered document search
+              {t('knowledge.subtitle')}
             </Typography>
           </Box>
-          <Tooltip title="Settings">
+          <Tooltip title={t('knowledge.settings')}>
             <IconButton
               size="small"
               onClick={() => setShowSettings(!showSettings)}

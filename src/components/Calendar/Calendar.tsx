@@ -11,8 +11,10 @@ import { useStore } from '../../store';
 import type { Event } from '../../types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, parseISO, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 export const Calendar: React.FC = () => {
+  const { t } = useTranslation();
   const events = useStore((s) => s.events);
   const addEvent = useStore((s) => s.addEvent);
   const updateEvent = useStore((s) => s.updateEvent);
@@ -86,7 +88,7 @@ export const Calendar: React.FC = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 1 }}>
         <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600, flex: 1 }}>
-          📅 Calendar
+          📅 {t('calendar.title')}
         </Typography>
         <IconButton size="small" onClick={handlePrevMonth}>
           <ChevronLeft sx={{ fontSize: 18 }} />
@@ -189,7 +191,7 @@ export const Calendar: React.FC = () => {
       {/* Upcoming events */}
       <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.1)', p: 1.5 }}>
         <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary', mb: 1, display: 'block' }}>
-          UPCOMING
+          {t('calendar.upcoming')}
         </Typography>
         <List dense disablePadding>
           {events
@@ -215,7 +217,7 @@ export const Calendar: React.FC = () => {
             ))}
           {events.filter((e) => new Date(e.startTime) >= new Date()).length === 0 && (
             <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-              No upcoming events
+              {t('calendar.noEvents')}
             </Typography>
           )}
         </List>
@@ -281,11 +283,11 @@ export const Calendar: React.FC = () => {
 
       {/* Add/Edit Event Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontSize: 15 }}>{editingEvent ? 'Edit Event' : 'New Event'}</DialogTitle>
+        <DialogTitle sx={{ fontSize: 15 }}>{editingEvent ? t('calendar.editEvent') : t('calendar.addEvent')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
-              label="Title"
+              label={t('calendar.eventTitle')}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               size="small"
@@ -293,7 +295,7 @@ export const Calendar: React.FC = () => {
               autoFocus
             />
             <TextField
-              label="Start"
+              label={t('calendar.startTime')}
               type="datetime-local"
               value={formData.startTime}
               onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
@@ -302,7 +304,7 @@ export const Calendar: React.FC = () => {
               InputLabelProps={{ shrink: true }}
             />
             <TextField
-              label="End"
+              label={t('calendar.endTime')}
               type="datetime-local"
               value={formData.endTime}
               onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
@@ -311,14 +313,14 @@ export const Calendar: React.FC = () => {
               InputLabelProps={{ shrink: true }}
             />
             <TextField
-              label="Location (optional)"
+              label={t('calendar.location')}
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               size="small"
               fullWidth
             />
             <TextField
-              label="Description (optional)"
+              label={t('calendar.description')}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               size="small"
@@ -329,9 +331,9 @@ export const Calendar: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDialogOpen(false)} size="small">Cancel</Button>
+          <Button onClick={() => setDialogOpen(false)} size="small">{t('calendar.cancel')}</Button>
           <Button onClick={handleSave} variant="contained" size="small" disabled={!formData.title || !formData.startTime}>
-            Save
+            {t('calendar.save')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -6,6 +6,7 @@ import type { EmailAccount } from './types';
 import { initCompanion } from './services/companion';
 import { compactMemory } from './services/memory';
 import { checkGreeting, checkReminders } from './services/actions/ActionTrigger';
+import './services/i18n';
 
 const darkTheme = createTheme({
   palette: {

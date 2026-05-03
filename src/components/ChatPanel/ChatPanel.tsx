@@ -11,6 +11,7 @@ import { injectCompanionContext, autoSummarizeChat, adjustMoodForInteraction } f
 import { queryKnowledgeBase, buildRAGContext, isDocumentIndexed, reindexAllDocuments } from '../../services/rag';
 import { voiceService } from '../../services/voice/voiceService';
 import type { Message } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -38,6 +39,7 @@ const TypingIndicator: React.FC = () => {
 };
 
 export const ChatPanel: React.FC = () => {
+  const { t } = useTranslation();
   const [input, setInput] = useState('');
   const [showThinkingContent, setShowThinkingContent] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -234,7 +236,7 @@ export const ChatPanel: React.FC = () => {
     } catch (err) {
       errorOccurred = true;
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
-      addMessage({ role: 'assistant', content: `⚠️ Error: ${errorMsg}` });
+      addMessage({ role: 'assistant', content: `${t('chat.errorPrefix')}: ${errorMsg}` });
     } finally {
       setAIThinking(false);
       updateLastActivity();
@@ -261,7 +263,7 @@ export const ChatPanel: React.FC = () => {
       {/* Header */}
       <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600 }}>
-          💬 AI Chat
+          💬 {t('chat.title')}
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
           {displayModel}
@@ -285,7 +287,7 @@ export const ChatPanel: React.FC = () => {
         {messages.length === 0 && (
           <Box sx={{ textAlign: 'center', mt: 4, opacity: 0.5 }}>
             <Typography variant="body2" sx={{ fontSize: 13 }}>
-              👋 Hi! I'm PixelPal. Ask me anything!
+              {t('chat.emptyState')}
             </Typography>
           </Box>
         )}
@@ -342,7 +344,7 @@ export const ChatPanel: React.FC = () => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-                  PixelPal is thinking
+                  {t('chat.thinking')}
                 </Typography>
                 <TypingIndicator />
               </Box>
@@ -367,7 +369,7 @@ export const ChatPanel: React.FC = () => {
                     }}
                   >
                     <Typography variant="caption" sx={{ fontSize: 10, color: 'inherit' }}>
-                      {showThinkingContent ? '▼ Hide reasoning' : '▶ Show reasoning'}
+                      {showThinkingContent ? t('chat.hideReasoning') : t('chat.showReasoning')}
                     </Typography>
                   </Box>
 
@@ -426,7 +428,7 @@ export const ChatPanel: React.FC = () => {
         <TextField
           fullWidth
           size="small"
-          placeholder="Ask me anything... (Enter to send)"
+          placeholder={t('chat.placeholder')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -449,7 +451,7 @@ export const ChatPanel: React.FC = () => {
         />
 
         {/* Voice Input Button (Mic) */}
-        <Tooltip title={isListening ? 'Stop listening' : voiceSettings.sttEnabled ? 'Voice input' : 'Voice disabled'}>
+        <Tooltip title={isListening ? t('chat.stopListening') : voiceSettings.sttEnabled ? t('chat.voiceInput') : t('chat.voiceDisabled')}>
           <span>
             <IconButton
               color={isListening ? 'error' : 'default'}
@@ -470,7 +472,7 @@ export const ChatPanel: React.FC = () => {
 
         {/* TTS Toggle Button */}
         {ttsSupported && (
-          <Tooltip title={ttsEnabled ? 'Disable voice output' : 'Enable voice output'}>
+          <Tooltip title={ttsEnabled ? t('chat.disableVoiceOutput') : t('chat.enableVoiceOutput')}>
             <span>
               <IconButton
                 color={ttsEnabled ? 'primary' : 'default'}

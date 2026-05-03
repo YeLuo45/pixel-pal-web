@@ -1,6 +1,7 @@
 // PluginPanel — wrapper component that renders a plugin's panel by pluginId
 import React from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { ArrowBack as ArrowBackIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import { PluginService } from '../../services/plugin/PluginService';
 
@@ -10,13 +11,14 @@ interface PluginPanelProps {
 }
 
 export const PluginPanel: React.FC<PluginPanelProps> = ({ pluginId, onBack }) => {
+  const { t } = useTranslation();
   const plugin = PluginService.getPlugin(pluginId);
 
   if (!plugin) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Plugin "{pluginId}" not found
+          {t('plugin.notFound')} "{pluginId}"
         </Typography>
       </Box>
     );
@@ -65,7 +67,7 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ pluginId, onBack }) =>
         ) : (
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
             <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: 13 }}>
-              This plugin has no panel content
+              {t('plugin.noPanelContent')}
             </Typography>
           </Box>
         )}

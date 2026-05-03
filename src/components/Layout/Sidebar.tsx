@@ -3,18 +3,19 @@ import { Box, Typography, Tooltip, Divider } from '@mui/material';
 import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon, Memory as MemoryIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { PluginService } from '../../services/plugin/PluginService';
+import { useTranslation } from 'react-i18next';
 
 const NAV_ITEMS = [
-  { id: 'chat', label: 'Chat', icon: ChatIcon },
-  { id: 'memory', label: 'Memory', icon: MemoryIcon },
-  { id: 'calendar', label: 'Calendar', icon: CalendarIcon },
-  { id: 'tasks', label: 'Tasks', icon: TaskIcon },
-  { id: 'document', label: 'Documents', icon: DocIcon },
-  { id: 'knowledge', label: 'Knowledge', icon: KnowledgeIcon },
-  { id: 'writing', label: 'Writing', icon: WriteIcon },
-  { id: 'email', label: 'Email', icon: EmailIcon },
-  { id: 'team', label: 'Team', icon: GroupIcon },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon },
+  { id: 'chat', labelKey: 'nav.chat', icon: ChatIcon },
+  { id: 'memory', labelKey: 'nav.memory', icon: MemoryIcon },
+  { id: 'calendar', labelKey: 'nav.calendar', icon: CalendarIcon },
+  { id: 'tasks', labelKey: 'nav.tasks', icon: TaskIcon },
+  { id: 'document', labelKey: 'nav.document', icon: DocIcon },
+  { id: 'knowledge', labelKey: 'nav.knowledge', icon: KnowledgeIcon },
+  { id: 'writing', labelKey: 'nav.writing', icon: WriteIcon },
+  { id: 'email', labelKey: 'nav.email', icon: EmailIcon },
+  { id: 'team', labelKey: 'nav.team', icon: GroupIcon },
+  { id: 'settings', labelKey: 'nav.settings', icon: SettingsIcon },
 ] as const;
 
 interface SidebarProps {
@@ -23,6 +24,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate }) => {
+  const { t } = useTranslation();
   const activePanel = useStore((s) => s.activePanel);
   const setActivePanel = useStore((s) => s.setActivePanel);
   const setActivePluginId = useStore((s) => s.setActivePluginId);
@@ -78,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
           const Icon = item.icon;
           const isActive = activePanel === item.id;
           return (
-            <Tooltip key={item.id} title={collapsed ? item.label : ''} placement="right">
+            <Tooltip key={item.id} title={collapsed ? t(item.labelKey) : ''} placement="right">
               <Box
                 component="button"
                 onClick={() => handleNavClick(item.id as typeof activePanel)}
@@ -113,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
                 }} />
                 {!collapsed && (
                   <Typography variant="body2" sx={{ fontSize: 12, fontWeight: isActive ? 600 : 400 }}>
-                    {item.label}
+                    {t(item.labelKey)}
                   </Typography>
                 )}
               </Box>
@@ -127,7 +129,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
             <Divider sx={{ opacity: 0.1, my: 0.5 }} />
             {!collapsed && (
               <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', px: 1.5, py: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                Plugins
+                {t('nav.plugins')}
               </Typography>
             )}
             {collapsed && <Box sx={{ height: 8 }} />}

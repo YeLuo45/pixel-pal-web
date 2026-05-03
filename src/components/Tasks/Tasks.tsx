@@ -12,6 +12,7 @@ import { useStore } from '../../store';
 import type { Task } from '../../types';
 import { format, parseISO, isPast, isSameDay } from 'date-fns';
 import { triggerTaskCelebrate } from '../../services/actions/ActionTrigger';
+import { useTranslation } from 'react-i18next';
 
 const PRIORITY_COLORS: Record<string, string> = {
   low: '#4CAF50',
@@ -20,6 +21,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export const Tasks: React.FC = () => {
+  const { t } = useTranslation();
   const tasks = useStore((s) => s.tasks);
   const addTask = useStore((s) => s.addTask);
   const updateTask = useStore((s) => s.updateTask);
@@ -109,10 +111,10 @@ export const Tasks: React.FC = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 1 }}>
         <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600, flex: 1 }}>
-          ✅ Tasks
+          ✅ {t('tasks.title')}
         </Typography>
-        <Chip label={`${pendingCount} pending`} size="small" sx={{ fontSize: 10, height: 20 }} />
-        <Chip label={`${completedCount} done`} size="small" sx={{ fontSize: 10, height: 20, bgcolor: 'rgba(76,175,80,0.2)', color: '#4CAF50' }} />
+        <Chip label={`${pendingCount} ${t('tasks.pending')}`} size="small" sx={{ fontSize: 10, height: 20 }} />
+        <Chip label={`${completedCount} ${t('tasks.done')}`} size="small" sx={{ fontSize: 10, height: 20, bgcolor: 'rgba(76,175,80,0.2)', color: '#4CAF50' }} />
         <IconButton size="small" color="primary" onClick={() => handleOpenDialog()}>
           <AddIcon sx={{ fontSize: 18 }} />
         </IconButton>
@@ -138,7 +140,7 @@ export const Tasks: React.FC = () => {
               bgcolor: filter === f ? 'rgba(255,255,255,0.08)' : 'transparent',
             }}
           >
-            {f}
+            {f === 'all' ? t('tasks.filterAll') : f === 'pending' ? t('tasks.filterPending') : t('tasks.filterCompleted')}
           </Typography>
         ))}
       </Box>
@@ -148,7 +150,7 @@ export const Tasks: React.FC = () => {
         {filteredTasks.length === 0 ? (
           <Box sx={{ textAlign: 'center', mt: 4, opacity: 0.5 }}>
             <Typography variant="body2" sx={{ fontSize: 13 }}>
-              No tasks yet. Click + to add one!
+              {t('tasks.noTasks')}
             </Typography>
           </Box>
         ) : (
@@ -216,7 +218,7 @@ export const Tasks: React.FC = () => {
                             {isOverdue ? '⚠️ ' : ''}{format(parseISO(task.dueDate), 'MMM d, yyyy')}
                           </Typography>
                           {isOverdue && (
-                            <Chip label="Overdue" size="small" sx={{ height: 14, fontSize: 8, bgcolor: 'rgba(244,67,54,0.2)', color: '#F44336', '& .MuiChip-label': { px: 0.5 } }} />
+                            <Chip label={t('tasks.overdue')} size="small" sx={{ height: 14, fontSize: 8, bgcolor: 'rgba(244,67,54,0.2)', color: '#F44336', '& .MuiChip-label': { px: 0.5 } }} />
                           )}
                         </Box>
                       )
@@ -232,11 +234,11 @@ export const Tasks: React.FC = () => {
 
       {/* Add/Edit Task Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontSize: 15 }}>{editingTask ? 'Edit Task' : 'New Task'}</DialogTitle>
+        <DialogTitle sx={{ fontSize: 15 }}>{editingTask ? t('tasks.editTask') : t('tasks.addTask')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
-              label="Title"
+              label={t('tasks.taskTitle')}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               size="small"
@@ -244,7 +246,7 @@ export const Tasks: React.FC = () => {
               autoFocus
             />
             <TextField
-              label="Due Date (optional)"
+              label={t('tasks.dueDate')}
               type="date"
               value={formData.dueDate}
               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
@@ -253,23 +255,23 @@ export const Tasks: React.FC = () => {
               InputLabelProps={{ shrink: true }}
             />
             <FormControl size="small" fullWidth>
-              <InputLabel>Priority</InputLabel>
+              <InputLabel>{t('tasks.priority')}</InputLabel>
               <Select
                 value={formData.priority}
-                label="Priority"
+                label={t('tasks.priority')}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
               >
-                <MenuItem value="low">Low</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="high">High</MenuItem>
+                <MenuItem value="low">{t('tasks.priorityLow')}</MenuItem>
+                <MenuItem value="medium">{t('tasks.priorityMedium')}</MenuItem>
+                <MenuItem value="high">{t('tasks.priorityHigh')}</MenuItem>
               </Select>
             </FormControl>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDialogOpen(false)} size="small">Cancel</Button>
+          <Button onClick={() => setDialogOpen(false)} size="small">{t('tasks.cancel')}</Button>
           <Button onClick={handleSave} variant="contained" size="small" disabled={!formData.title}>
-            Save
+            {t('tasks.save')}
           </Button>
         </DialogActions>
       </Dialog>

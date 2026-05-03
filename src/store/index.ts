@@ -82,6 +82,10 @@ interface AppState {
   // Voice Settings
   voiceSettings: VoiceSettings;
   setVoiceSettings: (settings: Partial<VoiceSettings>) => void;
+
+  // Language
+  language: 'zh' | 'en';
+  setLanguage: (lang: 'zh' | 'en') => void;
 }
 
 // Default model templates
@@ -326,6 +330,10 @@ export const useStore = create<AppState>()(
         set((state) => ({
           voiceSettings: { ...state.voiceSettings, ...settings },
         })),
+
+      // Language
+      language: 'zh',
+      setLanguage: (language) => set({ language }),
     }),
     {
       name: 'pixelpal-storage',
@@ -343,6 +351,7 @@ export const useStore = create<AppState>()(
         models: state.models,
         companion: state.companion,
         voiceSettings: state.voiceSettings,
+        language: state.language,
       }),
     }
   )

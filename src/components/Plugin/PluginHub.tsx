@@ -1,10 +1,12 @@
 // PluginHub — landing page listing all registered plugin panels
 import React from 'react';
 import { Box, Typography, Card, CardActionArea, CardContent, Divider } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { PluginService } from '../../services/plugin/PluginService';
 import { useStore } from '../../store';
 
 export const PluginHub: React.FC = () => {
+  const { t } = useTranslation();
   const setActivePluginId = useStore((s) => s.setActivePluginId);
 
   const panelPlugins = PluginService.listPlugins().filter((p) =>
@@ -22,10 +24,10 @@ export const PluginHub: React.FC = () => {
       {/* Header */}
       <Box sx={{ p: 2, borderBottom: '1px solid rgba(155,127,212,0.2)', bgcolor: 'rgba(155,127,212,0.04)' }}>
         <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600 }}>
-          🧩 Plugin Center
+          🧩 {t('plugin.hub')}
         </Typography>
         <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary' }}>
-          {allPlugins.length} plugin{allPlugins.length !== 1 ? 's' : ''} registered · Click to open
+          {allPlugins.length} {t('plugin.registered', { count: allPlugins.length })} · {t('plugin.clickToOpen')}
         </Typography>
       </Box>
 
@@ -33,7 +35,7 @@ export const PluginHub: React.FC = () => {
       {panelPlugins.length > 0 && (
         <Box sx={{ p: 2 }}>
           <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1, display: 'block' }}>
-            App Panels
+            {t('plugin.appPanels')}
           </Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 1.5 }}>
             {panelPlugins.map((plugin) => (
@@ -89,7 +91,7 @@ export const PluginHub: React.FC = () => {
       {aiToolPlugins.length > panelPlugins.length && (
         <Box sx={{ px: 2, pb: 2 }}>
           <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1, display: 'block' }}>
-            AI Tools
+            {t('plugin.aiTools')}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
             {aiToolPlugins
@@ -119,7 +121,7 @@ export const PluginHub: React.FC = () => {
       {allPlugins.length === 0 && (
         <Box sx={{ textAlign: 'center', mt: 6, opacity: 0.5 }}>
           <Typography variant="body2" sx={{ fontSize: 13 }}>
-            No plugins registered
+            {t('plugin.noPlugins')}
           </Typography>
         </Box>
       )}

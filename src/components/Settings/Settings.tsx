@@ -581,6 +581,34 @@ export const Settings: React.FC = () => {
 
         <Divider sx={{ opacity: 0.1 }} />
 
+        {/* Language Settings */}
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+            🌐 Language / 语言
+          </Typography>
+
+          <FormControl size="small" fullWidth>
+            <InputLabel>Select language / 选择语言</InputLabel>
+            <Select
+              value={useStore((s) => s.language)}
+              label="Select language / 选择语言"
+              onChange={(e) => {
+                const lang = e.target.value as 'zh' | 'en';
+                useStore.getState().setLanguage(lang);
+                // Sync with i18n
+                import('../../services/i18n').then(({ changeLanguage }) => {
+                  changeLanguage(lang);
+                });
+              }}
+            >
+              <MenuItem value="zh">中文</MenuItem>
+              <MenuItem value="en">English</MenuItem>
+            </Select>
+          </FormControl>
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
+
         {/* AI Models Configuration */}
         <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
