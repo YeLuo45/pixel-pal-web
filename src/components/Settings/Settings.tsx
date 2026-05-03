@@ -1,54 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, TextField, Button, Paper,
   FormControl, InputLabel, Select, MenuItem,
-  Alert, Divider, Stack,
+  Alert, Divider, Stack, IconButton,
+  Switch, Collapse, List, ListItem,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Chip, Tooltip,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Save as SaveIcon } from '@mui/icons-material';
-import { useStore } from '../../store';
 import {
-  PRESET_MODELS,
-  DEFAULT_MODELS,
-  PROVIDER_BASE_URLS,
-} from '../../services/ai/openaiAdapter';
-import type { AIConfig, GreetingFrequency } from '../../types';
+  Visibility, VisibilityOff, Save as SaveIcon,
+  Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon,
+  DragIndicator as DragIcon, ExpandMore as ExpandIcon, ExpandLess as CollapseIcon,
+} from '@mui/icons-material';
+import { useStore } from '../../store';
+import { testModel } from '../../services/ai/model-registry-adapter';
+import { PERSONAS, MOODS } from '../../services/companion/personalityTypes';
+import { getMemoryStats, clearAllMemories, compactMemory } from '../../services/memory/memoryStorage';
+import type { ModelConfig } from '../../services/ai/model-registry';
+import type { PersonaId } from '../../types';
 
 const PROVIDER_LABELS: Record<string, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic',
-  'azure-openai': 'Azure OpenAI',
-  custom: 'Custom Endpoint',
   minimax: 'MiniMax',
+  'minimax-cn': 'MiniMax CN',
   xiaomi: 'Xiaomi (Mimo)',
   zhipu: 'Zhipu (GLM)',
   qwen: 'Qwen (Alibaba)',
+  gemini: 'Google Gemini',
+  'azure-openai': 'Azure OpenAI',
+  custom: 'Custom Endpoint',
 };
 
 export const Settings: React.FC = () => {
   const aiConfig = useStore((s) => s.aiConfig);
   const setAIConfig = useStore((s) => s.setAIConfig);
+  const models = useStore((s) => s.models);
+  const addModel = useStore((s) => s.addModel);
+  const updateModel = useStore((s) => s.updateModel);
+  const removeModel = useStore((s) => s.removeModel);
   const emailAccount = useStore((s) => s.emailAccount);
   const setEmailAccount = useStore((s) => s.setEmailAccount);
   const interactionSettings = useStore((s) => s.interactionSettings);
   const setInteractionSettings = useStore((s) => s.setInteractionSettings);
+  const companion = useStore((s) => s.companion);
+  const setPersona = useStore((s) => s.setPersona);
+  const setMood = useStore((s) => s.setMood);
+  const setCustomName = useStore((s) => s.setCustomName);
+  const setMemoryEnabled = useStore((s) => s.setMemoryEnabled);
+  const setAutoSummarize = useStore((s) => s.setAutoSummarize);
 
-  const [formData, setFormData] = useState<AIConfig>(aiConfig);
+  // Legacy form state (for backward compatibility)
+  const [formData, setFormData] = useState(aiConfig);
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
-  const handleProviderChange = (provider: AIConfig['provider']) => {
-    const defaultModel = DEFAULT_MODELS[provider] || 'gpt-4o-mini';
-    const defaultBaseURL = PROVIDER_BASE_URLS[provider] || '';
-    setFormData({
-      ...formData,
-      provider,
-      model: defaultModel,
-      baseURL: defaultBaseURL,
-    });
-  };
+  // Model management state
+  const [modelsExpanded, setModelsExpanded] = useState(true);
+  const [isAddingModel, setIsAddingModel] = useState(false);
+  const [testStatus, setTestStatus] = useState<Record<string, { loading: boolean; success?: boolean; message: string }>>({});
 
-  const handleSave = () => {
+  // Dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogModel, setDialogModel] = useState<Partial<ModelConfig>>({});
+
+  // Companion/Memory state
+  const [memoryStats, setMemoryStats] = useState<{ totalEntries: number; byType: Record<string, number> } | null>(null);
+  const [memoryClearing, setMemoryClearing] = useState(false);
+  const [memoryCompacting, setMemoryCompacting] = useState(false);
+  const [customNameInput, setCustomNameInput] = useState(companion.customName);
+
+  // Load memory stats on mount
+  useEffect(() => {
+    getMemoryStats().then(setMemoryStats).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setFormData(aiConfig);
+  }, [aiConfig]);
+
+  const handleLegacySave = () => {
     if (!formData.apiKey.trim()) {
       setError('API Key is required to use AI features.');
       return;
@@ -64,7 +96,128 @@ export const Settings: React.FC = () => {
     localStorage.removeItem('pixelpal_gmail_client_id');
   };
 
-  const filteredModels = PRESET_MODELS.filter((m) => m.provider === formData.provider);
+  // Model management functions
+  const handleToggleModelEnabled = (modelId: string) => {
+    const model = models.find(m => m.id === modelId);
+    if (model) {
+      updateModel(modelId, { isEnabled: !model.isEnabled });
+    }
+  };
+
+  const handleTestModel = async (model: ModelConfig) => {
+    if (!model.apiKey || !model.apiKey.trim()) {
+      setTestStatus(prev => ({
+        ...prev,
+        [model.id]: { loading: false, success: false, message: 'No API Key' }
+      }));
+      return;
+    }
+
+    setTestStatus(prev => ({
+      ...prev,
+      [model.id]: { loading: true, message: 'Testing...' }
+    }));
+
+    const result = await testModel(model.id);
+
+    setTestStatus(prev => ({
+      ...prev,
+      [model.id]: { loading: false, success: result.success, message: result.message }
+    }));
+  };
+
+  const handleOpenAddDialog = () => {
+    const newModel: Partial<ModelConfig> = {
+      name: '',
+      provider: 'openai',
+      modelName: '',
+      apiBaseUrl: 'https://api.openai.com/v1',
+      apiKey: '',
+      temperature: 0.7,
+      maxTokens: 4096,
+      isEnabled: true,
+      priority: models.length,
+    };
+    setDialogModel(newModel);
+    setIsAddingModel(true);
+    setDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (model: ModelConfig) => {
+    setDialogModel({ ...model });
+    setIsAddingModel(false);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setDialogModel({});
+    setIsAddingModel(false);
+  };
+
+  const handleSaveDialog = () => {
+    if (!dialogModel.name || !dialogModel.provider || !dialogModel.modelName) {
+      return;
+    }
+
+    if (isAddingModel) {
+      const newModel: ModelConfig = {
+        id: `model-${Date.now()}`,
+        name: dialogModel.name || '',
+        provider: dialogModel.provider || 'openai',
+        modelName: dialogModel.modelName || '',
+        apiBaseUrl: dialogModel.apiBaseUrl || PROVIDER_BASE_URLS[dialogModel.provider || 'openai'] || '',
+        apiKey: dialogModel.apiKey || '',
+        temperature: dialogModel.temperature ?? 0.7,
+        maxTokens: dialogModel.maxTokens ?? 4096,
+        isEnabled: dialogModel.isEnabled ?? true,
+        priority: dialogModel.priority ?? models.length,
+      };
+      addModel(newModel);
+    } else if (dialogModel.id) {
+      updateModel(dialogModel.id, dialogModel);
+    }
+
+    handleCloseDialog();
+  };
+
+  const handleDeleteModel = (modelId: string) => {
+    if (models.length <= 1) {
+      setError('Cannot delete the last model. At least one model is required.');
+      return;
+    }
+    removeModel(modelId);
+  };
+
+  const handleProviderChange = (provider: string) => {
+    const baseUrl = PROVIDER_BASE_URLS[provider] || '';
+    setDialogModel({
+      ...dialogModel,
+      provider,
+      apiBaseUrl: baseUrl,
+      modelName: '', // Reset model name when provider changes
+    });
+  };
+
+  const getAvailableModelsForProvider = (provider: string): string[] => {
+    const modelMap: Record<string, string[]> = {
+      openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+      anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
+      minimax: ['MiniMax-Text-01', 'MiniMax-Text-01-mini'],
+      'minimax-cn': ['MiniMax-Text-01'],
+      xiaomi: ['MiLM', 'mimo-v2-pro', 'mimo-v2-omni'],
+      zhipu: ['glm-4', 'glm-4-plus', 'glm-4-air', 'glm-4-flash'],
+      qwen: ['qwen-turbo', 'qwen-plus', 'qwen-max', 'qwen-vl-max'],
+      gemini: ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+      'azure-openai': ['gpt-4o', 'gpt-4o-mini'],
+      custom: [],
+    };
+    return modelMap[provider] || [];
+  };
+
+  // Sort models by priority
+  const sortedModels = [...models].sort((a, b) => a.priority - b.priority);
+  const enabledCount = models.filter(m => m.isEnabled && m.apiKey && m.apiKey.trim()).length;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'auto' }}>
@@ -83,14 +236,13 @@ export const Settings: React.FC = () => {
           </Typography>
 
           <Stack gap={2}>
-            {/* Greeting Frequency */}
             <FormControl size="small" fullWidth>
               <InputLabel>Periodic Greetings</InputLabel>
               <Select
                 value={interactionSettings.greetingFrequency}
                 label="Periodic Greetings"
                 onChange={(e) =>
-                  setInteractionSettings({ greetingFrequency: e.target.value as GreetingFrequency })}
+                  setInteractionSettings({ greetingFrequency: e.target.value as 'high' | 'medium' | 'low' | 'off' })}
               >
                 <MenuItem value="high">High (every 30 minutes)</MenuItem>
                 <MenuItem value="medium">Medium (hourly)</MenuItem>
@@ -99,7 +251,6 @@ export const Settings: React.FC = () => {
               </Select>
             </FormControl>
 
-            {/* Sleep Schedule */}
             <Box>
               <Typography variant="body2" sx={{ fontSize: 12, mb: 1, color: 'text.secondary' }}>
                 Sleep Schedule
@@ -138,79 +289,380 @@ export const Settings: React.FC = () => {
 
         <Divider sx={{ opacity: 0.1 }} />
 
-        {/* AI Settings */}
+        {/* Companion Personality Settings */}
         <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
           <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
-            🤖 AI Configuration
+            🐾 Companion Personality
           </Typography>
 
-          <Stack gap={2}>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Provider</InputLabel>
-              <Select
-                value={formData.provider}
-                label="Provider"
-                onChange={(e) => handleProviderChange(e.target.value as AIConfig['provider'])}
-              >
-                <MenuItem value="openai">{PROVIDER_LABELS.openai}</MenuItem>
-                <MenuItem value="anthropic">{PROVIDER_LABELS.anthropic}</MenuItem>
-                <MenuItem value="azure-openai">{PROVIDER_LABELS['azure-openai']}</MenuItem>
-                <MenuItem value="custom">{PROVIDER_LABELS.custom}</MenuItem>
-                <MenuItem value="minimax">{PROVIDER_LABELS.minimax}</MenuItem>
-                <MenuItem value="xiaomi">{PROVIDER_LABELS.xiaomi}</MenuItem>
-                <MenuItem value="zhipu">{PROVIDER_LABELS.zhipu}</MenuItem>
-                <MenuItem value="qwen">{PROVIDER_LABELS.qwen}</MenuItem>
-              </Select>
-            </FormControl>
+          {/* Persona Selection */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ fontSize: 12, mb: 1, color: 'text.secondary' }}>
+              Choose your companion's personality
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {(Object.keys(PERSONAS) as PersonaId[]).map((pid) => {
+                const p = PERSONAS[pid];
+                const isActive = companion.personaId === pid;
+                return (
+                  <Box
+                    key={pid}
+                    onClick={() => setPersona(pid)}
+                    sx={{
+                      px: 1.5,
+                      py: 1,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      border: `1px solid ${isActive ? p.color : 'rgba(255,255,255,0.15)'}`,
+                      bgcolor: isActive ? `${p.color}22` : 'transparent',
+                      transition: 'all 0.2s',
+                      '&:hover': { borderColor: p.color },
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontSize: 11, fontWeight: isActive ? 600 : 400 }}>
+                      {p.name}
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary' }}>
+                      {p.description}
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
 
-            <FormControl size="small" fullWidth>
-              <InputLabel>Model</InputLabel>
-              <Select
-                value={formData.model}
-                label="Model"
-                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-              >
-                {filteredModels.map((m) => (
-                  <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>
-                ))}
-                <MenuItem value="__custom__">Custom model name...</MenuItem>
-              </Select>
-            </FormControl>
+          {/* Mood Selection */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ fontSize: 12, mb: 1, color: 'text.secondary' }}>
+              Current mood: {MOODS[companion.moodId]?.label ?? 'happy'} {MOODS[companion.moodId]?.emoji ?? '😊'}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {Object.values(MOODS).map((m) => {
+                const isActive = companion.moodId === m.id;
+                return (
+                  <Chip
+                    key={m.id}
+                    label={`${m.emoji} ${m.label}`}
+                    size="small"
+                    onClick={() => setMood(m.id)}
+                    sx={{
+                      fontSize: 10,
+                      height: 22,
+                      cursor: 'pointer',
+                      bgcolor: isActive ? 'primary.main' : 'rgba(255,255,255,0.08)',
+                      border: 'none',
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          </Box>
 
-            <TextField
-              label="API Key"
-              type={showKey ? 'text' : 'password'}
-              value={formData.apiKey}
-              onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-              size="small"
-              fullWidth
-              placeholder="sk-..."
-              InputProps={{
-                endAdornment: (
-                  <Button size="small" onClick={() => setShowKey(!showKey)} sx={{ minWidth: 'auto', p: 0.5 }}>
-                    {showKey ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}
-                  </Button>
-                ),
-              }}
-              helperText={
-                <Typography variant="caption" sx={{ fontSize: 10 }}>
-                  Stored locally in your browser. Never sent to our servers.
-                </Typography>
-              }
-            />
-
-            {(formData.provider === 'custom' || formData.provider === 'azure-openai') && (
+          {/* Custom Name */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ fontSize: 12, mb: 1, color: 'text.secondary' }}>
+              Custom name
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
               <TextField
-                label="Base URL"
-                value={formData.baseURL || ''}
-                onChange={(e) => setFormData({ ...formData, baseURL: e.target.value })}
                 size="small"
-                fullWidth
-                placeholder="https://api.openai.com/v1"
+                value={customNameInput}
+                onChange={(e) => setCustomNameInput(e.target.value)}
+                onBlur={() => setCustomName(customNameInput)}
+                placeholder={PERSONAS[companion.personaId]?.name ?? '小墨'}
+                sx={{ flex: 1, '& input': { fontSize: 12 } }}
               />
-            )}
+            </Box>
+          </Box>
+
+          {/* Memory Controls */}
+          <Divider sx={{ opacity: 0.1, my: 1.5 }} />
+          <Typography variant="body2" sx={{ fontSize: 12, mb: 1, color: 'text.secondary', fontWeight: 600 }}>
+            Memory ({memoryStats?.totalEntries ?? 0} entries)
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+            <Switch
+              size="small"
+              checked={companion.memoryEnabled}
+              onChange={(e) => setMemoryEnabled(e.target.checked)}
+            />
+            <Typography variant="caption" sx={{ fontSize: 11, alignSelf: 'center', color: 'text.secondary' }}>
+              Enable memory persistence
+            </Typography>
+            <Switch
+              size="small"
+              checked={companion.autoSummarize}
+              onChange={(e) => setAutoSummarize(e.target.checked)}
+            />
+            <Typography variant="caption" sx={{ fontSize: 11, alignSelf: 'center', color: 'text.secondary' }}>
+              Auto-summarize chats
+            </Typography>
+          </Box>
+
+          <Stack direction="row" gap={1}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={async () => {
+                setMemoryCompacting(true);
+                await compactMemory();
+                const stats = await getMemoryStats();
+                setMemoryStats(stats);
+                setMemoryCompacting(false);
+              }}
+              disabled={memoryCompacting}
+              sx={{ fontSize: 10 }}
+            >
+              {memoryCompacting ? 'Compacting...' : 'Compact Memory'}
+            </Button>
+            <Button
+              size="small"
+              color="error"
+              variant="outlined"
+              onClick={async () => {
+                setMemoryClearing(true);
+                await clearAllMemories();
+                setMemoryStats({ totalEntries: 0, byType: {} });
+                setMemoryClearing(false);
+              }}
+              disabled={memoryClearing}
+              sx={{ fontSize: 10 }}
+            >
+              {memoryClearing ? 'Clearing...' : 'Clear All Memory'}
+            </Button>
           </Stack>
         </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
+
+        {/* AI Models Configuration */}
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600 }}>
+                🤖 AI Models
+              </Typography>
+              <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary' }}>
+                {enabledCount} model(s) configured with API keys
+              </Typography>
+            </Box>
+            <Button
+              size="small"
+              startIcon={<AddIcon sx={{ fontSize: 14 }} />}
+              onClick={handleOpenAddDialog}
+              sx={{ fontSize: 11 }}
+            >
+              Add Model
+            </Button>
+          </Box>
+
+          {/* Models List */}
+          <List dense disablePadding sx={{ mb: 1 }}>
+            {sortedModels.map((model) => {
+              const test = testStatus[model.id];
+              return (
+                <ListItem
+                  key={model.id}
+                  sx={{
+                    bgcolor: 'rgba(0,0,0,0.2)',
+                    borderRadius: 1,
+                    mb: 0.5,
+                    flexDirection: 'column',
+                    alignItems: 'stretch',
+                  }}
+                  secondaryAction={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                      <Tooltip title={model.isEnabled ? 'Disable' : 'Enable'}>
+                        <Switch
+                          size="small"
+                          checked={model.isEnabled}
+                          onChange={() => handleToggleModelEnabled(model.id)}
+                        />
+                      </Tooltip>
+                      <IconButton size="small" onClick={() => handleOpenEditDialog(model)}>
+                        <EditIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDeleteModel(model.id)}>
+                        <DeleteIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    </Box>
+                  }
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <DragIcon sx={{ fontSize: 14, opacity: 0.5, cursor: 'grab' }} />
+                    <Box sx={{ flex: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
+                          {model.name}
+                        </Typography>
+                        <Chip
+                          label={PROVIDER_LABELS[model.provider] || model.provider}
+                          size="small"
+                          sx={{ height: 16, fontSize: 9 }}
+                        />
+                        {!model.apiKey && (
+                          <Chip
+                            label="No API Key"
+                            size="small"
+                            color="warning"
+                            sx={{ height: 16, fontSize: 9 }}
+                          />
+                        )}
+                        {model.isEnabled && model.apiKey && (
+                          <Chip
+                            label="Ready"
+                            size="small"
+                            color="success"
+                            sx={{ height: 16, fontSize: 9 }}
+                          />
+                        )}
+                      </Box>
+                      <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                        {model.modelName} · Priority: {model.priority}
+                      </Typography>
+                      {test && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: 10,
+                            display: 'block',
+                            color: test.success ? 'success.main' : 'error.main'
+                          }}
+                        >
+                          {test.loading ? '⏳ Testing...' : test.success ? '✓ ' + test.message : '✗ ' + test.message}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => handleTestModel(model)}
+                      disabled={test?.loading || !model.apiKey}
+                      sx={{ fontSize: 10, minWidth: 'auto', p: 0.5 }}
+                    >
+                      Test
+                    </Button>
+                  </Box>
+                </ListItem>
+              );
+            })}
+          </List>
+
+          <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', display: 'block' }}>
+            Models are tried in priority order (0 = highest). If the primary model fails, the next enabled model is used automatically.
+          </Typography>
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
+
+        {/* Legacy AI Configuration (for backward compatibility) */}
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600 }}>
+              ⚙️ Legacy AI Config
+            </Typography>
+            <Button
+              size="small"
+              onClick={() => setModelsExpanded(!modelsExpanded)}
+              endIcon={modelsExpanded ? <CollapseIcon /> : <ExpandIcon />}
+              sx={{ fontSize: 10 }}
+            >
+              {modelsExpanded ? 'Collapse' : 'Expand'}
+            </Button>
+          </Box>
+
+          <Collapse in={modelsExpanded}>
+            <Stack gap={2}>
+              <Alert severity="info" sx={{ fontSize: 11 }}>
+                This section is for backward compatibility. The new AI Models section above is recommended.
+              </Alert>
+
+              <FormControl size="small" fullWidth>
+                <InputLabel>Provider</InputLabel>
+                <Select
+                  value={formData.provider}
+                  label="Provider"
+                  onChange={(e) => {
+                    const defaultModels: Record<string, string> = {
+                      openai: 'gpt-4o-mini',
+                      anthropic: 'claude-3-5-sonnet-20241022',
+                      minimax: 'MiniMax-Text-01',
+                      xiaomi: 'mimo-v2-pro',
+                      zhipu: 'glm-4',
+                      qwen: 'qwen-plus',
+                    };
+                    const defaultBaseUrls: Record<string, string> = {
+                      openai: 'https://api.openai.com/v1',
+                      anthropic: 'https://api.anthropic.com/v1',
+                      minimax: 'https://api.minimax.chat/v1',
+                      xiaomi: 'https://account.platform.minimax.io',
+                      zhipu: 'https://open.bigmodel.cn/api/paas/v4',
+                      qwen: 'https://dashscope.aliyuncs.com/api/v1',
+                    };
+                    setFormData({
+                      ...formData,
+                      provider: e.target.value as typeof formData.provider,
+                      model: defaultModels[e.target.value] || 'gpt-4o-mini',
+                      baseURL: defaultBaseUrls[e.target.value] || '',
+                    });
+                  }}
+                >
+                  <MenuItem value="openai">{PROVIDER_LABELS.openai}</MenuItem>
+                  <MenuItem value="anthropic">{PROVIDER_LABELS.anthropic}</MenuItem>
+                  <MenuItem value="minimax">{PROVIDER_LABELS.minimax}</MenuItem>
+                  <MenuItem value="xiaomi">{PROVIDER_LABELS.xiaomi}</MenuItem>
+                  <MenuItem value="zhipu">{PROVIDER_LABELS.zhipu}</MenuItem>
+                  <MenuItem value="qwen">{PROVIDER_LABELS.qwen}</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Model"
+                value={formData.model}
+                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                size="small"
+                fullWidth
+                placeholder="e.g., gpt-4o-mini"
+              />
+
+              <TextField
+                label="API Key"
+                type={showKey ? 'text' : 'password'}
+                value={formData.apiKey}
+                onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                size="small"
+                fullWidth
+                placeholder="sk-..."
+                InputProps={{
+                  endAdornment: (
+                    <Button size="small" onClick={() => setShowKey(!showKey)} sx={{ minWidth: 'auto', p: 0.5 }}>
+                      {showKey ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}
+                    </Button>
+                  ),
+                }}
+                helperText={
+                  <Typography variant="caption" sx={{ fontSize: 10 }}>
+                    Stored locally in your browser. Never sent to our servers.
+                  </Typography>
+                }
+              />
+
+              {(formData.provider === 'custom' || formData.provider === 'azure-openai') && (
+                <TextField
+                  label="Base URL"
+                  value={formData.baseURL || ''}
+                  onChange={(e) => setFormData({ ...formData, baseURL: e.target.value })}
+                  size="small"
+                  fullWidth
+                  placeholder="https://api.openai.com/v1"
+                />
+              )}
+            </Stack>
+          </Collapse>
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
 
         {/* Gmail Settings */}
         <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
@@ -254,21 +706,166 @@ export const Settings: React.FC = () => {
           </Typography>
         </Paper>
 
-        {error && <Alert severity="error" sx={{ fontSize: 12 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ fontSize: 12 }} onClose={() => setError('')}>{error}</Alert>}
         {saved && <Alert severity="success" sx={{ fontSize: 12 }}>Settings saved!</Alert>}
 
         <Button
           variant="contained"
           startIcon={<SaveIcon sx={{ fontSize: 16 }} />}
-          onClick={handleSave}
+          onClick={handleLegacySave}
           fullWidth
           sx={{ fontSize: 13 }}
         >
-          Save Settings
+          Save Legacy Settings
         </Button>
       </Box>
+
+      {/* Add/Edit Model Dialog */}
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontSize: 14 }}>
+          {isAddingModel ? 'Add New Model' : 'Edit Model'}
+        </DialogTitle>
+        <DialogContent>
+          <Stack gap={2} sx={{ mt: 1 }}>
+            <TextField
+              label="Model Name"
+              value={dialogModel.name || ''}
+              onChange={(e) => setDialogModel({ ...dialogModel, name: e.target.value })}
+              size="small"
+              fullWidth
+              placeholder="e.g., My Custom Model"
+            />
+
+            <FormControl size="small" fullWidth>
+              <InputLabel>Provider</InputLabel>
+              <Select
+                value={dialogModel.provider || 'openai'}
+                label="Provider"
+                onChange={(e) => handleProviderChange(e.target.value)}
+              >
+                {Object.entries(PROVIDER_LABELS).map(([key, label]) => (
+                  <MenuItem key={key} value={key}>{label}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {getAvailableModelsForProvider(dialogModel.provider || 'openai').length > 0 ? (
+              <FormControl size="small" fullWidth>
+                <InputLabel>Model</InputLabel>
+                <Select
+                  value={dialogModel.modelName || ''}
+                  label="Model"
+                  onChange={(e) => setDialogModel({ ...dialogModel, modelName: e.target.value })}
+                >
+                  {getAvailableModelsForProvider(dialogModel.provider || 'openai').map((model) => (
+                    <MenuItem key={model} value={model}>{model}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            ) : (
+              <TextField
+                label="Model Name"
+                value={dialogModel.modelName || ''}
+                onChange={(e) => setDialogModel({ ...dialogModel, modelName: e.target.value })}
+                size="small"
+                fullWidth
+                placeholder="e.g., gpt-4o-mini"
+              />
+            )}
+
+            <TextField
+              label="API Base URL"
+              value={dialogModel.apiBaseUrl || ''}
+              onChange={(e) => setDialogModel({ ...dialogModel, apiBaseUrl: e.target.value })}
+              size="small"
+              fullWidth
+              placeholder="https://api.openai.com/v1"
+            />
+
+            <TextField
+              label="API Key"
+              type={showKey ? 'text' : 'password'}
+              value={dialogModel.apiKey || ''}
+              onChange={(e) => setDialogModel({ ...dialogModel, apiKey: e.target.value })}
+              size="small"
+              fullWidth
+              placeholder="sk-..."
+              InputProps={{
+                endAdornment: (
+                  <Button size="small" onClick={() => setShowKey(!showKey)} sx={{ minWidth: 'auto', p: 0.5 }}>
+                    {showKey ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}
+                  </Button>
+                ),
+              }}
+            />
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="Temperature"
+                type="number"
+                value={dialogModel.temperature ?? 0.7}
+                onChange={(e) => setDialogModel({ ...dialogModel, temperature: parseFloat(e.target.value) })}
+                size="small"
+                sx={{ flex: 1 }}
+                inputProps={{ min: 0, max: 2, step: 0.1 }}
+              />
+              <TextField
+                label="Max Tokens"
+                type="number"
+                value={dialogModel.maxTokens ?? 4096}
+                onChange={(e) => setDialogModel({ ...dialogModel, maxTokens: parseInt(e.target.value) || 4096 })}
+                size="small"
+                sx={{ flex: 1 }}
+                inputProps={{ min: 100, max: 100000, step: 100 }}
+              />
+            </Box>
+
+            <TextField
+              label="Priority (0 = highest)"
+              type="number"
+              value={dialogModel.priority ?? models.length}
+              onChange={(e) => setDialogModel({ ...dialogModel, priority: parseInt(e.target.value) || 0 })}
+              size="small"
+              fullWidth
+              inputProps={{ min: 0, step: 1 }}
+            />
+
+            <FormControl size="small" fullWidth>
+              <InputLabel>Enabled</InputLabel>
+              <Select
+                value={dialogModel.isEnabled ? 'true' : 'false'}
+                label="Enabled"
+                onChange={(e) => setDialogModel({ ...dialogModel, isEnabled: e.target.value === 'true' })}
+              >
+                <MenuItem value="true">Enabled</MenuItem>
+                <MenuItem value="false">Disabled</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseDialog} size="small">Cancel</Button>
+          <Button onClick={handleSaveDialog} variant="contained" size="small" disabled={!dialogModel.name || !dialogModel.provider || !dialogModel.modelName}>
+            {isAddingModel ? 'Add' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
+};
+
+// Helper to get base URLs
+const PROVIDER_BASE_URLS: Record<string, string> = {
+  openai: 'https://api.openai.com/v1',
+  anthropic: 'https://api.anthropic.com/v1',
+  minimax: 'https://api.minimax.chat/v1',
+  'minimax-cn': 'https://api.minimaxi.com/anthropic',
+  xiaomi: 'https://account.platform.minimax.io',
+  zhipu: 'https://open.bigmodel.cn/api/paas/v4',
+  qwen: 'https://dashscope.aliyuncs.com/api/v1',
+  gemini: 'https://generativelanguage.googleapis.com/v1beta',
+  'azure-openai': '',
+  custom: '',
 };
 
 export default Settings;

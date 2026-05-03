@@ -8,14 +8,20 @@ import {
 import { Upload as UploadIcon, Delete as DeleteIcon, QuestionAnswer as AskIcon, Article as ArticleIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { parseDocument, formatFileSize, isFileSizeValid } from '../../utils/documentParser';
-import { documentChatCompletion } from '../../services/ai/openaiAdapter';
+import { documentChatCompletion, initModelRegistry } from '../../services/ai/model-registry-adapter';
 import type { DocumentFile } from '../../types';
 
 export const DocumentUpload: React.FC = () => {
   const documents = useStore((s) => s.documents);
+  const models = useStore((s) => s.models);
   const addDocument = useStore((s) => s.addDocument);
   const removeDocument = useStore((s) => s.removeDocument);
   const aiConfig = useStore((s) => s.aiConfig);
+
+  // Initialize model registry when models change
+  React.useEffect(() => {
+    initModelRegistry(models);
+  }, [models]);
 
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

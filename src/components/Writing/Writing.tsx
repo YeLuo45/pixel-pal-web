@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { AutoAwesome as SparkIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
-import { writingChatCompletion } from '../../services/ai/openaiAdapter';
+import { writingChatCompletion, initModelRegistry } from '../../services/ai/model-registry-adapter';
 
 type WritingMode = 'generate' | 'continue' | 'polish' | 'summarize';
 
@@ -34,19 +34,27 @@ const MODE_LABELS: Record<WritingMode, { label: string; desc: string; placeholde
 
 export const Writing: React.FC = () => {
   const aiConfig = useStore((s) => s.aiConfig);
+  const models = useStore((s) => s.models);
   const [mode, setMode] = useState<WritingMode>('generate');
   const [outline, setOutline] = useState('');
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Initialize model registry when models change
+  React.useEffect(() => {
+    initModelRegistry(models);
+  }, [models]);
+
   const handleGenerate = async () => {
     if (!outline.trim() && (mode === 'generate' || mode === 'continue' || mode === 'polish' || mode === 'summarize')) {
       setError('Please enter some content first.');
       return;
     }
-    if (!aiConfig.apiKey) {
-      setError('API Key not configured. Please go to Settings.');
+    // Check if any model has an API key configured
+    const hasEnabledModel = models.some(m => m.isEnabled && m.apiKey && m.apiKey.trim());
+    if (!hasEnabledModel) {
+      setError('No AI model configured. Please go to Settings and enter at least one API Key.');
       return;
     }
 

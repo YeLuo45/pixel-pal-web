@@ -98,3 +98,13 @@ export interface InteractionCooldowns {
   lastScheduleNoticeTime: number; // timestamp
   lastEmailNoticeTime: number;    // timestamp
 }
+
+export type PersonaId = 'default' | 'playful' | 'professional' | 'gentle' | 'witty';
+
+export interface CompanionState {
+  personaId: PersonaId;
+  moodId: string;
+  customName: string;
+  memoryEnabled: boolean;   // Whether memory persistence is active
+  autoSummarize: boolean;  // Whether to auto-summarize chat history
+}

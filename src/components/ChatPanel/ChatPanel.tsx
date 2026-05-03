@@ -5,7 +5,8 @@ import {
 } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
-import { chatCompletion } from '../../services/ai/openaiAdapter';
+import { chatCompletion, initModelRegistry, getDefaultModel } from '../../services/ai/model-registry-adapter';
+import { injectCompanionContext, autoSummarizeChat, adjustMoodForInteraction } from '../../services/companion';
 import type { Message } from '../../types';
 
 // Three-dot typing indicator component
@@ -36,6 +37,7 @@ const TypingIndicator: React.FC = () => {
 export const ChatPanel: React.FC = () => {
   const [input, setInput] = useState('');
   const messages = useStore((s) => s.messages);
+  const models = useStore((s) => s.models);
   const addMessage = useStore((s) => s.addMessage);
   const clearMessages = useStore((s) => s.clearMessages);
   const isAIThinking = useStore((s) => s.isAIThinking);
@@ -44,6 +46,15 @@ export const ChatPanel: React.FC = () => {
   const setPetStatus = useStore((s) => s.setPetStatus);
   const updateLastActivity = useStore((s) => s.updateLastActivity);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize model registry when models change
+  useEffect(() => {
+    initModelRegistry(models);
+  }, [models]);
+
+  // Get default model for display
+  const defaultModel = getDefaultModel();
+  const displayModel = defaultModel ? `${defaultModel.name} (${defaultModel.provider})` : `${aiConfig.model} · ${aiConfig.provider}`;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -62,6 +73,7 @@ export const ChatPanel: React.FC = () => {
     // Add user message
     addMessage({ role: 'user', content: userMsg });
     updateLastActivity();
+    adjustMoodForInteraction('chat');
 
     // Set pet to thinking
     setPetStatus({ state: 'thinking', message: undefined });
@@ -73,14 +85,23 @@ export const ChatPanel: React.FC = () => {
     try {
       setAIThinking(true);
 
-      // Build messages for API
+      // Build messages with companion context (personality + memory)
       const apiMessages: Message[] = [
         ...messages,
         { id: 'temp', role: 'user', content: userMsg, timestamp: Date.now() },
       ];
 
-      aiContent = await chatCompletion(apiMessages, aiConfig);
+      // Inject companion context (personality system prompt + memory)
+      const messagesWithContext = await injectCompanionContext(apiMessages);
+
+      aiContent = await chatCompletion(messagesWithContext, aiConfig);
       addMessage({ role: 'assistant', content: aiContent });
+
+      // Auto-summarize chat to memory if enabled
+      const companionState = useStore.getState().companion;
+      if (companionState.autoSummarize && messagesWithContext.length > 10) {
+        autoSummarizeChat(messagesWithContext).catch(() => {});
+      }
     } catch (err) {
       errorOccurred = true;
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
@@ -114,7 +135,7 @@ export const ChatPanel: React.FC = () => {
           💬 AI Chat
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-          {aiConfig.model} · {aiConfig.provider}
+          {displayModel}
         </Typography>
       </Box>
 

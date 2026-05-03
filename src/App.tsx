@@ -3,6 +3,8 @@ import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import { MainPage } from './pages/MainPage';
 import { useStore } from './store';
 import type { EmailAccount } from './types';
+import { initCompanion } from './services/companion';
+import { compactMemory } from './services/memory';
 
 const darkTheme = createTheme({
   palette: {
@@ -67,6 +69,17 @@ const darkTheme = createTheme({
 function App() {
   const setEmailAccount = useStore((s) => s.setEmailAccount);
   const setActivePanel = useStore((s) => s.setActivePanel);
+  const companion = useStore((s) => s.companion);
+
+  // Initialize companion service and memory on startup
+  useEffect(() => {
+    const init = async () => {
+      await initCompanion(companion.personaId, companion.moodId, companion.customName);
+      // Compact memory if needed (runs in background)
+      compactMemory().catch(() => {});
+    };
+    init();
+  }, []);
 
   // Handle Gmail OAuth callback — tokens returned via URL hash fragment
   useEffect(() => {

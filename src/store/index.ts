@@ -1,11 +1,18 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { AIConfig, Message, Event, Task, DocumentFile, PetStatus, EmailAccount, InteractionSettings, InteractionCooldowns } from '../types';
+import type { AIConfig, Message, Event, Task, DocumentFile, PetStatus, EmailAccount, InteractionSettings, InteractionCooldowns, CompanionState, PersonaId } from '../types';
 
 interface AppState {
   // AI Config
   aiConfig: AIConfig;
   setAIConfig: (config: AIConfig) => void;
+
+  // Models (for ModelRegistry - multi-model support)
+  models: import('../services/ai/model-registry').ModelConfig[];
+  setModels: (models: import('../services/ai/model-registry').ModelConfig[]) => void;
+  addModel: (model: import('../services/ai/model-registry').ModelConfig) => void;
+  updateModel: (id: string, updates: Partial<import('../services/ai/model-registry').ModelConfig>) => void;
+  removeModel: (id: string) => void;
 
   // Chat
   messages: Message[];
@@ -57,12 +64,87 @@ interface AppState {
   // UI
   activePanel: 'chat' | 'calendar' | 'tasks' | 'document' | 'email' | 'writing' | 'settings';
   setActivePanel: (panel: AppState['activePanel']) => void;
+
+  // Companion Personality & Memory
+  companion: CompanionState;
+  setPersona: (personaId: PersonaId) => void;
+  setMood: (moodId: string) => void;
+  setCustomName: (name: string) => void;
+  setMemoryEnabled: (enabled: boolean) => void;
+  setAutoSummarize: (enabled: boolean) => void;
 }
+
+// Default model templates
+const createDefaultModels = () => {
+  const templates = [
+    {
+      name: 'MiniMax M2.7',
+      provider: 'minimax',
+      modelName: 'MiniMax-Text-01',
+      apiBaseUrl: 'https://api.minimax.chat/v1',
+      temperature: 0.7,
+      maxTokens: 4096,
+      priority: 0,
+    },
+    {
+      name: 'OpenAI GPT-4o Mini',
+      provider: 'openai',
+      modelName: 'gpt-4o-mini',
+      apiBaseUrl: 'https://api.openai.com/v1',
+      temperature: 0.7,
+      maxTokens: 4096,
+      priority: 1,
+    },
+    {
+      name: 'Anthropic Claude 3.5 Sonnet',
+      provider: 'anthropic',
+      modelName: 'claude-3-5-sonnet-20241022',
+      apiBaseUrl: 'https://api.anthropic.com/v1',
+      temperature: 0.7,
+      maxTokens: 4096,
+      priority: 2,
+    },
+    {
+      name: 'Zhipu GLM-4',
+      provider: 'zhipu',
+      modelName: 'glm-4',
+      apiBaseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+      temperature: 0.7,
+      maxTokens: 4096,
+      priority: 3,
+    },
+    {
+      name: 'Google Gemini 2.0 Flash',
+      provider: 'gemini',
+      modelName: 'gemini-2.0-flash',
+      apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+      temperature: 0.7,
+      maxTokens: 4096,
+      priority: 4,
+    },
+    {
+      name: 'Xiaomi MiLM',
+      provider: 'xiaomi',
+      modelName: 'MiLM',
+      apiBaseUrl: 'https://account.platform.minimax.io',
+      temperature: 0.7,
+      maxTokens: 4096,
+      priority: 5,
+    },
+  ];
+
+  return templates.map((template, index) => ({
+    ...template,
+    id: `model-${index + 1}`,
+    apiKey: '',
+    isEnabled: index === 0, // Only first one enabled by default
+  }));
+};
 
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
-      // AI Config defaults
+      // AI Config defaults (kept for backward compatibility with Settings UI)
       aiConfig: {
         provider: 'openai',
         apiKey: '',
@@ -70,6 +152,16 @@ export const useStore = create<AppState>()(
         model: 'gpt-4o-mini',
       },
       setAIConfig: (config) => set({ aiConfig: config }),
+
+      // Models (ModelRegistry support)
+      models: createDefaultModels(),
+      setModels: (models) => set({ models }),
+      addModel: (model) => set((state) => ({ models: [...state.models, model] })),
+      updateModel: (id, updates) =>
+        set((state) => ({
+          models: state.models.map((m) => (m.id === id ? { ...m, ...updates } : m)),
+        })),
+      removeModel: (id) => set((state) => ({ models: state.models.filter((m) => m.id !== id) })),
 
       // Chat
       messages: [],
@@ -175,6 +267,35 @@ export const useStore = create<AppState>()(
       // UI
       activePanel: 'chat',
       setActivePanel: (panel) => set({ activePanel: panel }),
+
+      // Companion Personality & Memory
+      companion: {
+        personaId: 'default',
+        moodId: 'happy',
+        customName: '',
+        memoryEnabled: true,
+        autoSummarize: true,
+      },
+      setPersona: (personaId) =>
+        set((state) => ({
+          companion: { ...state.companion, personaId },
+        })),
+      setMood: (moodId) =>
+        set((state) => ({
+          companion: { ...state.companion, moodId },
+        })),
+      setCustomName: (customName) =>
+        set((state) => ({
+          companion: { ...state.companion, customName },
+        })),
+      setMemoryEnabled: (memoryEnabled) =>
+        set((state) => ({
+          companion: { ...state.companion, memoryEnabled },
+        })),
+      setAutoSummarize: (autoSummarize) =>
+        set((state) => ({
+          companion: { ...state.companion, autoSummarize },
+        })),
     }),
     {
       name: 'pixelpal-storage',
@@ -189,6 +310,8 @@ export const useStore = create<AppState>()(
         petStatus: state.petStatus,
         interactionSettings: state.interactionSettings,
         cooldowns: state.cooldowns,
+        models: state.models,
+        companion: state.companion,
       }),
     }
   )
