@@ -133,10 +133,6 @@ function splitBySentences(text: string, maxLength: number, overlap: number): str
  */
 function tokenizeSentences(text: string): string[] {
   // Split on sentence-ending punctuation followed by space and uppercase
-  // Handles common abbreviations to avoid false splits
-  const abbreviations = new Set(['Dr', 'Mr', 'Mrs', 'Ms', 'Prof', 'Inc', 'Ltd', 'Corp', 'vs', 'etc', 'e.g', 'i.e']);
-  
-  // Split on . ! ? followed by space and uppercase letter
   const sentences: string[] = [];
   let current = '';
 

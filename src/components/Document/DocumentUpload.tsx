@@ -9,7 +9,7 @@ import { Upload as UploadIcon, Delete as DeleteIcon, QuestionAnswer as AskIcon, 
 import { useStore } from '../../store';
 import { parseDocument, formatFileSize, isFileSizeValid } from '../../utils/documentParser';
 import { documentChatCompletion, initModelRegistry } from '../../services/ai/model-registry-adapter';
-import { indexDocumentFromContent, getKnowledgeBaseStats } from '../../services/rag';
+import { indexDocumentFromContent } from '../../services/rag';
 import type { DocumentFile } from '../../types';
 
 export const DocumentUpload: React.FC = () => {

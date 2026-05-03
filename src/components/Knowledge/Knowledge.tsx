@@ -15,7 +15,6 @@ import {
   TextField,
   Button,
   IconButton,
-  Divider,
   Chip,
   CircularProgress,
   Alert,
@@ -34,8 +33,6 @@ import {
   Article as ArticleIcon,
   Quiz as QuizIcon,
   Settings as SettingsIcon,
-  ExpandMore as ExpandIcon,
-  ExpandLess as CollapseIcon,
 } from '@mui/icons-material';
 import { useStore } from '../../store';
 import {
@@ -51,7 +48,6 @@ import {
 
 export const KnowledgePanel: React.FC = () => {
   const documents = useStore((s) => s.documents);
-  const addDocument = useStore((s) => s.addDocument);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<RAGQueryResult | null>(null);
@@ -60,7 +56,6 @@ export const KnowledgePanel: React.FC = () => {
   const [error, setError] = useState('');
   const [autoRAG, setAutoRAG] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [indexedDocs, setIndexedDocs] = useState<Set<string>>(new Set());
   const resultsRef = useRef<HTMLDivElement>(null);
 
   // Refresh stats on mount and after indexing
