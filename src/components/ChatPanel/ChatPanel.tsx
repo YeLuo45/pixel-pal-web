@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Box, TextField, IconButton,
   Typography, Paper, Divider,
+  Tooltip,
 } from '@mui/material';
-import { Send as SendIcon } from '@mui/icons-material';
+import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { chatCompletion, initModelRegistry, getDefaultModel } from '../../services/ai/model-registry-adapter';
 import { injectCompanionContext, autoSummarizeChat, adjustMoodForInteraction } from '../../services/companion';
 import { queryKnowledgeBase, buildRAGContext, isDocumentIndexed, reindexAllDocuments } from '../../services/rag';
+import { voiceService } from '../../services/voice/voiceService';
 import type { Message } from '../../types';
 
 // Three-dot typing indicator component
@@ -38,6 +40,9 @@ const TypingIndicator: React.FC = () => {
 export const ChatPanel: React.FC = () => {
   const [input, setInput] = useState('');
   const [showThinkingContent, setShowThinkingContent] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [ttsSupported, setTtsSupported] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(false);
   const messages = useStore((s) => s.messages);
   const models = useStore((s) => s.models);
   const addMessage = useStore((s) => s.addMessage);
@@ -49,12 +54,45 @@ export const ChatPanel: React.FC = () => {
   const aiConfig = useStore((s) => s.aiConfig);
   const setPetStatus = useStore((s) => s.setPetStatus);
   const updateLastActivity = useStore((s) => s.updateLastActivity);
+  const voiceSettings = useStore((s) => s.voiceSettings);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const voiceUnsubscribeRef = useRef<(() => void) | null>(null);
 
   // Initialize model registry when models change
   useEffect(() => {
     initModelRegistry(models);
   }, [models]);
+
+  // Voice service initialization and subscription
+  useEffect(() => {
+    const support = voiceService.isSupported();
+    setTtsSupported(support.tts);
+    setTtsEnabled(voiceSettings.ttsEnabled);
+
+    // Subscribe to voice service state changes
+    const unsubscribe = voiceService.subscribe((event) => {
+      if (event.type === 'stateChange' && event.state) {
+        setIsListening(event.state.isListening);
+      }
+      if (event.type === 'transcription' && event.transcription) {
+        setInput((prev) => {
+          // Append transcription to existing input (or replace if empty)
+          return prev ? `${prev} ${event.transcription}` : event.transcription || prev;
+        });
+      }
+    });
+
+    voiceUnsubscribeRef.current = unsubscribe;
+
+    return () => {
+      unsubscribe();
+    };
+  }, [voiceSettings.ttsEnabled]);
+
+  // Sync ttsEnabled with voiceSettings
+  useEffect(() => {
+    setTtsEnabled(voiceSettings.ttsEnabled);
+  }, [voiceSettings.ttsEnabled]);
 
   // Get default model for display
   const defaultModel = getDefaultModel();
@@ -67,6 +105,35 @@ export const ChatPanel: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isAIThinking]);
+
+  // Voice: Toggle listening
+  const handleVoiceToggle = () => {
+    if (isListening) {
+      voiceService.stopListening();
+    } else {
+      if (voiceSettings.sttEnabled) {
+        voiceService.startListening();
+      }
+    }
+  };
+
+  // Voice: Toggle TTS for AI responses
+  const handleTtsToggle = () => {
+    const newTtsEnabled = !ttsEnabled;
+    setTtsEnabled(newTtsEnabled);
+    useStore.getState().setVoiceSettings({ ttsEnabled: newTtsEnabled });
+  };
+
+  // Speak text via TTS
+  const speakText = async (text: string) => {
+    if (ttsEnabled && ttsSupported) {
+      try {
+        await voiceService.speak(text);
+      } catch (err) {
+        console.warn('[Voice] TTS error:', err);
+      }
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isAIThinking) return;
@@ -153,6 +220,11 @@ export const ChatPanel: React.FC = () => {
       }
 
       addMessage({ role: 'assistant', content: aiContent });
+
+      // TTS: Speak AI response aloud if enabled
+      if (ttsEnabled && ttsSupported && aiContent) {
+        speakText(aiContent);
+      }
 
       // Auto-summarize chat to memory if enabled
       const companionState = useStore.getState().companion;
@@ -349,6 +421,48 @@ export const ChatPanel: React.FC = () => {
             },
           }}
         />
+
+        {/* Voice Input Button (Mic) */}
+        <Tooltip title={isListening ? 'Stop listening' : voiceSettings.sttEnabled ? 'Voice input' : 'Voice disabled'}>
+          <span>
+            <IconButton
+              color={isListening ? 'error' : 'default'}
+              onClick={handleVoiceToggle}
+              disabled={!voiceSettings.sttEnabled || isAIThinking}
+              size="small"
+              sx={{
+                alignSelf: 'flex-end',
+                flexShrink: 0,
+                bgcolor: isListening ? 'rgba(255, 80, 80, 0.15)' : 'transparent',
+                '&:hover': { bgcolor: isListening ? 'rgba(255, 80, 80, 0.25)' : 'rgba(255,255,255,0.08)' },
+              }}
+            >
+              {isListening ? <MicOffIcon sx={{ fontSize: 18 }} /> : <MicIcon sx={{ fontSize: 18 }} />}
+            </IconButton>
+          </span>
+        </Tooltip>
+
+        {/* TTS Toggle Button */}
+        {ttsSupported && (
+          <Tooltip title={ttsEnabled ? 'Disable voice output' : 'Enable voice output'}>
+            <span>
+              <IconButton
+                color={ttsEnabled ? 'primary' : 'default'}
+                onClick={handleTtsToggle}
+                size="small"
+                sx={{
+                  alignSelf: 'flex-end',
+                  flexShrink: 0,
+                  bgcolor: ttsEnabled ? 'rgba(155, 127, 212, 0.15)' : 'transparent',
+                  '&:hover': { bgcolor: ttsEnabled ? 'rgba(155, 127, 212, 0.25)' : 'rgba(255,255,255,0.08)' },
+                }}
+              >
+                {ttsEnabled ? <VolumeUpIcon sx={{ fontSize: 18 }} /> : <VolumeOffIcon sx={{ fontSize: 18 }} />}
+              </IconButton>
+            </span>
+          </Tooltip>
+        )}
+
         <IconButton
           color="primary"
           onClick={handleSend}

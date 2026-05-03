@@ -5,7 +5,7 @@ import {
   Alert, Divider, Stack, IconButton,
   Switch, Collapse, List, ListItem,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Chip, Tooltip,
+  Chip, Tooltip, Slider,
 } from '@mui/material';
 import {
   Visibility, VisibilityOff, Save as SaveIcon,
@@ -16,6 +16,7 @@ import { useStore } from '../../store';
 import { testModel } from '../../services/ai/model-registry-adapter';
 import { PERSONAS, MOODS } from '../../services/companion/personalityTypes';
 import { getMemoryStats, clearAllMemories, compactMemory } from '../../services/memory/memoryStorage';
+import { voiceService } from '../../services/voice/voiceService';
 import type { ModelConfig } from '../../services/ai/model-registry';
 import type { PersonaId } from '../../types';
 
@@ -71,9 +72,33 @@ export const Settings: React.FC = () => {
   const [memoryCompacting, setMemoryCompacting] = useState(false);
   const [customNameInput, setCustomNameInput] = useState(companion.customName);
 
+  // Voice state
+  const voiceSettings = useStore((s) => s.voiceSettings);
+  const setVoiceSettings = useStore((s) => s.setVoiceSettings);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceSupported, setVoiceSupported] = useState({ stt: false, tts: false });
+
   // Load memory stats on mount
   useEffect(() => {
     getMemoryStats().then(setMemoryStats).catch(() => {});
+  }, []);
+
+  // Load voice support and available voices
+  useEffect(() => {
+    const support = voiceService.isSupported();
+    setVoiceSupported(support);
+    if (support.tts) {
+      const voices = voiceService.getAvailableVoices();
+      setAvailableVoices(voices);
+      // Voices may load asynchronously
+      const loadVoices = () => {
+        setAvailableVoices(voiceService.getAvailableVoices());
+      };
+      window.speechSynthesis?.addEventListener('voiceschanged', loadVoices);
+      return () => {
+        window.speechSynthesis?.removeEventListener('voiceschanged', loadVoices);
+      };
+    }
   }, []);
 
   useEffect(() => {
@@ -432,6 +457,126 @@ export const Settings: React.FC = () => {
               {memoryClearing ? 'Clearing...' : 'Clear All Memory'}
             </Button>
           </Stack>
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
+
+        {/* Voice Settings */}
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+            🎙️ Voice Settings
+          </Typography>
+
+          {/* Voice support status */}
+          {!voiceSupported.stt && !voiceSupported.tts && (
+            <Alert severity="warning" sx={{ fontSize: 11, mb: 2 }}>
+              Your browser does not support Web Speech API (Speech Recognition or Synthesis).
+            </Alert>
+          )}
+
+          {/* Voice Input (STT) */}
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Switch
+                size="small"
+                checked={voiceSettings.sttEnabled}
+                onChange={(e) => setVoiceSettings({ sttEnabled: e.target.checked })}
+                disabled={!voiceSupported.stt}
+              />
+              <Typography variant="body2" sx={{ fontSize: 12, color: 'text.secondary' }}>
+                Voice Input (Speech-to-Text)
+              </Typography>
+            </Box>
+            <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', pl: 4, display: 'block' }}>
+              {voiceSupported.stt
+                ? 'Click the mic button in chat to speak your message'
+                : 'Not supported in this browser'}
+            </Typography>
+          </Box>
+
+          {/* Voice Output (TTS) */}
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Switch
+                size="small"
+                checked={voiceSettings.ttsEnabled}
+                onChange={(e) => setVoiceSettings({ ttsEnabled: e.target.checked })}
+                disabled={!voiceSupported.tts}
+              />
+              <Typography variant="body2" sx={{ fontSize: 12, color: 'text.secondary' }}>
+                Voice Output (Text-to-Speech)
+              </Typography>
+            </Box>
+            <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', pl: 4, display: 'block' }}>
+              {voiceSupported.tts
+                ? 'PixelPal will speak AI responses aloud'
+                : 'Not supported in this browser'}
+            </Typography>
+          </Box>
+
+          {/* TTS Settings (only show if TTS is enabled and supported) */}
+          {voiceSettings.ttsEnabled && voiceSupported.tts && (
+            <Box sx={{ pl: 4, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {/* Voice Selection */}
+              <FormControl size="small" fullWidth>
+                <InputLabel sx={{ fontSize: 12 }}>Voice</InputLabel>
+                <Select
+                  value={voiceSettings.ttsVoice || availableVoices[0]?.name || ''}
+                  label="Voice"
+                  onChange={(e) => setVoiceSettings({ ttsVoice: e.target.value })}
+                  sx={{ fontSize: 12 }}
+                >
+                  {availableVoices.map((voice) => (
+                    <MenuItem key={voice.name} value={voice.name} sx={{ fontSize: 11 }}>
+                      {voice.name} ({voice.lang})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {/* Speed (Rate) */}
+              <Box>
+                <Typography variant="body2" sx={{ fontSize: 11, mb: 0.5, color: 'text.secondary' }}>
+                  Speed: {voiceSettings.ttsRate.toFixed(1)}x
+                </Typography>
+                <Slider
+                  size="small"
+                  min={0.5}
+                  max={2}
+                  step={0.1}
+                  value={voiceSettings.ttsRate}
+                  onChange={(_, v) => setVoiceSettings({ ttsRate: v as number })}
+                  sx={{ fontSize: 10 }}
+                />
+              </Box>
+
+              {/* Volume */}
+              <Box>
+                <Typography variant="body2" sx={{ fontSize: 11, mb: 0.5, color: 'text.secondary' }}>
+                  Volume: {Math.round(voiceSettings.ttsVolume * 100)}%
+                </Typography>
+                <Slider
+                  size="small"
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  value={voiceSettings.ttsVolume}
+                  onChange={(_, v) => setVoiceSettings({ ttsVolume: v as number })}
+                  sx={{ fontSize: 10 }}
+                />
+              </Box>
+
+              {/* Test TTS Button */}
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => voiceService.speak('Hello! This is PixelPal speaking.')}
+                sx={{ fontSize: 10, alignSelf: 'flex-start' }}
+              >
+                🔊 Test Voice
+              </Button>
+            </Box>
+          )}
         </Paper>
 
         <Divider sx={{ opacity: 0.1 }} />

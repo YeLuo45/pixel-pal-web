@@ -108,3 +108,12 @@ export interface CompanionState {
   memoryEnabled: boolean;   // Whether memory persistence is active
   autoSummarize: boolean;  // Whether to auto-summarize chat history
 }
+
+export interface VoiceSettings {
+  sttEnabled: boolean;
+  ttsEnabled: boolean;
+  ttsRate: number;
+  ttsPitch: number;
+  ttsVolume: number;
+  ttsVoice: string;
+}

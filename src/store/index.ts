@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { AIConfig, Message, Event, Task, DocumentFile, PetStatus, EmailAccount, InteractionSettings, InteractionCooldowns, CompanionState, PersonaId } from '../types';
+import type { AIConfig, Message, Event, Task, DocumentFile, PetStatus, EmailAccount, InteractionSettings, InteractionCooldowns, CompanionState, PersonaId, VoiceSettings } from '../types';
 
 interface AppState {
   // AI Config
@@ -74,6 +74,10 @@ interface AppState {
   setCustomName: (name: string) => void;
   setMemoryEnabled: (enabled: boolean) => void;
   setAutoSummarize: (enabled: boolean) => void;
+
+  // Voice Settings
+  voiceSettings: VoiceSettings;
+  setVoiceSettings: (settings: Partial<VoiceSettings>) => void;
 }
 
 // Default model templates
@@ -300,6 +304,20 @@ export const useStore = create<AppState>()(
         set((state) => ({
           companion: { ...state.companion, autoSummarize },
         })),
+
+      // Voice Settings
+      voiceSettings: {
+        sttEnabled: true,
+        ttsEnabled: false,
+        ttsRate: 1,
+        ttsPitch: 1,
+        ttsVolume: 1,
+        ttsVoice: '',
+      },
+      setVoiceSettings: (settings) =>
+        set((state) => ({
+          voiceSettings: { ...state.voiceSettings, ...settings },
+        })),
     }),
     {
       name: 'pixelpal-storage',
@@ -316,6 +334,7 @@ export const useStore = create<AppState>()(
         cooldowns: state.cooldowns,
         models: state.models,
         companion: state.companion,
+        voiceSettings: state.voiceSettings,
       }),
     }
   )
