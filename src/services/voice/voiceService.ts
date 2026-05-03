@@ -38,6 +38,12 @@ type VoiceEventListener = (event: VoiceEvent) => void;
 // Voice Service Class
 // ============================================================
 
+import {
+  type SpeechRecognitionEvent,
+  type SpeechRecognitionErrorEvent,
+  type ISpeechRecognition,
+} from '../../types';
+
 class VoiceService {
   private state: VoiceState = {
     isListening: false,
@@ -56,9 +62,9 @@ class VoiceService {
   };
 
   private listeners: Set<VoiceEventListener> = new Set();
-  private recognition: SpeechRecognition | null = null;
+  private recognition: ISpeechRecognition | null = null;
   private synth: SpeechSynthesis | null = null;
-  private currentUtterance: SpeechSynthesisUtterance | null = null;
+  private _currentUtterance: SpeechSynthesisUtterance | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -109,7 +115,7 @@ class VoiceService {
 
   isSupported(): { stt: boolean; tts: boolean } {
     return {
-      stt: typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window),
+      stt: typeof window !== 'undefined' && (('SpeechRecognition' in window) || ('webkitSpeechRecognition' in window)),
       tts: typeof window !== 'undefined' && 'speechSynthesis' in window,
     };
   }
@@ -119,13 +125,14 @@ class VoiceService {
   // --------------------------------
 
   private initRecognition(): void {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const win = window as typeof window & { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
+    const SpeechRecognitionAPI = win.SpeechRecognition || win.webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) {
       console.warn('[Voice] Speech Recognition not supported in this browser');
       return;
     }
 
-    this.recognition = new SpeechRecognitionAPI();
+    this.recognition = new SpeechRecognitionAPI() as ISpeechRecognition;
     this.recognition.continuous = false;
     this.recognition.interimResults = true;
     this.recognition.lang = 'en-US';
@@ -260,7 +267,7 @@ class VoiceService {
       this.cancel();
 
       const utterance = this.createUtterance(text);
-      this.currentUtterance = utterance;
+      this._currentUtterance = utterance;
 
       utterance.onstart = () => {
         this.updateState({ isSpeaking: true, error: null });
@@ -268,13 +275,13 @@ class VoiceService {
 
       utterance.onend = () => {
         this.updateState({ isSpeaking: false });
-        this.currentUtterance = null;
+        this._currentUtterance = null;
         resolve();
       };
 
       utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
         this.updateState({ isSpeaking: false, error: `Speech error: ${event.error}` });
-        this.currentUtterance = null;
+        this._currentUtterance = null;
         // Don't reject for 'interrupted' or 'canceled'
         if (event.error === 'interrupted' || event.error === 'canceled') {
           resolve();
@@ -291,7 +298,7 @@ class VoiceService {
     if (this.synth) {
       this.synth.cancel();
     }
-    this.currentUtterance = null;
+    this._currentUtterance = null;
     this.updateState({ isSpeaking: false });
   }
 
