@@ -64,7 +64,6 @@ class VoiceService {
   private listeners: Set<VoiceEventListener> = new Set();
   private recognition: ISpeechRecognition | null = null;
   private synth: SpeechSynthesis | null = null;
-  private _currentUtterance: SpeechSynthesisUtterance | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -132,7 +131,7 @@ class VoiceService {
       return;
     }
 
-    this.recognition = new SpeechRecognitionAPI() as ISpeechRecognition;
+    this.recognition = (SpeechRecognitionAPI as unknown as { new (): ISpeechRecognition })();
     this.recognition.continuous = false;
     this.recognition.interimResults = true;
     this.recognition.lang = 'en-US';
@@ -267,7 +266,6 @@ class VoiceService {
       this.cancel();
 
       const utterance = this.createUtterance(text);
-      this._currentUtterance = utterance;
 
       utterance.onstart = () => {
         this.updateState({ isSpeaking: true, error: null });
@@ -275,13 +273,11 @@ class VoiceService {
 
       utterance.onend = () => {
         this.updateState({ isSpeaking: false });
-        this._currentUtterance = null;
         resolve();
       };
 
       utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
         this.updateState({ isSpeaking: false, error: `Speech error: ${event.error}` });
-        this._currentUtterance = null;
         // Don't reject for 'interrupted' or 'canceled'
         if (event.error === 'interrupted' || event.error === 'canceled') {
           resolve();
@@ -298,7 +294,6 @@ class VoiceService {
     if (this.synth) {
       this.synth.cancel();
     }
-    this._currentUtterance = null;
     this.updateState({ isSpeaking: false });
   }
 
