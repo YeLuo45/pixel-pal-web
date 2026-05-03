@@ -6,7 +6,7 @@
  * Shows the action content with type-specific styling and optional action buttons.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Box, Paper, Typography, IconButton, Button, Fade } from '@mui/material';
 import { Close as CloseIcon, CheckCircle as CheckIcon } from '@mui/icons-material';
 import { ACTION_COLORS, ACTION_ICONS } from '../../services/actions/ActionTypes';

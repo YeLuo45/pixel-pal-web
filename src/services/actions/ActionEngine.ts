@@ -7,7 +7,8 @@
  * - Auto-dismiss after duration
  */
 
-import type { CompanionAction, ActionQueueItem } from './ActionTypes';
+import type { CompanionAction } from './ActionTypes';
+export type { ActionQueueItem } from './ActionTypes';
 
 // ----- Constants -----
 

@@ -7,12 +7,11 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Box } from '@mui/material';
 import { PixelPal } from './PixelPal';
 import { ActionToast } from './ActionToast';
 import {
   subscribeToQueue,
-  dismissCurrent,
+  dismissCurrentWithReason,
   getCurrentAction,
   type ActionQueueItem,
 } from '../../services/actions/ActionEngine';
@@ -78,13 +77,7 @@ export const CompanionCanvas: React.FC = () => {
 
   // Handle toast dismiss
   const handleDismiss = () => {
-    dismissCurrent('user_dismissed');
-  };
-
-  // Handle pet click — optional interaction
-  const handlePetClick = () => {
-    // Pet click could trigger a random greeting or mood message
-    // Currently handled by PixelPal's onClick prop
+    dismissCurrentWithReason('user_dismissed');
   };
 
   return (

@@ -9,7 +9,6 @@ import { DocumentUpload } from '../components/Document/DocumentUpload';
 import { Writing } from '../components/Writing/Writing';
 import { Email } from '../components/Email/Email';
 import { Settings } from '../components/Settings/Settings';
-import { PixelPal } from '../components/PixelPal/PixelPal';
 import { CompanionCanvas } from '../components/PixelPal/CompanionCanvas';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
@@ -235,14 +234,6 @@ export const MainPage: React.FC = () => {
 
   // Activate interaction engine
   useInteractionEngine();
-
-  const handlePetClick = () => {
-    setPetStatus({ state: 'idle' });
-    // Switch to chat if not already there
-    if (activePanel !== 'chat') {
-      useStore.getState().setActivePanel('chat');
-    }
-  };
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: 'rgba(10, 5, 20, 1)' }}>

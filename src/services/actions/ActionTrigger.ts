@@ -14,7 +14,7 @@ import { enqueueAction, createCelebrateAction, createRemindAction, createGreetAc
 import type { Task } from '../../types';
 import { getMoodMessage, getDisplayName } from '../companion';
 import { queryMemories } from '../memory';
-import { differenceInHours, parseISO, isPast, isToday, isTomorrow } from 'date-fns';
+import { differenceInHours, parseISO, isPast, isToday } from 'date-fns';
 
 // ----- Cooldown Helpers -----
 
@@ -94,8 +94,6 @@ export function checkReminders(): void {
     const dueDate = parseISO(task.dueDate);
     const hoursUntil = differenceInHours(dueDate, new Date());
     const overdue = isPast(dueDate) && !isToday(dueDate);
-    const dueToday = isToday(dueDate);
-    const dueTomorrow = isTomorrow(dueDate);
 
     // High priority task due within 1 hour
     if (task.priority === 'high' && hoursUntil <= 1 && hoursUntil > 0) {
