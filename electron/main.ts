@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, Notification, globalShortcut, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import { createTray, restoreWindow, showNotification, setAlwaysOnTopState, destroyTray } from './tray';
 
 // Development mode check
 const isDev = !app.isPackaged;
@@ -85,6 +86,9 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(path.join(DIST_PATH, 'index.html'));
   }
+
+  // Create system tray
+  tray = createTray(mainWindow);
 }
 
 function saveBounds(): void {
@@ -96,80 +100,6 @@ function saveBounds(): void {
     fs.writeFileSync(boundsPath, JSON.stringify(bounds));
   } catch (e) {
     console.error('Failed to save window bounds:', e);
-  }
-}
-
-function restoreWindow(): void {
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.show();
-    mainWindow.focus();
-  }
-}
-
-// ============ Tray System ============
-
-function createTray(): void {
-  // Create tray icon (use a simple 16x16 icon)
-  const iconPath = path.join(__dirname, '../renderer/icon.png');
-  let trayIcon: nativeImage;
-
-  if (fs.existsSync(iconPath)) {
-    trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
-  } else {
-    // Fallback: create a simple empty icon
-    trayIcon = nativeImage.createEmpty();
-  }
-
-  tray = new Tray(trayIcon);
-
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Show PixelPal',
-      click: restoreWindow,
-    },
-    {
-      label: 'Always on Top',
-      type: 'checkbox',
-      checked: isAlwaysOnTop,
-      click: (menuItem) => {
-        isAlwaysOnTop = menuItem.checked;
-        mainWindow?.setAlwaysOnTop(isAlwaysOnTop);
-        mainWindow?.webContents.send('always-on-top-changed', isAlwaysOnTop);
-      },
-    },
-    { type: 'separator' },
-    {
-      label: 'Quit',
-      click: () => {
-        app.isQuitting = true;
-        app.quit();
-      },
-    },
-  ]);
-
-  tray.setToolTip('PixelPal');
-  tray.setContextMenu(contextMenu);
-
-  // Double-click to restore
-  tray.on('double-click', restoreWindow);
-}
-
-// ============ Notifications ============
-
-function showNotification(title: string, body: string): void {
-  if (Notification.isSupported()) {
-    const notification = new Notification({
-      title,
-      body,
-      icon: path.join(__dirname, '../renderer/icon.png'),
-    });
-
-    notification.on('click', () => {
-      restoreWindow();
-    });
-
-    notification.show();
   }
 }
 
@@ -209,6 +139,7 @@ function setupIpcHandlers(): void {
   ipcMain.handle('window:setAlwaysOnTop', (_, value: boolean) => {
     isAlwaysOnTop = value;
     mainWindow?.setAlwaysOnTop(value);
+    setAlwaysOnTopState(value);
     return value;
   });
   ipcMain.handle('window:getAlwaysOnTop', () => isAlwaysOnTop);
@@ -251,11 +182,8 @@ app.whenReady().then(() => {
   // Setup IPC handlers first
   setupIpcHandlers();
 
-  // Create window
+  // Create window (which also creates tray)
   createWindow();
-
-  // Create tray
-  createTray();
 
   // Register global shortcuts
   registerGlobalShortcuts();
@@ -287,4 +215,5 @@ app.on('before-quit', () => {
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
+  destroyTray();
 });
