@@ -71,7 +71,10 @@
       "dist/**/*",
       "package.json"
     ],
-    "buildDependenciesFromSource": false,
+    "asarUnpack": [
+      "node_modules/canvas/**/*"
+    ],
+    "rebuild": false,
     "win": {
       "target": [
         {
