@@ -227,7 +227,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
           {activeMembers.length > 0 && (
             <Box sx={{ mb: 2 }}>
               <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary', mb: 0.5, display: 'block' }}>
-                Active Collaborators
+                {t('team.activeCollaborators')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {activeMembers.map(member => (
@@ -304,9 +304,9 @@ export const MultiPersonaCollaboration: React.FC = () => {
                     <ListItemSecondaryAction sx={{ right: 0 }}>
                       <Box sx={{ display: 'flex', gap: 0.25 }}>
                         {member.role !== 'primary' && (
-                          <Tooltip title="Set as Team Lead">
-                            <IconButton 
-                              size="small" 
+                          <Tooltip title={t('team.setAsTeamLead')}>
+                            <IconButton
+                              size="small"
                               onClick={() => handleSetPrimary(member.personaId)}
                               sx={{ p: 0.25 }}
                             >
@@ -314,7 +314,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
                             </IconButton>
                           </Tooltip>
                         )}
-                        <Tooltip title={member.isActive ? 'Set as observer' : 'Set as active'}>
+                        <Tooltip title={member.isActive ? t('team.setAsObserver') : t('team.setAsActive')}>
                           <Switch
                             size="small"
                             checked={member.isActive}
@@ -322,9 +322,9 @@ export const MultiPersonaCollaboration: React.FC = () => {
                             sx={{ '& .MuiSwitch-thumb': { width: 12, height: 12 } }}
                           />
                         </Tooltip>
-                        <Tooltip title="Remove from team">
-                          <IconButton 
-                            size="small" 
+                        <Tooltip title={t('team.removeFromTeam')}>
+                          <IconButton
+                            size="small"
                             onClick={() => handleRemovePersona(member.personaId)}
                             sx={{ p: 0.25, color: 'error.light' }}
                           >
@@ -340,7 +340,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
           ) : (
             <Box sx={{ textAlign: 'center', py: 2, opacity: 0.6 }}>
               <Typography variant="body2" sx={{ fontSize: 12 }}>
-                No team members yet
+                {t('team.noMembers')}
               </Typography>
             </Box>
           )}
@@ -353,7 +353,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
             onClick={() => setAddPersonaOpen(true)}
             sx={{ mt: 1.5 }}
           >
-            Add Team Member
+            {t('team.addTeamMember')}
           </Button>
 
           {/* Team Settings */}
@@ -368,16 +368,16 @@ export const MultiPersonaCollaboration: React.FC = () => {
               }
               label={
                 <Typography sx={{ fontSize: 11 }}>
-                  Allow debate between personas
+                  {t('team.allowDebate')}
                 </Typography>
               }
               sx={{ mb: 0.5 }}
             />
             <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-              <InputLabel sx={{ fontSize: 12 }}>Max Active Members</InputLabel>
+              <InputLabel sx={{ fontSize: 12 }}>{t('team.maxActiveMembers')}</InputLabel>
               <Select
                 value={teamConfig.maxActiveMembers}
-                label="Max Active Members"
+                label={t('team.maxActiveMembers')}
                 onChange={(e) => setTeamConfig({ maxActiveMembers: Number(e.target.value) })}
                 sx={{ fontSize: 12 }}
               >
@@ -397,7 +397,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <ChatIcon sx={{ fontSize: 18, color: 'primary.main' }} />
               <Typography variant="subtitle1" sx={{ fontSize: 14, fontWeight: 600 }}>
-                Team Discussion
+                {t('team.teamDiscussion')}
               </Typography>
               {localDiscussion && (
                 <Chip 
@@ -410,14 +410,14 @@ export const MultiPersonaCollaboration: React.FC = () => {
             </Box>
             <Box sx={{ display: 'flex', gap: 0.5 }}>
               {localDiscussion && localDiscussion.status === 'active' && (
-                <Tooltip title="Conclude discussion">
+                <Tooltip title={t('team.concludeDiscussion')}>
                   <IconButton size="small" onClick={handleConcludeDiscussion}>
                     <SummarizeIcon sx={{ fontSize: 16 }} />
                   </IconButton>
                 </Tooltip>
               )}
               {localDiscussion && (
-                <Tooltip title="Clear">
+                <Tooltip title={t('team.clear')}>
                   <IconButton size="small" onClick={handleClearTeamChat}>
                     <ClearIcon sx={{ fontSize: 16 }} />
                   </IconButton>
@@ -438,7 +438,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
                 <TextField
                   fullWidth
                   size="small"
-                  placeholder="Start a team discussion topic..."
+                  placeholder={t('team.discussionPlaceholder')}
                   value={teamInput}
                   onChange={(e) => setTeamInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleStartDiscussion()}
@@ -446,13 +446,13 @@ export const MultiPersonaCollaboration: React.FC = () => {
                     '& .MuiInputBase-input': { fontSize: 12 },
                   }}
                 />
-                <Button 
-                  variant="contained" 
-                  size="small" 
+                <Button
+                  variant="contained"
+                  size="small"
                   onClick={handleStartDiscussion}
                   disabled={!teamInput.trim()}
                 >
-                  Start
+                  {t('team.start')}
                 </Button>
               </Box>
             )}
@@ -461,7 +461,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
             {localDiscussion && (
               <Box sx={{ mb: 1.5, p: 1, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 1 }}>
                 <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
-                  Topic
+                  {t('team.topic')}
                 </Typography>
                 <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
                   {localDiscussion.topic}
@@ -532,7 +532,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
               {(!localDiscussion || localDiscussion.messages.length === 0) && (
                 <Box sx={{ textAlign: 'center', py: 2, opacity: 0.5 }}>
                   <Typography variant="body2" sx={{ fontSize: 12 }}>
-                    No messages yet. Start a discussion above!
+                    {t('team.noMessagesYet')}
                   </Typography>
                 </Box>
               )}
@@ -543,7 +543,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
             {localDiscussion?.summary && (
               <Box sx={{ p: 1.5, bgcolor: 'rgba(255, 213, 79, 0.1)', borderRadius: 1, mb: 1.5 }}>
                 <Typography variant="caption" sx={{ fontSize: 10, color: '#FFD54F', fontWeight: 600 }}>
-                  Summary
+                  {t('team.summary')}
                 </Typography>
                 <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
                   {localDiscussion.summary}
@@ -556,7 +556,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Add to the discussion..."
+                placeholder={t('team.addToDiscussion')}
                 value={teamInput}
                 onChange={(e) => setTeamInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -585,7 +585,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
                 }}
                 sx={{ fontSize: 11 }}
               >
-                Start New Discussion
+                {t('team.startNewDiscussion')}
               </Button>
             )}
           </Collapse>
@@ -594,13 +594,13 @@ export const MultiPersonaCollaboration: React.FC = () => {
 
       {/* Add Persona Dialog */}
       <Dialog open={addPersonaOpen} onClose={() => setAddPersonaOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontSize: 14 }}>Add Team Member</DialogTitle>
+        <DialogTitle sx={{ fontSize: 14 }}>{t('team.addTeamMember')}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-            <InputLabel sx={{ fontSize: 12 }}>Select Persona</InputLabel>
+            <InputLabel sx={{ fontSize: 12 }}>{t('team.selectPersona')}</InputLabel>
             <Select
               value={selectedNewPersona}
-              label="Select Persona"
+              label={t('team.selectPersona')}
               onChange={(e) => setSelectedNewPersona(e.target.value as PersonaId)}
               sx={{ fontSize: 12 }}
             >
@@ -639,16 +639,16 @@ export const MultiPersonaCollaboration: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button size="small" onClick={() => setAddPersonaOpen(false)} sx={{ fontSize: 11 }}>
-            Cancel
+            {t('common.cancel')}
           </Button>
-          <Button 
-            size="small" 
-            variant="contained" 
+          <Button
+            size="small"
+            variant="contained"
             onClick={handleAddPersona}
             disabled={!selectedNewPersona}
             sx={{ fontSize: 11 }}
           >
-            Add
+            {t('common.add')}
           </Button>
         </DialogActions>
       </Dialog>

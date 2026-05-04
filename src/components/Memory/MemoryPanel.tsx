@@ -11,6 +11,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
 import {
   Box,
   Typography,
@@ -78,25 +80,14 @@ import { generateMemoryInsights } from '../../services/memory/summarization';
 
 const MEMORY_TYPE_COLORS: Record<MemoryType, string> = {
   conversation_summary: '#9B7FD4',
-  user_preference: '#FF6B9D',
-  pet_milestone: '#4CAF50',
-  interaction_log: '#2196F3',
-  fact: '#FF9800',
-  preference: '#E91E63',
-  routine: '#00BCD4',
-  custom: '#9E9E9E',
+  user_preference: '#4DB6AC',
+  pet_milestone: '#FFB74D',
+  interaction_log: '#64B5F6',
+  fact: '#E57373',
+  preference: '#81C784',
+  routine: '#BA68C8',
+  custom: '#90A4AE',
 };
-
-const MEMORY_TYPE_LABELS: Record<MemoryType, string> = {
-  conversation_summary: 'Chat Summary',
-  user_preference: 'Preference',
-  pet_milestone: 'Milestone',
-  interaction_log: 'Interaction',
-  fact: 'Fact',
-  preference: 'Preference',
-  routine: 'Routine',
-  custom: 'Custom',
-}
 
 function formatRelativeTime(timestamp: number): string {
   const diff = Date.now() - timestamp;
@@ -104,14 +95,15 @@ function formatRelativeTime(timestamp: number): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
+  if (minutes < 1) return i18next.t('time.justNow');
+  if (minutes < 60) return i18next.t('time.minutesAgo', { count: minutes });
+  if (hours < 24) return i18next.t('time.hoursAgo', { count: hours });
+  if (days < 7) return i18next.t('time.daysAgo', { count: days });
   return new Date(timestamp).toLocaleDateString();
 }
 
 export const MemoryPanel: React.FC = () => {
+  const { t } = useTranslation();
   // Tab state
   const [tab, setTab] = useState(0);
 
@@ -308,14 +300,14 @@ export const MemoryPanel: React.FC = () => {
       {/* Header */}
       <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600, mb: 1.5 }}>
-          🧠 Memory Center
+          🧠 {t('memoryPanel.title')}
         </Typography>
 
         {/* Search */}
         <TextField
           fullWidth
           size="small"
-          placeholder="Search memories..."
+          placeholder={t('memoryPanel.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -339,16 +331,16 @@ export const MemoryPanel: React.FC = () => {
         {/* Quick filters */}
         <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
           <Button size="small" variant="outlined" onClick={() => handleQuickFilter('recent')} sx={{ fontSize: 10, py: 0.25, px: 1 }}>
-            Recent
+            {t('memoryPanel.recent')}
           </Button>
           <Button size="small" variant="outlined" onClick={() => handleQuickFilter('important')} sx={{ fontSize: 10, py: 0.25, px: 1 }}>
-            <StarIcon sx={{ fontSize: 12, mr: 0.5 }} /> Important
+            <StarIcon sx={{ fontSize: 12, mr: 0.5 }} /> {t('memoryPanel.important')}
           </Button>
           <Button size="small" variant="outlined" onClick={() => handleQuickFilter('frequent')} sx={{ fontSize: 10, py: 0.25, px: 1 }}>
-            <TrendingUpIcon sx={{ fontSize: 12, mr: 0.5 }} /> Frequent
+            <TrendingUpIcon sx={{ fontSize: 12, mr: 0.5 }} /> {t('memoryPanel.frequent')}
           </Button>
           <Button size="small" variant="outlined" onClick={() => setExportOpen(true)} sx={{ fontSize: 10, py: 0.25, px: 1 }}>
-            <DownloadIcon sx={{ fontSize: 12, mr: 0.5 }} /> Export
+            <DownloadIcon sx={{ fontSize: 12, mr: 0.5 }} /> {t('memoryPanel.export')}
           </Button>
         </Stack>
       </Box>
@@ -356,10 +348,10 @@ export const MemoryPanel: React.FC = () => {
       {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto">
-          <Tab icon={<MemoryIcon sx={{ fontSize: 16 }} />} label="All" iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
-          <Tab icon={<GraphIcon sx={{ fontSize: 16 }} />} label="Entities" iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
-          <Tab icon={<TimelineIcon sx={{ fontSize: 16 }} />} label="Timeline" iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
-          <Tab icon={<InsightIcon sx={{ fontSize: 16 }} />} label="Insights" iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
+          <Tab icon={<MemoryIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.all')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
+          <Tab icon={<GraphIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.entities')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
+          <Tab icon={<TimelineIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.timeline')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
+          <Tab icon={<InsightIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.insights')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
         </Tabs>
       </Box>
 
@@ -419,7 +411,7 @@ export const MemoryPanel: React.FC = () => {
         >
           <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
-              Search Results ({searchResults.length})
+              {t('memoryPanel.searchResults')} ({searchResults.length})
             </Typography>
             <IconButton size="small" onClick={() => setSearchResults([])}>
               <ClearIcon sx={{ fontSize: 16 }} />
@@ -437,7 +429,7 @@ export const MemoryPanel: React.FC = () => {
                   secondary={
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Chip
-                        label={MEMORY_TYPE_LABELS[memory.type]}
+                        label={i18next.t('memory.memoryTypes.' + memory.type)}
                         size="small"
                         sx={{
                           height: 18,
@@ -447,7 +439,7 @@ export const MemoryPanel: React.FC = () => {
                         }}
                       />
                       <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled' }}>
-                        Score: {score.toFixed(2)}
+                        {t('memoryPanel.score')}: {score.toFixed(2)}
                       </Typography>
                     </Stack>
                   }
@@ -461,19 +453,19 @@ export const MemoryPanel: React.FC = () => {
       {/* Detail Dialog */}
       <Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontSize: 14 }}>
-          Memory Detail
+          {t('memoryPanel.memoryDetail')}
         </DialogTitle>
         <DialogContent>
           {selectedMemory && (
             <Stack spacing={2}>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 <Chip
-                  label={MEMORY_TYPE_LABELS[selectedMemory.type]}
+                  label={i18next.t('memory.memoryTypes.' + selectedMemory.type)}
                   size="small"
                   sx={{ bgcolor: MEMORY_TYPE_COLORS[selectedMemory.type] + '33', color: MEMORY_TYPE_COLORS[selectedMemory.type] }}
                 />
-                <Chip label={`Importance: ${selectedMemory.importance}`} size="small" variant="outlined" />
-                <Chip label={`Accessed: ${selectedMemory.accessCount}x`} size="small" variant="outlined" />
+                <Chip label={`${t('memoryPanel.importance')}: ${selectedMemory.importance}`} size="small" variant="outlined" />
+                <Chip label={`${t('memoryPanel.accessed')}: ${selectedMemory.accessCount}x`} size="small" variant="outlined" />
               </Box>
 
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: 13 }}>
@@ -490,24 +482,24 @@ export const MemoryPanel: React.FC = () => {
 
               <Stack direction="row" spacing={1}>
                 <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-                  Created: {new Date(selectedMemory.createdAt).toLocaleString()}
+                  {t('memoryPanel.created')}: {new Date(selectedMemory.createdAt).toLocaleString()}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-                  Updated: {new Date(selectedMemory.updatedAt).toLocaleString()}
+                  {t('memoryPanel.updated')}: {new Date(selectedMemory.updatedAt).toLocaleString()}
                 </Typography>
               </Stack>
             </Stack>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDetailOpen(false)} size="small">Close</Button>
+          <Button onClick={() => setDetailOpen(false)} size="small">{t('memoryPanel.close')}</Button>
           {selectedMemory && (
             <Button
               color="error"
               onClick={() => { handleDelete(selectedMemory.id); setDetailOpen(false); }}
               size="small"
             >
-              Delete
+              {t('memoryPanel.delete')}
             </Button>
           )}
         </DialogActions>
@@ -515,15 +507,15 @@ export const MemoryPanel: React.FC = () => {
 
       {/* Export Dialog */}
       <Dialog open={exportOpen} onClose={() => setExportOpen(false)} maxWidth="xs">
-        <DialogTitle sx={{ fontSize: 14 }}>Export Memories</DialogTitle>
+        <DialogTitle sx={{ fontSize: 14 }}>{t('memoryPanel.exportMemories')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ fontSize: 12 }}>
-            Export {memories.length} memories as JSON?
+            {t('memoryPanel.exportCount', { count: memories.length })}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setExportOpen(false)} size="small">Cancel</Button>
-          <Button onClick={handleExport} size="small" variant="contained">Export</Button>
+          <Button onClick={() => setExportOpen(false)} size="small">{t('memoryPanel.cancel')}</Button>
+          <Button onClick={handleExport} size="small" variant="contained">{t('memoryPanel.export')}</Button>
         </DialogActions>
       </Dialog>
     </Box>
@@ -558,6 +550,7 @@ function AllMemoriesTab({
   typeFilter,
   onTypeFilterChange,
 }: AllMemoriesTabProps) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={2}>
       {/* Stats summary */}
@@ -569,7 +562,7 @@ function AllMemoriesTab({
                 {stats.totalEntries}
               </Typography>
               <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
-                Total Memories
+                {t('memoryPanel.totalMemories')}
               </Typography>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
@@ -577,7 +570,7 @@ function AllMemoriesTab({
                 {stats.averageImportance.toFixed(1)}
               </Typography>
               <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
-                Avg Importance
+                {t('memoryPanel.avgImportance')}
               </Typography>
             </Box>
             {stats.oldestEntry && (
@@ -586,7 +579,7 @@ function AllMemoriesTab({
                   {Math.floor((Date.now() - stats.oldestEntry) / (86400000 * 30))}m
                 </Typography>
                 <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
-                  Oldest Memory
+                  {t('memoryPanel.oldestMemory')}
                 </Typography>
               </Box>
             )}
@@ -597,7 +590,7 @@ function AllMemoriesTab({
       {/* Type filter */}
       <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
         <Chip
-          label="All"
+          label={t('memoryPanel.all')}
           size="small"
           onClick={() => onTypeFilterChange('all')}
           sx={{
@@ -606,10 +599,10 @@ function AllMemoriesTab({
             bgcolor: typeFilter === 'all' ? 'primary.main' : 'rgba(255,255,255,0.08)',
           }}
         />
-        {(Object.keys(MEMORY_TYPE_LABELS) as MemoryType[]).map(type => (
+        {(['conversation_summary', 'user_preference', 'pet_milestone', 'interaction_log', 'fact', 'preference', 'routine', 'custom'] as MemoryType[]).map(type => (
           <Chip
             key={type}
-            label={MEMORY_TYPE_LABELS[type]}
+            label={i18next.t('memory.memoryTypes.' + type)}
             size="small"
             onClick={() => onTypeFilterChange(type)}
             sx={{
@@ -625,12 +618,12 @@ function AllMemoriesTab({
       {/* Sort controls */}
       <Stack direction="row" spacing={1} alignItems="center">
         <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
-          Sort by:
+          {t('memory.sortBy')}:
         </Typography>
         {(['recent', 'importance', 'frequency'] as const).map(sort => (
           <Chip
             key={sort}
-            label={sort.charAt(0).toUpperCase() + sort.slice(1)}
+            label={t(`memory.${sort}`)}
             size="small"
             onClick={() => onSortChange(sort)}
             sx={{
@@ -650,10 +643,10 @@ function AllMemoriesTab({
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <MemoryIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            No memories yet
+            {t('memoryPanel.noMemories')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: 11 }}>
-            Start chatting to build your memory!
+            {t('memoryPanel.noMemoriesHint')}
           </Typography>
         </Box>
       ) : (
@@ -677,7 +670,7 @@ function AllMemoriesTab({
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
                   <Chip
-                    label={MEMORY_TYPE_LABELS[memory.type]}
+                    label={i18next.t('memory.memoryTypes.' + memory.type)}
                     size="small"
                     sx={{
                       height: 16,
@@ -742,6 +735,7 @@ interface EntitiesTabProps {
 }
 
 function EntitiesTab({ entityStats, onRefresh }: EntitiesTabProps) {
+  const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState<EntityType | 'all'>('all');
   const [entities, setEntities] = useState<Entity[]>([]);
 
@@ -767,7 +761,7 @@ function EntitiesTab({ entityStats, onRefresh }: EntitiesTabProps) {
     <Stack spacing={2}>
       <Stack direction="row" spacing={1} alignItems="center">
         <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
-          Entity Graph
+          {t('memoryPanel.entityGraph')}
         </Typography>
         <IconButton size="small" onClick={() => { onRefresh(); loadEntities(); }}>
           <RefreshIcon sx={{ fontSize: 14 }} />
@@ -783,7 +777,7 @@ function EntitiesTab({ entityStats, onRefresh }: EntitiesTabProps) {
                 {entityStats.totalEntities}
               </Typography>
               <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
-                Total Entities
+                {t('memoryPanel.totalEntities')}
               </Typography>
             </Box>
             <Box>
@@ -791,7 +785,7 @@ function EntitiesTab({ entityStats, onRefresh }: EntitiesTabProps) {
                 {entityStats.totalRelationships}
               </Typography>
               <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
-                Relationships
+                {t('memoryPanel.relationships')}
               </Typography>
             </Box>
           </Stack>
@@ -801,7 +795,7 @@ function EntitiesTab({ entityStats, onRefresh }: EntitiesTabProps) {
       {/* Type filter */}
       <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
         <Chip
-          label="All"
+          label={t('memoryPanel.allTypes')}
           size="small"
           onClick={() => setSelectedType('all')}
           sx={{ fontSize: 10, height: 22, bgcolor: selectedType === 'all' ? 'primary.main' : 'rgba(255,255,255,0.08)' }}
@@ -823,7 +817,7 @@ function EntitiesTab({ entityStats, onRefresh }: EntitiesTabProps) {
           <ListItem key={entity.id} sx={{ px: 1, py: 0.5 }}>
             <ListItemText
               primary={entity.name}
-              secondary={`${entity.type} • ${entity.accessCount} accesses • ${entity.memoryIds.length} memories`}
+              secondary={`${entity.type} • ${entity.accessCount} ${t('memoryPanel.accesses')} • ${entity.memoryIds.length} ${t('memoryPanel.memories')}`}
               primaryTypographyProps={{ sx: { fontSize: 12 } }}
               secondaryTypographyProps={{ sx: { fontSize: 10 } }}
             />
@@ -845,19 +839,20 @@ interface TimelineTabProps {
 }
 
 function TimelineTab({ clusters }: TimelineTabProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
     <Stack spacing={2}>
       <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
-        Memory Clusters
+        {t('memoryPanel.memoryClusters')}
       </Typography>
 
       {clusters.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <HubIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
           <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: 12 }}>
-            No clusters yet
+            {t('memoryPanel.noClusters')}
           </Typography>
         </Box>
       ) : (
@@ -872,7 +867,7 @@ function TimelineTab({ clusters }: TimelineTabProps) {
                 <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 600 }}>
                   {cluster.id}
                 </Typography>
-                <Chip label={`${cluster.memories.length} memories`} size="small" sx={{ height: 18, fontSize: 9 }} />
+                <Chip label={t('memoryPanel.clusterMemories', { count: cluster.memories.length })} size="small" sx={{ height: 18, fontSize: 9 }} />
               </Stack>
               {expanded === cluster.id ? <CollapseIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
             </Box>
@@ -911,10 +906,11 @@ interface InsightsTabProps {
 }
 
 function InsightsTab({ insights, stats, entityStats }: InsightsTabProps) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={2}>
       <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
-        Memory Insights
+        {t('memoryPanel.memoryInsights')}
       </Typography>
 
       {/* Generated insights */}
@@ -944,7 +940,7 @@ function InsightsTab({ insights, stats, entityStats }: InsightsTabProps) {
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <InsightIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
           <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: 12 }}>
-            Chat more to generate insights!
+            {t('memoryPanel.chatMoreForInsights')}
           </Typography>
         </Box>
       )}
@@ -953,7 +949,7 @@ function InsightsTab({ insights, stats, entityStats }: InsightsTabProps) {
       {stats && stats.totalEntries > 0 && (
         <>
           <Typography variant="subtitle2" sx={{ fontSize: 12, mt: 1 }}>
-            Memory Distribution
+            {t('memoryPanel.memoryDistribution')}
           </Typography>
           <Paper sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 1 }}>
             <Stack spacing={1}>
@@ -961,7 +957,7 @@ function InsightsTab({ insights, stats, entityStats }: InsightsTabProps) {
                 <Box key={type}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
-                      {MEMORY_TYPE_LABELS[type]}
+                      {i18next.t('memory.memoryTypes.' + type)}
                     </Typography>
                     <Typography variant="caption" sx={{ fontSize: 10 }}>
                       {count}
@@ -991,7 +987,7 @@ function InsightsTab({ insights, stats, entityStats }: InsightsTabProps) {
       {entityStats && entityStats.mostConnected.length > 0 && (
         <>
           <Typography variant="subtitle2" sx={{ fontSize: 12, mt: 1 }}>
-            Most Connected Entities
+            {t('memoryPanel.mostConnected')}
           </Typography>
           <Stack spacing={0.5}>
             {entityStats.mostConnected.slice(0, 5).map((entity, idx) => (
