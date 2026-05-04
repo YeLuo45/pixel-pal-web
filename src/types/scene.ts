@@ -27,7 +27,7 @@ export interface KeywordTrigger {
 
 export type Trigger = TimeTrigger | ClickTrigger | KeywordTrigger;
 
-export type ActionType = 'sendMessage' | 'switchRole' | 'speak' | 'notify';
+export type ActionType = 'sendMessage' | 'switchRole' | 'speak' | 'notify' | 'delay' | 'condition' | 'random';
 
 export interface SendMessageAction {
   type: 'sendMessage';
@@ -58,7 +58,39 @@ export interface NotifyAction {
   };
 }
 
-export type Action = SendMessageAction | SwitchRoleAction | SpeakAction | NotifyAction;
+export interface DelayAction {
+  type: 'delay';
+  params: {
+    seconds: number;
+  };
+}
+
+export interface ConditionAction {
+  type: 'condition';
+  params: {
+    field: 'hour' | 'dayOfWeek' | 'keyword';
+    operator: 'eq' | 'neq' | 'gt' | 'lt' | 'contains';
+    value: string;
+    thenActions: Action[];
+    elseActions?: Action[];
+  };
+}
+
+export interface RandomAction {
+  type: 'random';
+  params: {
+    options: Action[][];
+  };
+}
+
+export type Action =
+  | SendMessageAction
+  | SwitchRoleAction
+  | SpeakAction
+  | NotifyAction
+  | DelayAction
+  | ConditionAction
+  | RandomAction;
 
 export function createDefaultScene(): Omit<Scene, 'id' | 'createdAt'> {
   return {
@@ -91,12 +123,26 @@ export function createAction(type: ActionType): Action {
       return { type: 'speak', params: { text: '' } };
     case 'notify':
       return { type: 'notify', params: { title: 'PixelPal', body: '' } };
+    case 'delay':
+      return { type: 'delay', params: { seconds: 5 } };
+    case 'condition':
+      return {
+        type: 'condition',
+        params: {
+          field: 'hour',
+          operator: 'eq',
+          value: '8',
+          thenActions: [],
+          elseActions: [],
+        },
+      };
+    case 'random':
+      return { type: 'random', params: { options: [[]] } };
   }
 }
 
 export function matchKeyword(message: string, pattern: string): boolean {
   if (!pattern) return false;
-  // Convert glob pattern to regex: * → .*, ? → .
   const regexStr = pattern
     .replace(/[.+^${}()|[\]\\]/g, '\\$&')
     .replace(/\*/g, '.*')
