@@ -14,7 +14,9 @@
     "email": "Email",
     "team": "Team",
     "settings": "Settings",
-    "plugins": "Plugins"
+    "plugins": "Plugins",
+    "menu": "Menu",
+    "close": "Close"
   },
   "chat": {
     "title": "AI Chat",

@@ -63,6 +63,60 @@ const darkTheme = createTheme({
           backgroundColor: '#1A1028',
           backgroundImage: 'none',
         },
+        root: {
+          '&.MuiDialog-fullScreen': {
+            '& .MuiDialog-paper': {
+              margin: 0,
+              padding: 0,
+              maxWidth: '100%',
+              maxHeight: '100%',
+              borderRadius: 0,
+            },
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiInputBase-root': {
+            paddingTop: 8,
+            paddingBottom: 8,
+          },
+        },
+      },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          minHeight: 44,
+        },
+        input: {
+          padding: '10px 12px',
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          minWidth: 44,
+          minHeight: 44,
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          minHeight: 44,
+          minWidth: 44,
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          minHeight: 32,
+        },
       },
     },
   },
