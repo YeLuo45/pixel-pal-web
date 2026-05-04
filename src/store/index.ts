@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AIConfig, Message, Event, Task, DocumentFile, PetStatus, EmailAccount, InteractionSettings, InteractionCooldowns, CompanionState, PersonaId, VoiceSettings } from '../types';
+import type { EmotionState } from '../services/voice/emotionDetector';
 
 interface AppState {
   // AI Config
@@ -82,6 +83,13 @@ interface AppState {
   // Voice Settings
   voiceSettings: VoiceSettings;
   setVoiceSettings: (settings: Partial<VoiceSettings>) => void;
+
+  // Emotion State
+  currentEmotion: EmotionState;
+  setCurrentEmotion: (emotion: EmotionState) => void;
+  emotionHistory: Array<{ emotion: EmotionState; timestamp: number; confidence: number }>;
+  addEmotionEntry: (emotion: EmotionState, confidence: number) => void;
+  clearEmotionHistory: () => void;
 
   // Language
   language: 'zh' | 'en';
@@ -330,6 +338,19 @@ export const useStore = create<AppState>()(
         set((state) => ({
           voiceSettings: { ...state.voiceSettings, ...settings },
         })),
+
+      // Emotion State
+      currentEmotion: 'unknown' as EmotionState,
+      setCurrentEmotion: (emotion) => set({ currentEmotion: emotion }),
+      emotionHistory: [],
+      addEmotionEntry: (emotion, confidence) =>
+        set((state) => ({
+          emotionHistory: [
+            ...state.emotionHistory.slice(-99),
+            { emotion, timestamp: Date.now(), confidence },
+          ],
+        })),
+      clearEmotionHistory: () => set({ emotionHistory: [] }),
 
       // Language
       language: 'zh',

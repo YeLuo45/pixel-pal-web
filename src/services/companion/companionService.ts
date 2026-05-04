@@ -88,9 +88,9 @@ export function getMoodId(): string {
 }
 
 /**
- * Build the full system prompt with personality + memory context
+ * Build the full system prompt with personality + memory context + emotion
  */
-export async function buildCompanionSystemPrompt(additionalContext = ''): Promise<string> {
+export async function buildCompanionSystemPrompt(additionalContext = '', emotionContext?: string): Promise<string> {
   const memoryContext = await buildMemoryContext();
   const persona = getActivePersona();
 
@@ -102,6 +102,11 @@ export async function buildCompanionSystemPrompt(additionalContext = ''): Promis
   // Add current mood context
   const mood = getActiveMood();
   prompt += `\n\nYou are currently feeling ${mood.label} ${mood.emoji}. Adjust your responses to match this mood (energy: ${mood.energy}, warmth: ${mood.warmth}, curiosity: ${mood.curiosity}).`;
+
+  // Add emotion context (detected from user's speech)
+  if (emotionContext) {
+    prompt += `\n\n[Emotional Context: user seems ${emotionContext}]`;
+  }
 
   // Add memory context
   if (memoryContext) {
@@ -122,11 +127,11 @@ export async function buildCompanionSystemPrompt(additionalContext = ''): Promis
  */
 export async function injectCompanionContext(
   messages: Message[],
-  options: { includeMemory?: boolean; additionalContext?: string } = {}
+  options: { includeMemory?: boolean; additionalContext?: string; emotionContext?: string } = {}
 ): Promise<Message[]> {
-  const { includeMemory = true, additionalContext = '' } = options;
+  const { includeMemory = true, additionalContext = '', emotionContext } = options;
 
-  const systemPrompt = await buildCompanionSystemPrompt(additionalContext);
+  const systemPrompt = await buildCompanionSystemPrompt(additionalContext, emotionContext);
 
   // Build the system message
   const systemMessage: Message = {

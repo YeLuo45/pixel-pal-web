@@ -4,12 +4,13 @@ import {
   Typography, Paper, Divider,
   Tooltip,
 } from '@mui/material';
-import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon } from '@mui/icons-material';
+import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon, Stop as StopIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { chatCompletion, initModelRegistry, getDefaultModel } from '../../services/ai/model-registry-adapter';
 import { injectCompanionContext, autoSummarizeChat, adjustMoodForInteraction } from '../../services/companion';
 import { queryKnowledgeBase, buildRAGContext, isDocumentIndexed, reindexAllDocuments } from '../../services/rag';
 import { voiceService } from '../../services/voice/voiceService';
+import { detectEmotion, getEmotionLabel, type EmotionState } from '../../services/voice/emotionDetector';
 import type { Message } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { useSceneStore } from '../../stores/sceneStore';
@@ -47,6 +48,10 @@ export const ChatPanel: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [ttsSupported, setTtsSupported] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentEmotion, setCurrentEmotionLocal] = useState<EmotionState>('unknown');
+  const setCurrentEmotion = useStore((s) => s.setCurrentEmotion);
+  const addEmotionEntry = useStore((s) => s.addEmotionEntry);
   const messages = useStore((s) => s.messages);
   const models = useStore((s) => s.models);
   const addMessage = useStore((s) => s.addMessage);
@@ -61,6 +66,7 @@ export const ChatPanel: React.FC = () => {
   const voiceSettings = useStore((s) => s.voiceSettings);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceUnsubscribeRef = useRef<(() => void) | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Initialize model registry when models change
   useEffect(() => {
@@ -77,12 +83,18 @@ export const ChatPanel: React.FC = () => {
     const unsubscribe = voiceService.subscribe((event) => {
       if (event.type === 'stateChange' && event.state) {
         setIsListening(event.state.isListening);
+        setIsSpeaking(event.state.isSpeaking);
       }
       if (event.type === 'transcription' && event.transcription) {
         setInput((prev) => {
           // Append transcription to existing input (or replace if empty)
           return prev ? `${prev} ${event.transcription}` : event.transcription || prev;
         });
+        // Detect emotion from speech characteristics
+        const result = detectEmotion(event.transcription, 2000); // 2sec estimated duration
+        setCurrentEmotionLocal(result.emotion);
+        setCurrentEmotion(result.emotion);
+        addEmotionEntry(result.emotion, result.confidence);
       }
     });
 
@@ -128,13 +140,24 @@ export const ChatPanel: React.FC = () => {
     useStore.getState().setVoiceSettings({ ttsEnabled: newTtsEnabled });
   };
 
-  // Speak text via TTS
-  const speakText = async (text: string) => {
+  // Voice: Interrupt current AI speech
+  const handleInterrupt = () => {
+    voiceService.interrupt();
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setAIThinking(false);
+    setPetStatus({ state: 'idle' });
+  };
+
+  // Speak text chunk immediately (streaming TTS)
+  const speakChunkImmediate = (text: string) => {
     if (ttsEnabled && ttsSupported) {
       try {
-        await voiceService.speak(text);
+        voiceService.speakChunk(text);
       } catch (err) {
-        console.warn('[Voice] TTS error:', err);
+        console.warn('[Voice] TTS chunk error:', err);
       }
     }
   };
@@ -161,6 +184,10 @@ export const ChatPanel: React.FC = () => {
       executeScene(scene);
     }
 
+    // Create AbortController for interrupt support
+    abortControllerRef.current = voiceService.createAbortController();
+    const abortSignal = abortControllerRef.current.signal;
+
     // Set pet to thinking
     setPetStatus({ state: 'thinking', message: undefined });
     setAIThinkingContent(null);
@@ -174,14 +201,18 @@ export const ChatPanel: React.FC = () => {
     try {
       setAIThinking(true);
 
-      // Build messages with companion context (personality + memory)
+      // Build messages with companion context (personality + memory + emotion)
       const apiMessages: Message[] = [
         ...messages,
         { id: 'temp', role: 'user', content: userMsg, timestamp: Date.now() },
       ];
 
-      // Inject companion context (personality system prompt + memory)
-      const messagesWithContext = await injectCompanionContext(apiMessages);
+      // Get emotion context for system prompt
+      const emotionState = useStore.getState().currentEmotion;
+      const emotionContext = emotionState !== 'unknown' ? emotionState : undefined;
+
+      // Inject companion context (personality system prompt + memory + emotion)
+      const messagesWithContext = await injectCompanionContext(apiMessages, { emotionContext });
 
       // RAG Enhancement: Query knowledge base and add relevant context
       let ragContext = '';
@@ -236,9 +267,17 @@ export const ChatPanel: React.FC = () => {
 
       addMessage({ role: 'assistant', content: aiContent });
 
-      // TTS: Speak AI response aloud if enabled
+      // TTS: Speak AI response aloud using streaming (chunk by chunk)
       if (ttsEnabled && ttsSupported && aiContent) {
-        speakText(aiContent);
+        // Speak in chunks for immediate feedback (streaming TTS)
+        const sentences = aiContent.match(/[^.!?。！？]+[.!?。！？]*/g) || [aiContent];
+        for (const sentence of sentences) {
+          if (abortSignal.aborted) break;
+          const trimmed = sentence.trim();
+          if (trimmed) {
+            speakChunkImmediate(trimmed);
+          }
+        }
       }
 
       // Auto-summarize chat to memory if enabled
@@ -275,12 +314,32 @@ export const ChatPanel: React.FC = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600 }}>
-          💬 {t('chat.title')}
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-          {displayModel}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box>
+            <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600 }}>
+              💬 {t('chat.title')}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
+              {displayModel}
+            </Typography>
+          </Box>
+          {/* Emotion Display */}
+          {currentEmotion !== 'unknown' && (
+            <Box sx={{
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 2,
+              bgcolor: 'rgba(155, 127, 212, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+            }}>
+              <Typography variant="caption" sx={{ fontSize: 12 }}>
+                {getEmotionLabel(currentEmotion)}
+              </Typography>
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* Messages */}
@@ -499,6 +558,27 @@ export const ChatPanel: React.FC = () => {
                 }}
               >
                 {ttsEnabled ? <VolumeUpIcon sx={{ fontSize: 18 }} /> : <VolumeOffIcon sx={{ fontSize: 18 }} />}
+              </IconButton>
+            </span>
+          </Tooltip>
+        )}
+
+        {/* Interrupt Button (shown when AI is speaking/thinking) */}
+        {(isSpeaking || isAIThinking) && (
+          <Tooltip title={t('interruptVoice')}>
+            <span>
+              <IconButton
+                color="error"
+                onClick={handleInterrupt}
+                size="small"
+                sx={{
+                  alignSelf: 'flex-end',
+                  flexShrink: 0,
+                  bgcolor: 'rgba(255, 80, 80, 0.15)',
+                  '&:hover': { bgcolor: 'rgba(255, 80, 80, 0.25)' },
+                }}
+              >
+                <StopIcon sx={{ fontSize: 18 }} />
               </IconButton>
             </span>
           </Tooltip>

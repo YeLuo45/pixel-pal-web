@@ -155,33 +155,26 @@
     "noEmails": "No emails loaded"
   },
   "team": {
-    "title": "Multi-Persona Team",
-    "members": "members",
-    "addPersona": "Add Persona",
-    "removePersona": "Remove",
-    "setPrimary": "Set as Primary",
-    "active": "Active",
-    "observing": "Observing",
-    "setupBalanced": "Setup Balanced Team",
-    "startDiscussion": "Start Discussion",
-    "discussionPlaceholder": "Start a team discussion...",
-    "concludeDiscussion": "Conclude Discussion",
-    "clearChat": "Clear Chat",
-    "discussionEnded": "Discussion ended",
-    "noMembers": "No team members yet",
-    "availablePersonas": "Available Personas",
-    "roles": {
-      "primary": "Primary",
-      "contributor": "Contributor",
-      "observer": "Observer"
-    },
-    "messageTypes": {
-      "contribution": "Contribution",
-      "question": "Question",
-      "agreement": "Agreement",
-      "disagreement": "Disagreement",
-      "summary": "Summary"
-    }
+    "activeCollaborators": "Active Collaborators",
+    "setAsTeamLead": "Set as Team Lead",
+    "setAsObserver": "Set as observer",
+    "setAsActive": "Set as active",
+    "removeFromTeam": "Remove from team",
+    "addTeamMember": "Add Team Member",
+    "allowDebate": "Allow debate between personas",
+    "maxActiveMembers": "Max Active Members",
+    "teamDiscussion": "Team Discussion",
+    "concludeDiscussion": "Conclude discussion",
+    "clear": "Clear",
+    "start": "Start",
+    "topic": "Topic",
+    "noMessagesYet": "No messages yet. Start a discussion above!",
+    "summary": "Summary",
+    "addToDiscussion": "Add to the discussion...",
+    "startNewDiscussion": "Start New Discussion",
+    "selectPersona": "Select Persona",
+    "personaName": "Persona Name",
+    "personaTraits": "Persona Traits"
   },
   "settings": {
     "title": "Settings",
@@ -369,28 +362,6 @@
     "timelineView": "Timeline View",
     "wordCloud": "Word Cloud"
   },
-  "team": {
-    "activeCollaborators": "Active Collaborators",
-    "setAsTeamLead": "Set as Team Lead",
-    "setAsObserver": "Set as observer",
-    "setAsActive": "Set as active",
-    "removeFromTeam": "Remove from team",
-    "addTeamMember": "Add Team Member",
-    "allowDebate": "Allow debate between personas",
-    "maxActiveMembers": "Max Active Members",
-    "teamDiscussion": "Team Discussion",
-    "concludeDiscussion": "Conclude discussion",
-    "clear": "Clear",
-    "start": "Start",
-    "topic": "Topic",
-    "noMessagesYet": "No messages yet. Start a discussion above!",
-    "summary": "Summary",
-    "addToDiscussion": "Add to the discussion...",
-    "startNewDiscussion": "Start New Discussion",
-    "selectPersona": "Select Persona",
-    "personaName": "Persona Name",
-    "personaTraits": "Persona Traits"
-  },
   "analytics": {
     "title": "Analytics Dashboard",
     "subtitle": "Your interaction insights and habits",
@@ -409,5 +380,12 @@
     "entries": "entries",
     "interactions": "interactions",
     "mostActiveHour": "Peak: {{hour}}:00"
-  }
+  },
+  "emotionCalm": "Calm",
+  "emotionExcited": "Excited",
+  "emotionTense": "Tense",
+  "emotionLowEnergy": "Low Energy",
+  "emotionUnknown": "Unknown",
+  "emotionDetected": "Emotion Detected",
+  "interruptVoice": "Interrupt Voice"
 }

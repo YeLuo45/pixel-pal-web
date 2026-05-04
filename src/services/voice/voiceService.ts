@@ -9,6 +9,7 @@
 export interface VoiceState {
   isListening: boolean;
   isSpeaking: boolean;
+  isInterrupted: boolean;
   lastTranscription: string | null;
   error: string | null;
 }
@@ -48,6 +49,7 @@ class VoiceService {
   private state: VoiceState = {
     isListening: false,
     isSpeaking: false,
+    isInterrupted: false,
     lastTranscription: null,
     error: null,
   };
@@ -64,6 +66,7 @@ class VoiceService {
   private listeners: Set<VoiceEventListener> = new Set();
   private recognition: ISpeechRecognition | null = null;
   private synth: SpeechSynthesis | null = null;
+  private abortController: AbortController | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -311,6 +314,98 @@ class VoiceService {
     if (this.synth) {
       this.synth.resume();
     }
+  }
+
+  // --------------------------------
+  // Interrupt & Streaming
+  // --------------------------------
+
+  /**
+   * Interrupt current speech and return an abort signal for stopping AI fetch
+   */
+  interrupt(): AbortSignal | null {
+    // Cancel current speech
+    if (this.synth) {
+      this.synth.cancel();
+    }
+    this.updateState({ isSpeaking: false, isInterrupted: true });
+    return this.abortController?.signal || null;
+  }
+
+  /**
+   * Create a new AbortController for AI fetch cancellation
+   */
+  createAbortController(): AbortController {
+    this.abortController = new AbortController();
+    return this.abortController;
+  }
+
+  /**
+   * Get the current abort signal
+   */
+  getAbortSignal(): AbortSignal | null {
+    return this.abortController?.signal || null;
+  }
+
+  /**
+   * Speak a text chunk immediately without waiting for full text.
+   * Used for streaming TTS - speaks sentences as they arrive.
+   */
+  speakChunk(text: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.synth) {
+        reject(new Error('Speech Synthesis not supported'));
+        return;
+      }
+
+      // Split into sentences for natural chunks
+      const sentences = text.match(/[^.!?。！？]+[.!?。！？]*/g) || [text];
+      
+      const speakNext = (index: number): void => {
+        if (index >= sentences.length) {
+          this.updateState({ isSpeaking: false });
+          resolve();
+          return;
+        }
+
+        const sentence = sentences[index].trim();
+        if (!sentence) {
+          speakNext(index + 1);
+          return;
+        }
+
+        const utterance = this.createUtterance(sentence);
+
+        utterance.onstart = () => {
+          this.updateState({ isSpeaking: true, isInterrupted: false, error: null });
+        };
+
+        utterance.onend = () => {
+          if (!this.state.isInterrupted) {
+            speakNext(index + 1);
+          } else {
+            resolve();
+          }
+        };
+
+        utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
+          if (event.error === 'interrupted' || event.error === 'canceled') {
+            resolve();
+          } else {
+            // On error, still try next sentence
+            if (!this.state.isInterrupted) {
+              speakNext(index + 1);
+            } else {
+              resolve();
+            }
+          }
+        };
+
+        this.synth!.speak(utterance);
+      };
+
+      speakNext(0);
+    });
   }
 
   // --------------------------------

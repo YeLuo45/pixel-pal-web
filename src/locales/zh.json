@@ -155,33 +155,26 @@
     "noEmails": "暂无邮件"
   },
   "team": {
-    "title": "多角色团队",
-    "members": "成员",
-    "addPersona": "添加角色",
-    "removePersona": "移除",
-    "setPrimary": "设为主角色",
-    "active": "活跃",
-    "observing": "观察中",
-    "setupBalanced": "设置均衡团队",
-    "startDiscussion": "开始讨论",
-    "discussionPlaceholder": "发起团队讨论...",
+    "activeCollaborators": "活跃协作者",
+    "setAsTeamLead": "设为主角色",
+    "setAsObserver": "设为观察者",
+    "setAsActive": "设为活跃",
+    "removeFromTeam": "移出团队",
+    "addTeamMember": "添加团队成员",
+    "allowDebate": "允许角色之间辩论",
+    "maxActiveMembers": "最大活跃成员数",
+    "teamDiscussion": "团队讨论",
     "concludeDiscussion": "结束讨论",
-    "clearChat": "清空聊天",
-    "discussionEnded": "讨论已结束",
-    "noMembers": "暂无团队成员",
-    "availablePersonas": "可用角色",
-    "roles": {
-      "primary": "主角色",
-      "contributor": "贡献者",
-      "observer": "观察者"
-    },
-    "messageTypes": {
-      "contribution": "贡献",
-      "question": "提问",
-      "agreement": "同意",
-      "disagreement": "异议",
-      "summary": "总结"
-    }
+    "clear": "清空",
+    "start": "开始",
+    "topic": "话题",
+    "noMessagesYet": "暂无消息。发起一个讨论吧！",
+    "summary": "总结",
+    "addToDiscussion": "添加到讨论...",
+    "startNewDiscussion": "发起新讨论",
+    "selectPersona": "选择角色",
+    "personaName": "角色名称",
+    "personaTraits": "角色特征"
   },
   "settings": {
     "title": "设置",
@@ -369,28 +362,6 @@
     "timelineView": "时间线视图",
     "wordCloud": "词云"
   },
-  "team": {
-    "activeCollaborators": "活跃协作者",
-    "setAsTeamLead": "设为主角色",
-    "setAsObserver": "设为观察者",
-    "setAsActive": "设为活跃",
-    "removeFromTeam": "移出团队",
-    "addTeamMember": "添加团队成员",
-    "allowDebate": "允许角色之间辩论",
-    "maxActiveMembers": "最大活跃成员数",
-    "teamDiscussion": "团队讨论",
-    "concludeDiscussion": "结束讨论",
-    "clear": "清空",
-    "start": "开始",
-    "topic": "话题",
-    "noMessagesYet": "暂无消息。发起一个讨论吧！",
-    "summary": "总结",
-    "addToDiscussion": "添加到讨论...",
-    "startNewDiscussion": "发起新讨论",
-    "selectPersona": "选择角色",
-    "personaName": "角色名称",
-    "personaTraits": "角色特征"
-  },
   "analytics": {
     "title": "数据分析面板",
     "subtitle": "你的互动洞察和习惯分析",
@@ -409,5 +380,12 @@
     "entries": "条记录",
     "interactions": "次互动",
     "mostActiveHour": "高峰：{{hour}}:00"
-  }
+  },
+  "emotionCalm": "平静",
+  "emotionExcited": "兴奋",
+  "emotionTense": "紧张",
+  "emotionLowEnergy": "低落",
+  "emotionUnknown": "未知",
+  "emotionDetected": "检测到情绪",
+  "interruptVoice": "打断语音"
 }
