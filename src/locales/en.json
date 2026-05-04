@@ -17,7 +17,8 @@
     "plugins": "Plugins",
     "menu": "Menu",
     "close": "Close",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "scenes": "Scenes"
   },
   "chat": {
     "title": "AI Chat",

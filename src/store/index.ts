@@ -64,7 +64,7 @@ interface AppState {
   updateLastActivity: () => void;
 
   // UI
-  activePanel: 'chat' | 'calendar' | 'tasks' | 'document' | 'knowledge' | 'email' | 'writing' | 'settings' | 'team' | 'plugin' | 'memory' | 'analytics';
+  activePanel: 'chat' | 'calendar' | 'tasks' | 'document' | 'knowledge' | 'email' | 'writing' | 'settings' | 'team' | 'plugin' | 'memory' | 'analytics' | 'scenes';
   setActivePanel: (panel: AppState['activePanel']) => void;
 
   // Active plugin (used when activePanel === 'plugin')

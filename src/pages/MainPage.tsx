@@ -16,6 +16,8 @@ import { PluginPanel } from '../components/Plugin/PluginPanel';
 import { PluginHub } from '../components/Plugin/PluginHub';
 import { MemoryPanel } from '../components/Memory/MemoryPanel';
 import { AnalyticsPanel } from '../components/Analytics/AnalyticsPanel';
+import { ScenesPage } from '../pages/ScenesPage';
+import { QuickSceneBar } from '../components/scene/QuickSceneBar';
 import { registerBuiltinPlugins, registerOptionalPlugins } from '../plugins';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
@@ -33,6 +35,7 @@ const PANEL_COMPONENTS = {
   plugin: PluginPanel,
   memory: MemoryPanel,
   analytics: AnalyticsPanel,
+  scenes: ScenesPage,
 } as const;
 
 // Greeting messages library (10+ messages)
@@ -332,6 +335,9 @@ export const MainPage: React.FC = () => {
 
       {/* Pixel Pet */}
       <CompanionCanvas />
+
+      {/* Scene Quick Bar */}
+      <QuickSceneBar />
     </Box>
   );
 };
