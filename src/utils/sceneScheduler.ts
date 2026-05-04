@@ -1,6 +1,20 @@
-import type { Scene, Action } from '../types/scene';
+import type { Scene, Action, Trigger } from '../types/scene';
 import { matchKeyword } from '../types/scene';
 import { useSceneStore } from '../stores/sceneStore';
+
+function describeTrigger(trigger?: Trigger): string {
+  if (!trigger) return '手动';
+  switch (trigger.type) {
+    case 'time':
+      return `⏰ ${(trigger as { time: string }).time}`;
+    case 'click':
+      return '🖱️ 点击';
+    case 'keyword':
+      return `🔑 "${(trigger as { pattern: string }).pattern}"`;
+    default:
+      return '未知';
+  }
+}
 
 // Timer map: sceneId → timeoutId
 const timerMap = new Map<string, ReturnType<typeof setTimeout>>();
@@ -60,17 +74,26 @@ export function setOnSceneExecutedCallback(fn: (sceneName: string) => void) {
   onSceneExecutedCallback = fn;
 }
 
-export async function executeScene(scene: Scene) {
+export async function executeScene(scene: Scene, trigger?: string) {
   if (!scene.enabled) return;
 
-  for (let i = 0; i < scene.actions.length; i++) {
-    await executeAction(scene.actions[i]);
-  }
+  const triggerDesc = trigger || describeTrigger(scene.triggers[0]);
+  const { addLog } = useSceneStore.getState();
 
-  if (onSceneExecutedCallback) {
-    onSceneExecutedCallback(scene.name);
-  } else {
-    window.alert(`场景 "${scene.name}" 已执行`);
+  try {
+    for (let i = 0; i < scene.actions.length; i++) {
+      await executeAction(scene.actions[i]);
+    }
+    addLog({ sceneId: scene.id, sceneName: scene.name, trigger: triggerDesc, status: 'success' });
+    if (onSceneExecutedCallback) {
+      onSceneExecutedCallback(scene.name);
+    } else {
+      window.alert(`场景 "${scene.name}" 已执行`);
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    addLog({ sceneId: scene.id, sceneName: scene.name, trigger: triggerDesc, status: 'error', message: msg });
+    window.alert(`场景 "${scene.name}" 执行失败: ${msg}`);
   }
 }
 

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Box, Typography, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab } from '@mui/material';
 import { Add as AddIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { useSceneStore } from '../stores/sceneStore';
 import { SceneCard } from '../components/scene/SceneCard';
 import { SceneEditorDialog } from '../components/scene/SceneEditorDialog';
 import { PresetScenesModal } from '../components/scene/PresetScenesModal';
+import { SceneLogPanel } from '../components/scene/SceneLogPanel';
 import { executeScene, scheduleScene, unscheduleScene } from '../utils/sceneScheduler';
 import { createSceneFromPreset, type PresetScene } from '../data/presetScenes';
 import type { Scene } from '../types/scene';
@@ -15,6 +16,7 @@ export const ScenesPage: React.FC = () => {
   const [presetOpen, setPresetOpen] = useState(false);
   const [editingScene, setEditingScene] = useState<Scene | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [tab, setTab] = useState(0);
 
   useEffect(() => {
     if (!loaded) {
@@ -68,7 +70,7 @@ export const ScenesPage: React.FC = () => {
   };
 
   const handleQuickTrigger = (scene: Scene) => {
-    executeScene(scene);
+    executeScene(scene, '手动触发');
   };
 
   const handleCloseDialog = () => {
@@ -83,55 +85,90 @@ export const ScenesPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          场景
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            startIcon={<AutoAwesomeIcon />}
-            onClick={() => setPresetOpen(true)}
-            size="small"
-          >
-            预设
-          </Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
-            新建
-          </Button>
-        </Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Tab bar */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3 }}>
+        <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ minHeight: 44 }}>
+          <Tab label="场景" sx={{ minHeight: 44, fontSize: 14 }} />
+          <Tab
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                执行日志
+                <Typography
+                  component="span"
+                  sx={{
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
+                    borderRadius: 5,
+                    px: 0.8,
+                    py: 0.1,
+                    fontSize: 10,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {useSceneStore.getState().sceneLogs.length}
+                </Typography>
+              </Box>
+            }
+            sx={{ minHeight: 44, fontSize: 14 }}
+          />
+        </Tabs>
       </Box>
 
-      {scenes.length === 0 ? (
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-            还没有场景，创建一个吧
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button variant="outlined" startIcon={<AutoAwesomeIcon />} onClick={() => setPresetOpen(true)}>
-              添加预设场景
-            </Button>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
-              创建自定义场景
-            </Button>
+      {/* Tab content */}
+      {tab === 0 && (
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 3, overflow: 'auto' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              场景
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button variant="outlined" startIcon={<AutoAwesomeIcon />} onClick={() => setPresetOpen(true)} size="small">
+                预设
+              </Button>
+              <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+                新建
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      ) : (
-        <Box sx={{ flex: 1, overflow: 'auto' }}>
-          <Grid container spacing={2}>
-            {scenes.map((scene) => (
-              <Grid item xs={12} sm={6} md={4} key={scene.id}>
-                <SceneCard
-                  scene={scene}
-                  onEdit={handleEdit}
-                  onDelete={(id) => setDeleteConfirmId(id)}
-                  onToggle={handleToggle}
-                  onQuickTrigger={handleQuickTrigger}
-                />
+
+          {scenes.length === 0 ? (
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+              <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                还没有场景，创建一个吧
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button variant="outlined" startIcon={<AutoAwesomeIcon />} onClick={() => setPresetOpen(true)}>
+                  添加预设场景
+                </Button>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+                  创建自定义场景
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ flex: 1, overflow: 'auto' }}>
+              <Grid container spacing={2}>
+                {scenes.map((scene) => (
+                  <Grid item xs={12} sm={6} md={4} key={scene.id}>
+                    <SceneCard
+                      scene={scene}
+                      onEdit={handleEdit}
+                      onDelete={(id) => setDeleteConfirmId(id)}
+                      onToggle={handleToggle}
+                      onQuickTrigger={handleQuickTrigger}
+                    />
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {tab === 1 && (
+        <Box sx={{ flex: 1, overflow: 'auto' }}>
+          <SceneLogPanel />
         </Box>
       )}
 
