@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { useSceneStore } from '../stores/sceneStore';
 import { SceneCard } from '../components/scene/SceneCard';
 import { SceneEditorDialog } from '../components/scene/SceneEditorDialog';
+import { PresetScenesModal } from '../components/scene/PresetScenesModal';
 import { executeScene, scheduleScene, unscheduleScene } from '../utils/sceneScheduler';
+import { createSceneFromPreset, type PresetScene } from '../data/presetScenes';
 import type { Scene } from '../types/scene';
 
 export const ScenesPage: React.FC = () => {
   const { scenes, loaded, loadScenes, addScene, updateScene, removeScene, toggleScene } = useSceneStore();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [presetOpen, setPresetOpen] = useState(false);
   const [editingScene, setEditingScene] = useState<Scene | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -19,7 +22,6 @@ export const ScenesPage: React.FC = () => {
     }
   }, [loaded, loadScenes]);
 
-  // Register/unregister timers when scenes change
   useEffect(() => {
     if (!loaded) return;
     scenes.forEach((scene) => {
@@ -74,15 +76,31 @@ export const ScenesPage: React.FC = () => {
     setEditingScene(null);
   };
 
+  const handleAddPreset = async (preset: PresetScene) => {
+    const scene = createSceneFromPreset(preset);
+    await addScene(scene);
+    scheduleScene(scene);
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           场景
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
-          新建场景
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<AutoAwesomeIcon />}
+            onClick={() => setPresetOpen(true)}
+            size="small"
+          >
+            预设
+          </Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+            新建
+          </Button>
+        </Box>
       </Box>
 
       {scenes.length === 0 ? (
@@ -90,9 +108,14 @@ export const ScenesPage: React.FC = () => {
           <Typography variant="body1" sx={{ color: 'text.secondary' }}>
             还没有场景，创建一个吧
           </Typography>
-          <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
-            创建第一个场景
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" startIcon={<AutoAwesomeIcon />} onClick={() => setPresetOpen(true)}>
+              添加预设场景
+            </Button>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+              创建自定义场景
+            </Button>
+          </Box>
         </Box>
       ) : (
         <Box sx={{ flex: 1, overflow: 'auto' }}>
@@ -112,7 +135,6 @@ export const ScenesPage: React.FC = () => {
         </Box>
       )}
 
-      {/* Delete confirmation */}
       <Dialog open={!!deleteConfirmId} onClose={() => setDeleteConfirmId(null)} maxWidth="xs" fullWidth>
         <DialogTitle>确认删除</DialogTitle>
         <DialogContent>
@@ -126,8 +148,9 @@ export const ScenesPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Editor dialog */}
       <SceneEditorDialog open={dialogOpen} onClose={handleCloseDialog} onSave={handleSave} editingScene={editingScene} />
+
+      <PresetScenesModal open={presetOpen} onClose={() => setPresetOpen(false)} onAddPreset={handleAddPreset} />
     </Box>
   );
 };
