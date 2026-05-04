@@ -12,6 +12,8 @@ import { queryKnowledgeBase, buildRAGContext, isDocumentIndexed, reindexAllDocum
 import { voiceService } from '../../services/voice/voiceService';
 import type { Message } from '../../types';
 import { useTranslation } from 'react-i18next';
+import { useSceneStore } from '../../stores/sceneStore';
+import { checkKeywordTrigger, executeScene, initSceneScheduler } from '../../utils/sceneScheduler';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -147,6 +149,17 @@ export const ChatPanel: React.FC = () => {
     addMessage({ role: 'user', content: userMsg });
     updateLastActivity();
     adjustMoodForInteraction('chat');
+
+    // Keyword trigger: check and execute matching scenes
+    const { loaded: scenesLoaded, loadScenes } = useSceneStore.getState();
+    if (!scenesLoaded) {
+      await loadScenes();
+      initSceneScheduler();
+    }
+    const matchedScenes = checkKeywordTrigger(userMsg);
+    for (const scene of matchedScenes) {
+      executeScene(scene);
+    }
 
     // Set pet to thinking
     setPetStatus({ state: 'thinking', message: undefined });
