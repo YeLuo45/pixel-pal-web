@@ -9,9 +9,10 @@ export interface AIConfig {
 
 export interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp: number;
+  toolCallId?: string; // For tool role messages
 }
 
 export interface Event {

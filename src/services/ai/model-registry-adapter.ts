@@ -96,6 +96,24 @@ export async function chatCompletion(
 }
 
 /**
+ * Chat completion that returns full result including tool calls.
+ * Use this when you need to handle function calling.
+ */
+export async function chatCompletionWithTools(
+  messages: Message[],
+  tools: CallOptions['tools'] = [],
+  sessionId?: string
+): Promise<CallResult> {
+  const apiMessages = messages.map((m) => ({
+    role: m.role,
+    content: m.content,
+  }));
+
+  const result = await getRegistry().call(apiMessages, { tools, sessionId });
+  return result;
+}
+
+/**
  * Document Q&A using ModelRegistry with fallback
  * Matches the signature: documentChatCompletion(documentContent: string, userQuestion: string, aiConfig: AIConfig): Promise<string>
  */

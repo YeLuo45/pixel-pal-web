@@ -36,6 +36,7 @@ export interface CallOptions {
   maxTokens?: number;
   stop?: string[];
   sessionId?: string;     // MiniMax 需要 session_id
+  tools?: AITool[];       // Function calling tools
 }
 
 export interface CallResult {
@@ -43,7 +44,28 @@ export interface CallResult {
   content: string;
   modelUsed: string;
   modelId: string;
+  toolCalls?: ToolCall[];
   error?: string;
+}
+
+// OpenAI Function Calling types
+export interface AITool {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: 'object';
+      properties?: Record<string, { type: string; description?: string }>;
+      required?: string[];
+    };
+  };
+}
+
+export interface ToolCall {
+  id: string;
+  name: string;
+  arguments: string; // JSON string
 }
 
 // ============================================================
@@ -275,6 +297,7 @@ export class ModelRegistry {
             content: result.content,
             modelUsed: model.name,
             modelId: model.id,
+            toolCalls: result.toolCalls,
           };
         }
 
@@ -393,6 +416,10 @@ async function callMiniMax(
     max_tokens: options.maxTokens ?? config.maxTokens,
   };
 
+  if (options.tools?.length) {
+    body.tools = options.tools.map(t => ({ type: 'function', function: t.function }));
+  }
+
   const response = await fetch(`${config.apiBaseUrl}/chat/completions`, {
     method: 'POST',
     headers,
@@ -406,7 +433,17 @@ async function callMiniMax(
 
   const data = await response.json();
 
-  // OpenAI 兼容格式
+  // OpenAI 兼容格式：tool_calls
+  if (data.choices?.[0]?.message?.tool_calls) {
+    const textContent = data.choices[0].message.content || '';
+    const toolCalls = data.choices[0].message.tool_calls.map((tc: { id: string; function: { name: string; arguments: string } }) => ({
+      id: tc.id,
+      name: tc.function.name,
+      arguments: tc.function.arguments,
+    }));
+    return { success: true, content: textContent, toolCalls };
+  }
+
   if (data.choices?.[0]?.message?.content) {
     return { success: true, content: data.choices[0].message.content };
   }
@@ -432,6 +469,10 @@ async function callAnthropic(
     max_tokens: options.maxTokens ?? config.maxTokens,
   };
 
+  if (options.tools?.length) {
+    body.tools = options.tools.map(t => ({ type: 'function', function: t.function }));
+  }
+
   const response = await fetch(`${config.apiBaseUrl}/messages`, {
     method: 'POST',
     headers,
@@ -444,6 +485,20 @@ async function callAnthropic(
   }
 
   const data = await response.json();
+
+  // Anthropic tool_use format
+  const toolUseBlocks = data.content?.filter((c: { type: string }) => c.type === 'tool_use') || [];
+  if (toolUseBlocks.length > 0) {
+    const toolCalls = toolUseBlocks.map((c: { id: string; name: string; input: unknown }) => ({
+      id: c.id,
+      name: c.name,
+      arguments: JSON.stringify(c.input),
+    }));
+    // Get text content excluding tool_use blocks
+    const textBlocks = data.content?.filter((c: { type: string }) => c.type === 'text') || [];
+    const textContent = textBlocks.map((c: { text: string }) => c.text).join('\n');
+    return { success: true, content: textContent, toolCalls };
+  }
 
   if (data.content?.[0]?.text) {
     return { success: true, content: data.content[0].text };
@@ -469,6 +524,10 @@ async function callOpenAICompatible(
     max_tokens: options.maxTokens ?? config.maxTokens,
   };
 
+  if (options.tools?.length) {
+    body.tools = options.tools.map(t => ({ type: 'function', function: t.function }));
+  }
+
   if (options.stop) {
     body.stop = options.stop;
   }
@@ -485,6 +544,17 @@ async function callOpenAICompatible(
   }
 
   const data = await response.json();
+
+  // OpenAI tool_calls
+  if (data.choices?.[0]?.message?.tool_calls) {
+    const textContent = data.choices[0].message.content || '';
+    const toolCalls = data.choices[0].message.tool_calls.map((tc: { id: string; function: { name: string; arguments: string } }) => ({
+      id: tc.id,
+      name: tc.function.name,
+      arguments: tc.function.arguments,
+    }));
+    return { success: true, content: textContent, toolCalls };
+  }
 
   if (data.choices?.[0]?.message?.content) {
     return { success: true, content: data.choices[0].message.content };

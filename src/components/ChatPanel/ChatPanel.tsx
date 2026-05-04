@@ -6,11 +6,12 @@ import {
 } from '@mui/material';
 import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon, Stop as StopIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
-import { chatCompletion, initModelRegistry, getDefaultModel } from '../../services/ai/model-registry-adapter';
+import { chatCompletion, chatCompletionWithTools, initModelRegistry, getDefaultModel } from '../../services/ai/model-registry-adapter';
 import { injectCompanionContext, autoSummarizeChat, adjustMoodForInteraction } from '../../services/companion';
 import { queryKnowledgeBase, buildRAGContext, isDocumentIndexed, reindexAllDocuments } from '../../services/rag';
 import { voiceService } from '../../services/voice/voiceService';
 import { detectEmotion, getEmotionLabel, type EmotionState } from '../../services/voice/emotionDetector';
+import { PluginService } from '../../plugins';
 import type { Message } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { useSceneStore } from '../../stores/sceneStore';
@@ -249,19 +250,94 @@ export const ChatPanel: React.FC = () => {
         finalMessages = [messagesWithContext[0], ragSystemMessage, ...messagesWithContext.slice(1)];
       }
 
-      const result = await chatCompletion(finalMessages, aiConfig);
+      // Get AI tools from plugins
+      const pluginTools = PluginService.getAITools();
+      const openAITools = pluginTools.map(t => ({
+        type: 'function' as const,
+        function: {
+          name: `${t.pluginId}:${t.toolName}`,
+          description: `${t.pluginName} - ${t.toolName}`,
+          parameters: { type: 'object' as const, properties: {} },
+        },
+      }));
+
+      // Build conversation messages for this turn
+      const currentMessages: Message[] = [
+        ...finalMessages,
+      ];
+
+      // First call: get AI response with tools
+      const result = await chatCompletionWithTools(currentMessages, openAITools.length > 0 ? openAITools : undefined);
+
+      if (!result.success) {
+        throw new Error(result.error || 'AI request failed');
+      }
+
+      // Handle tool calls
+      let toolCalls = result.toolCalls;
+      let finalContent = result.content;
+
+      // Tool execution loop: execute tools and feed results back to AI
+      while (toolCalls && toolCalls.length > 0) {
+        // Show tool execution indicator
+        addMessage({ role: 'assistant', content: `🧩 正在调用 ${toolCalls.length} 个工具...` });
+
+        for (const tc of toolCalls) {
+          try {
+            const [pluginId, toolName] = tc.name.split(':');
+            const args = JSON.parse(tc.arguments);
+            const toolResult = await PluginService.callTool(pluginId, toolName, args);
+
+            // Add tool result as a special message
+            currentMessages.push({
+              id: crypto.randomUUID(),
+              role: 'tool',
+              content: JSON.stringify(toolResult),
+              timestamp: Date.now(),
+              toolCallId: tc.id,
+            });
+          } catch (toolErr) {
+            currentMessages.push({
+              id: crypto.randomUUID(),
+              role: 'tool',
+              content: JSON.stringify({ error: toolErr instanceof Error ? toolErr.message : 'Tool execution failed' }),
+              timestamp: Date.now(),
+              toolCallId: tc.id,
+            });
+          }
+        }
+
+        // Second call: send tool results back to AI
+        const followUpResult = await chatCompletionWithTools(currentMessages, openAITools.length > 0 ? openAITools : undefined);
+
+        if (!followUpResult.success) {
+          throw new Error(followUpResult.error || 'AI follow-up request failed');
+        }
+
+        finalContent = followUpResult.content;
+        toolCalls = followUpResult.toolCalls;
+
+        // If no more tool calls, use this as final content
+        if (!toolCalls || toolCalls.length === 0) {
+          aiContent = finalContent;
+        }
+      }
+
+      // If no tool calls, use the initial result
+      if (!aiContent) {
+        aiContent = finalContent;
+      }
 
       // Extract thinking content if present (format: <thinking>...</thinking> or 【思考】...【/思考】)
-      const thinkingMatch = result.match(/<(?:think(?:ing)?|thought)>([\s\S]*?)<\/(?:think(?:ing)?|thought)>/i)
-        || result.match(/【思考】([\s\S]*?)【\/思考】/)
-        || result.match(/\[(?:思考|thinking|reasoning)\]([\s\S]*?)\[\/(?:思考|thinking|reasoning)\]/i);
+      const thinkingMatch = aiContent.match(/<(?:think(?:ing)?|thought)>([\s\S]*?)<\/(?:think(?:ing)?|thought)>/i)
+        || aiContent.match(/【思考】([\s\S]*?)【\/思考】/)
+        || aiContent.match(/\[(?:思考|thinking|reasoning)\]([\s\S]*?)\[\/(?:思考|thinking|reasoning)\]/i);
 
       if (thinkingMatch) {
         thinkingContent = thinkingMatch[1].trim();
-        aiContent = result.replace(thinkingMatch[0], '').trim();
+        aiContent = aiContent.replace(thinkingMatch[0], '').trim();
         setAIThinkingContent(thinkingContent);
       } else {
-        aiContent = result;
         setAIThinkingContent(null);
       }
 
