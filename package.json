@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:electron": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "package": "npm run build && electron-builder --win --x64",

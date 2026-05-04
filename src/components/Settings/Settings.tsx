@@ -79,6 +79,75 @@ export const Settings: React.FC = () => {
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [voiceSupported, setVoiceSupported] = useState({ stt: false, tts: false });
 
+  // Desktop settings state (Electron only)
+  const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI;
+  const [desktopSettings, setDesktopSettings] = useState({
+    openAtLogin: false,
+    alwaysOnTop: false,
+    notificationsEnabled: true,
+  });
+
+  // Load desktop settings on mount
+  useEffect(() => {
+    if (!isElectron) return;
+    const loadDesktopSettings = async () => {
+      try {
+        const loginSettings = await (window as any).electronAPI.getLoginItemSettings();
+        const alwaysOnTop = await (window as any).electronAPI.getAlwaysOnTop();
+        setDesktopSettings(prev => ({
+          ...prev,
+          openAtLogin: loginSettings?.openAtLogin ?? false,
+          alwaysOnTop: alwaysOnTop ?? false,
+        }));
+      } catch (e) {
+        console.error('Failed to load desktop settings:', e);
+      }
+    };
+    loadDesktopSettings();
+
+    // Listen for always-on-top changes from main process
+    const unsubscribe = (window as any).electronAPI?.onAlwaysOnTopChanged((value: boolean) => {
+      setDesktopSettings(prev => ({ ...prev, alwaysOnTop: value }));
+    });
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [isElectron]);
+
+  // Handle desktop setting changes
+  const handleDesktopSettingChange = (key: 'openAtLogin' | 'alwaysOnTop' | 'notificationsEnabled') => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.checked;
+    setDesktopSettings(prev => ({ ...prev, [key]: value }));
+
+    if (!isElectron) return;
+    try {
+      if (key === 'openAtLogin') {
+        await (window as any).electronAPI.setLoginItemSettings(value);
+      } else if (key === 'alwaysOnTop') {
+        await (window as any).electronAPI.setAlwaysOnTop(value);
+      }
+    } catch (err) {
+      console.error('Failed to update desktop setting:', err);
+    }
+  };
+
+  // Test notification
+  const testNotification = () => {
+    if (isElectron) {
+      (window as any).electronAPI.showNotification('PixelPal Test', 'Desktop notifications are working!');
+    } else {
+      if (Notification.permission === 'granted') {
+        new Notification('PixelPal Test', { body: 'Desktop notifications are working!' });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification('PixelPal Test', { body: 'Desktop notifications are working!' });
+          }
+        });
+      }
+    }
+  };
+
   // Load memory stats on mount
   useEffect(() => {
     getMemoryStats().then(setMemoryStats).catch(() => {});
@@ -606,6 +675,92 @@ export const Settings: React.FC = () => {
               <MenuItem value="en">English</MenuItem>
             </Select>
           </FormControl>
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
+
+        {/* Desktop App Settings (Electron only) */}
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }} id="desktop-settings">
+          <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+            🖥️ Desktop App
+          </Typography>
+
+          <List dense disablePadding>
+            <ListItem sx={{ px: 0, py: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Box>
+                  <Typography variant="body2" sx={{ fontSize: 12 }}>Run at Startup</Typography>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                    Launch PixelPal when you log in
+                  </Typography>
+                </Box>
+                <Switch
+                  size="small"
+                  checked={desktopSettings.openAtLogin}
+                  onChange={handleDesktopSettingChange('openAtLogin')}
+                />
+              </Box>
+            </ListItem>
+
+            <ListItem sx={{ px: 0, py: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Box>
+                  <Typography variant="body2" sx={{ fontSize: 12 }}>Show in System Tray</Typography>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                    Keep running in background when closed
+                  </Typography>
+                </Box>
+                <Switch size="small" checked={true} disabled />
+              </Box>
+            </ListItem>
+
+            <ListItem sx={{ px: 0, py: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Box>
+                  <Typography variant="body2" sx={{ fontSize: 12 }}>Always on Top</Typography>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                    Keep window above other windows
+                  </Typography>
+                </Box>
+                <Switch
+                  size="small"
+                  checked={desktopSettings.alwaysOnTop}
+                  onChange={handleDesktopSettingChange('alwaysOnTop')}
+                />
+              </Box>
+            </ListItem>
+
+            <ListItem sx={{ px: 0, py: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Box>
+                  <Typography variant="body2" sx={{ fontSize: 12 }}>Desktop Notifications</Typography>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                    Show system notifications
+                  </Typography>
+                </Box>
+                <Switch
+                  size="small"
+                  checked={desktopSettings.notificationsEnabled}
+                  onChange={handleDesktopSettingChange('notificationsEnabled')}
+                />
+              </Box>
+            </ListItem>
+
+            <ListItem sx={{ px: 0, py: 0.5 }}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={testNotification}
+                sx={{ fontSize: 11 }}
+              >
+                Test Notification
+              </Button>
+            </ListItem>
+          </List>
+
+          <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', mt: 1, display: 'block' }}>
+            Global shortcut: Ctrl+Shift+P to show window
+          </Typography>
         </Paper>
 
         <Divider sx={{ opacity: 0.1 }} />
