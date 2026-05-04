@@ -14,7 +14,9 @@
     "email": "邮件",
     "team": "团队",
     "settings": "设置",
-    "plugins": "插件"
+    "plugins": "插件",
+    "menu": "菜单",
+    "close": "关闭"
   },
   "chat": {
     "title": "AI 聊天",
