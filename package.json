@@ -71,6 +71,7 @@
       "dist/**/*",
       "package.json"
     ],
+    "publish": null,
     "win": {
       "target": [
         {
