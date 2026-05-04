@@ -2,9 +2,9 @@ name: Build Electron (Windows)
 
 on:
   push:
-    branches: [v15-desktop-electron]
+    branches: [v16-scenes, main]
   pull_request:
-    branches: [v15-desktop-electron]
+    branches: [v16-scenes, main]
 
 jobs:
   build:
