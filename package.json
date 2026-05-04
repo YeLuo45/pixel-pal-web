@@ -3,9 +3,12 @@
   "productName": "PixelPal",
   "version": "1.0.0",
   "description": "AI Companion Desktop App",
+  "author": "YeLuo45",
   "homepage": "https://YeLuo45.github.io/pixel-pal-web",
   "private": true,
   "type": "module",
+  "npmRebuild": false,
+  "buildDependenciesFromSource": false,
   "main": "dist/main/main.js",
   "scripts": {
     "dev": "vite",
@@ -68,6 +71,7 @@
       "dist/**/*",
       "package.json"
     ],
+    "buildDependenciesFromSource": false,
     "win": {
       "target": [
         {
