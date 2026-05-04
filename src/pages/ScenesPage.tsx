@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Box, Typography, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab } from '@mui/material';
-import { Add as AddIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
+import { Add as AddIcon, AutoAwesome as AutoAwesomeIcon, FileDownload as ExportIcon, FileUpload as ImportIcon } from '@mui/icons-material';
 import { useSceneStore } from '../stores/sceneStore';
 import { SceneCard } from '../components/scene/SceneCard';
 import { SceneEditorDialog } from '../components/scene/SceneEditorDialog';
@@ -17,6 +17,8 @@ export const ScenesPage: React.FC = () => {
   const [editingScene, setEditingScene] = useState<Scene | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
+  const [importConfirmData, setImportConfirmData] = useState<Scene[] | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loaded) {
@@ -84,6 +86,54 @@ export const ScenesPage: React.FC = () => {
     scheduleScene(scene);
   };
 
+  // --- Import / Export ---
+  const handleExport = () => {
+    const data = JSON.stringify({ version: 1, scenes }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pixelpal-scenes-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const incoming: Scene[] = Array.isArray(parsed) ? parsed : (parsed.scenes ?? []);
+      if (incoming.length === 0) {
+        window.alert('未找到有效的场景数据');
+        return;
+      }
+      setImportConfirmData(incoming);
+    } catch {
+      window.alert('文件格式无效，请选择有效的 JSON 文件');
+    }
+    e.target.value = '';
+  };
+
+  const handleConfirmImport = async () => {
+    if (!importConfirmData) return;
+    for (const scene of importConfirmData) {
+      const newScene: Scene = {
+        ...scene,
+        id: `scene-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        createdAt: Date.now(),
+      };
+      await addScene(newScene);
+      scheduleScene(newScene);
+    }
+    setImportConfirmData(null);
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Tab bar */}
@@ -125,6 +175,12 @@ export const ScenesPage: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button variant="outlined" startIcon={<AutoAwesomeIcon />} onClick={() => setPresetOpen(true)} size="small">
                 预设
+              </Button>
+              <Button variant="outlined" startIcon={<ImportIcon />} onClick={handleImportClick} size="small">
+                导入
+              </Button>
+              <Button variant="outlined" startIcon={<ExportIcon />} onClick={handleExport} size="small" disabled={scenes.length === 0}>
+                导出
               </Button>
               <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
                 新建
@@ -188,6 +244,39 @@ export const ScenesPage: React.FC = () => {
       <SceneEditorDialog open={dialogOpen} onClose={handleCloseDialog} onSave={handleSave} editingScene={editingScene} />
 
       <PresetScenesModal open={presetOpen} onClose={() => setPresetOpen(false)} onAddPreset={handleAddPreset} />
+
+      {/* Hidden file input for import */}
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".json"
+        style={{ display: 'none' }}
+        onChange={handleImportFile}
+      />
+
+      {/* Import confirmation dialog */}
+      <Dialog open={!!importConfirmData} onClose={() => setImportConfirmData(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>确认导入</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            将导入以下 {importConfirmData?.length} 个场景：
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {importConfirmData?.map((s) => (
+              <Box key={s.id} sx={{ p: 1, bgcolor: 'rgba(255,255,255,0.04)', borderRadius: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>{s.name}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {s.triggers.map((t) => t.type).join(', ')} · {s.actions.length} 个动作
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setImportConfirmData(null)}>取消</Button>
+          <Button variant="contained" onClick={handleConfirmImport}>确认导入</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
