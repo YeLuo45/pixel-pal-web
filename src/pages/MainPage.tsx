@@ -15,6 +15,7 @@ import { CompanionCanvas } from '../components/PixelPal/CompanionCanvas';
 import { PluginPanel } from '../components/Plugin/PluginPanel';
 import { PluginHub } from '../components/Plugin/PluginHub';
 import { MemoryPanel } from '../components/Memory/MemoryPanel';
+import { AnalyticsPanel } from '../components/Analytics/AnalyticsPanel';
 import { registerBuiltinPlugins, registerOptionalPlugins } from '../plugins';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
@@ -31,6 +32,7 @@ const PANEL_COMPONENTS = {
   settings: Settings,
   plugin: PluginPanel,
   memory: MemoryPanel,
+  analytics: AnalyticsPanel,
 } as const;
 
 // Greeting messages library (10+ messages)

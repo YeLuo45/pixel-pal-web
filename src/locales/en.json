@@ -16,7 +16,8 @@
     "settings": "Settings",
     "plugins": "Plugins",
     "menu": "Menu",
-    "close": "Close"
+    "close": "Close",
+    "analytics": "Analytics"
   },
   "chat": {
     "title": "AI Chat",
@@ -388,5 +389,24 @@
     "selectPersona": "Select Persona",
     "personaName": "Persona Name",
     "personaTraits": "Persona Traits"
+  },
+  "analytics": {
+    "title": "Analytics Dashboard",
+    "subtitle": "Your interaction insights and habits",
+    "interactionHeatmap": "Interaction Activity",
+    "moodTrend": "Mood Trend (7 days)",
+    "memoryActivity": "Memory Distribution",
+    "habitAnalysis": "Usage by Hour",
+    "featureUsage": "Feature Usage",
+    "totalInteractions": "Total Interactions",
+    "activeDays": "Active Days",
+    "currentStreak": "Current Streak",
+    "totalMemories": "Total Memories",
+    "days": "days",
+    "noMoodData": "No mood data yet",
+    "noMemoryData": "No memory data yet",
+    "entries": "entries",
+    "interactions": "interactions",
+    "mostActiveHour": "Peak: {{hour}}:00"
   }
 }

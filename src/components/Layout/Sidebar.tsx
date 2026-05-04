@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Tooltip, Divider } from '@mui/material';
-import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon, Memory as MemoryIcon } from '@mui/icons-material';
+import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon, Memory as MemoryIcon, BarChart as AnalyticsIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { PluginService } from '../../services/plugin/PluginService';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { id: 'writing', labelKey: 'nav.writing', icon: WriteIcon },
   { id: 'email', labelKey: 'nav.email', icon: EmailIcon },
   { id: 'team', labelKey: 'nav.team', icon: GroupIcon },
+  { id: 'analytics', labelKey: 'nav.analytics', icon: AnalyticsIcon },
   { id: 'settings', labelKey: 'nav.settings', icon: SettingsIcon },
 ] as const;
 
