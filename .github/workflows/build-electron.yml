@@ -23,6 +23,11 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Remove problematic native modules
+        run: |
+          Remove-Item -Recurse -Force node_modules/canvas -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force node_modules/@nut.tree -ErrorAction SilentlyContinue
+
       - name: Build renderer and electron
         run: npm run build
 

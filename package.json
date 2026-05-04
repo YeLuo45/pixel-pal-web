@@ -71,10 +71,6 @@
       "dist/**/*",
       "package.json"
     ],
-    "asarUnpack": [
-      "node_modules/canvas/**/*"
-    ],
-    "nativeRebuilder": null,
     "win": {
       "target": [
         {
