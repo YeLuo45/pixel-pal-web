@@ -10,6 +10,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { MemoryEntry, MemoryQuery, MemoryStats, MemorySummary } from './memoryTypes';
 import { MAX_MEMORY_ENTRIES, COMPRESS_KEEP_PER_TYPE } from './memoryTypes';
+import { calculateInitialScore, recalculateImportance } from './memoryScoring';
 
 const DB_NAME = 'pixelpal-memory';
 const DB_VERSION = 1;
@@ -80,11 +81,12 @@ async function ensureSchema(db: IDBPDatabase<PixelPalMemoryDB>): Promise<void> {
 /**
  * Add a new memory entry
  */
-export async function addMemory(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'updatedAt' | 'lastAccessedAt' | 'accessCount'>): Promise<MemoryEntry> {
+export async function addMemory(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'updatedAt' | 'lastAccessedAt' | 'accessCount' | 'importanceScore'>): Promise<MemoryEntry> {
   const db = await getMemoryDB();
   await ensureSchema(db);
 
   const now = Date.now();
+  const importanceScore = calculateInitialScore(entry.type, entry.importance);
   const fullEntry: MemoryEntry = {
     ...entry,
     id: crypto.randomUUID(),
@@ -92,6 +94,8 @@ export async function addMemory(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'u
     updatedAt: now,
     lastAccessedAt: now,
     accessCount: 0,
+    importance: importanceScore, // Use initial score as current importance
+    importanceScore,
   };
 
   await db.put('memories', fullEntry);
@@ -129,18 +133,20 @@ export async function deleteMemory(id: string): Promise<boolean> {
 }
 
 /**
- * Get a single memory entry by id (increments accessCount)
+ * Get a single memory entry by id (increments accessCount and recalculates score)
  */
 export async function getMemory(id: string): Promise<MemoryEntry | null> {
   const db = await getMemoryDB();
   const entry = await db.get('memories', id);
   if (!entry) return null;
 
-  // Increment access count and update last accessed
+  // Recalculate dynamic score and increment access count
+  const newImportance = recalculateImportance(entry);
   const updated = {
     ...entry,
     accessCount: entry.accessCount + 1,
     lastAccessedAt: Date.now(),
+    importance: newImportance,
   };
   await db.put('memories', updated);
   return updated;
@@ -155,7 +161,11 @@ export async function queryMemories(query: MemoryQuery = {}): Promise<MemoryEntr
     type,
     tags,
     minImportance,
+    maxImportance,
     since,
+    startDate,
+    endDate,
+    keyword,
     limit = 100,
     offset = 0,
   } = query;
@@ -177,9 +187,31 @@ export async function queryMemories(query: MemoryQuery = {}): Promise<MemoryEntr
     results = results.filter((e) => e.importance >= minImportance);
   }
 
-  // Filter by creation time
+  // Filter by maximum importance
+  if (maxImportance !== undefined) {
+    results = results.filter((e) => e.importance <= maxImportance);
+  }
+
+  // Filter by creation time (since)
   if (since !== undefined) {
     results = results.filter((e) => e.createdAt >= since);
+  }
+
+  // Filter by date range
+  if (startDate !== undefined) {
+    results = results.filter((e) => e.createdAt >= startDate);
+  }
+  if (endDate !== undefined) {
+    results = results.filter((e) => e.createdAt <= endDate);
+  }
+
+  // Filter by keyword search
+  if (keyword && keyword.trim()) {
+    const lowerKeyword = keyword.toLowerCase().trim();
+    results = results.filter((e) =>
+      e.content.toLowerCase().includes(lowerKeyword) ||
+      e.tags.some((t) => t.toLowerCase().includes(lowerKeyword))
+    );
   }
 
   // Sort by lastAccessedAt descending (most recently accessed first)

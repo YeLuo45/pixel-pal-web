@@ -3,16 +3,16 @@
  * 
  * Provides a dedicated UI for:
  * - Memory statistics and overview
- * - Memory search and retrieval
- * - Entity graph visualization
- * - Pin/Forget specific memories
- * - Memory export
- * - Memory type filtering
+ * - Memory search and retrieval with filters
+ * - Timeline view of memories
+ * - Word cloud insights
+ * - Export/Import memories
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
+import WordCloud from 'wordcloud';
 import {
   Box,
   Typography,
@@ -36,11 +36,11 @@ import {
   LinearProgress,
   Divider,
   Collapse,
+  Slider,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Memory as MemoryIcon,
-  Hub as HubIcon,
   Timeline as TimelineIcon,
   Star as StarIcon,
   Delete as DeleteIcon,
@@ -49,17 +49,18 @@ import {
   Download as DownloadIcon,
   Refresh as RefreshIcon,
   Clear as ClearIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as CollapseIcon,
   Lightbulb as InsightIcon,
   AccountTree as GraphIcon,
   TrendingUp as TrendingUpIcon,
+  Upload as UploadIcon,
+  CalendarMonth as CalendarIcon,
 } from '@mui/icons-material';
 import {
   getMemoryStats,
   queryMemories,
   getMemory,
   deleteMemory,
+  addMemory,
 } from '../../services/memory/memoryStorage';
 import { type MemoryEntry, type MemoryType, type MemoryStats } from '../../services/memory/memoryTypes';
 import {
@@ -73,7 +74,6 @@ import {
   smartRetrieve,
   retrieveRecentImportant,
   retrieveFrequent,
-  getMemoryClusters,
   type ScoredMemory,
 } from '../../services/memory/smartRetrieval';
 import { generateMemoryInsights } from '../../services/memory/summarization';
@@ -100,6 +100,14 @@ function formatRelativeTime(timestamp: number): string {
   if (hours < 24) return i18next.t('time.hoursAgo', { count: hours });
   if (days < 7) return i18next.t('time.daysAgo', { count: days });
   return new Date(timestamp).toLocaleDateString();
+}
+
+function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString(i18next.language === 'zh' ? 'zh-CN' : 'en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 export const MemoryPanel: React.FC = () => {
@@ -132,6 +140,11 @@ export const MemoryPanel: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<MemoryType | 'all'>('all');
   const [sortBy, setSortBy] = useState<'recent' | 'importance' | 'frequency'>('recent');
 
+  // Search/filter state for AllMemoriesTab
+  const [keywordFilter, setKeywordFilter] = useState('');
+  const [dateRange, setDateRange] = useState<[number | null, number | null]>([null, null]);
+  const [importanceRange, setImportanceRange] = useState<[number, number]>([0, 100]);
+
   // Selected memory for detail view
   const [selectedMemory, setSelectedMemory] = useState<MemoryEntry | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -139,16 +152,13 @@ export const MemoryPanel: React.FC = () => {
   // Pinned memories
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
 
-  // Clusters
-  const [clusters, setClusters] = useState<Array<{
-    id: string;
-    memories: MemoryEntry[];
-    commonTags: string[];
-    description: string;
-  }>>([]);
-
   // Export dialog
   const [exportOpen, setExportOpen] = useState(false);
+
+  // Import dialog
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
 
   // Load memories
   const loadMemories = useCallback(async () => {
@@ -185,8 +195,6 @@ export const MemoryPanel: React.FC = () => {
       const allMemories = await queryMemories({ limit: 100 });
       const memoryInsights = await generateMemoryInsights(allMemories);
       setInsights(memoryInsights);
-      const memoryClusters = await getMemoryClusters();
-      setClusters(memoryClusters);
     } catch (err) {
       console.error('Failed to load insights:', err);
     }
@@ -212,6 +220,26 @@ export const MemoryPanel: React.FC = () => {
       default:
         return b.createdAt - a.createdAt;
     }
+  });
+
+  // Filter memories by keyword, date range, and importance
+  const filteredMemories = sortedMemories.filter((m) => {
+    if (keywordFilter.trim()) {
+      const kw = keywordFilter.toLowerCase();
+      if (!m.content.toLowerCase().includes(kw) && !m.tags.some((t) => t.toLowerCase().includes(kw))) {
+        return false;
+      }
+    }
+    if (m.importance < importanceRange[0] || m.importance > importanceRange[1]) {
+      return false;
+    }
+    if (dateRange[0] !== null && m.createdAt < dateRange[0]) {
+      return false;
+    }
+    if (dateRange[1] !== null && m.createdAt > dateRange[1]) {
+      return false;
+    }
+    return true;
   });
 
   // Search handler
@@ -286,6 +314,38 @@ export const MemoryPanel: React.FC = () => {
     setExportOpen(false);
   };
 
+  // Import memories
+  const handleImport = async () => {
+    if (!importFile) return;
+    setImporting(true);
+    try {
+      const text = await importFile.text();
+      const imported = JSON.parse(text) as MemoryEntry[];
+      let count = 0;
+      for (const entry of imported) {
+        if (entry.id && entry.type && entry.content) {
+          await addMemory({
+            type: entry.type,
+            content: entry.content,
+            importance: entry.importance || 50,
+            tags: entry.tags || [],
+            metadata: entry.metadata,
+          });
+          count++;
+        }
+      }
+      alert(t('memoryPanel.importSuccess', { count }));
+      setImportOpen(false);
+      setImportFile(null);
+      loadMemories();
+      loadStats();
+    } catch (err) {
+      console.error('Import failed:', err);
+      alert(t('memoryPanel.importFailed'));
+    }
+    setImporting(false);
+  };
+
   // Memory detail view
   const openDetail = async (id: string) => {
     const memory = await getMemory(id);
@@ -342,6 +402,9 @@ export const MemoryPanel: React.FC = () => {
           <Button size="small" variant="outlined" onClick={() => setExportOpen(true)} sx={{ fontSize: 10, py: 0.25, px: 1 }}>
             <DownloadIcon sx={{ fontSize: 12, mr: 0.5 }} /> {t('memoryPanel.export')}
           </Button>
+          <Button size="small" variant="outlined" onClick={() => setImportOpen(true)} sx={{ fontSize: 10, py: 0.25, px: 1 }}>
+            <UploadIcon sx={{ fontSize: 12, mr: 0.5 }} /> {t('memoryPanel.import')}
+          </Button>
         </Stack>
       </Box>
 
@@ -359,7 +422,7 @@ export const MemoryPanel: React.FC = () => {
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {tab === 0 && (
           <AllMemoriesTab
-            memories={sortedMemories}
+            memories={filteredMemories}
             loading={loading}
             pinnedIds={pinnedIds}
             stats={stats}
@@ -370,6 +433,12 @@ export const MemoryPanel: React.FC = () => {
             onSortChange={setSortBy}
             typeFilter={typeFilter}
             onTypeFilterChange={setTypeFilter}
+            keywordFilter={keywordFilter}
+            onKeywordFilterChange={setKeywordFilter}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            importanceRange={importanceRange}
+            onImportanceRangeChange={setImportanceRange}
           />
         )}
 
@@ -382,7 +451,7 @@ export const MemoryPanel: React.FC = () => {
 
         {tab === 2 && (
           <TimelineTab
-            clusters={clusters}
+            onRefresh={loadMemories}
           />
         )}
 
@@ -391,6 +460,7 @@ export const MemoryPanel: React.FC = () => {
             insights={insights}
             stats={stats}
             entityStats={entityStats}
+            memories={memories}
           />
         )}
       </Box>
@@ -464,7 +534,7 @@ export const MemoryPanel: React.FC = () => {
                   size="small"
                   sx={{ bgcolor: MEMORY_TYPE_COLORS[selectedMemory.type] + '33', color: MEMORY_TYPE_COLORS[selectedMemory.type] }}
                 />
-                <Chip label={`${t('memoryPanel.importance')}: ${selectedMemory.importance}`} size="small" variant="outlined" />
+                <Chip label={`${t('memoryPanel.importance')}: ${selectedMemory.importance}/100`} size="small" variant="outlined" />
                 <Chip label={`${t('memoryPanel.accessed')}: ${selectedMemory.accessCount}x`} size="small" variant="outlined" />
               </Box>
 
@@ -518,6 +588,36 @@ export const MemoryPanel: React.FC = () => {
           <Button onClick={handleExport} size="small" variant="contained">{t('memoryPanel.export')}</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog open={importOpen} onClose={() => setImportOpen(false)} maxWidth="xs">
+        <DialogTitle sx={{ fontSize: 14 }}>{t('memoryPanel.importMemories')}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ fontSize: 12, mb: 2 }}>
+            {t('memoryPanel.importHint')}
+          </Typography>
+          <Button
+            variant="outlined"
+            component="label"
+            fullWidth
+            size="small"
+            startIcon={<UploadIcon />}
+          >
+            {importFile ? importFile.name : t('memoryPanel.selectFile')}
+            <input
+              type="file"
+              accept=".json"
+              hidden
+              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+            />
+          </Button>
+          {importing && <LinearProgress sx={{ mt: 1 }} />}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setImportOpen(false); setImportFile(null); }} size="small">{t('memoryPanel.cancel')}</Button>
+          <Button onClick={handleImport} size="small" variant="contained" disabled={!importFile || importing}>{t('memoryPanel.import')}</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
@@ -535,6 +635,12 @@ interface AllMemoriesTabProps {
   onSortChange: (sort: 'recent' | 'importance' | 'frequency') => void;
   typeFilter: MemoryType | 'all';
   onTypeFilterChange: (filter: MemoryType | 'all') => void;
+  keywordFilter: string;
+  onKeywordFilterChange: (v: string) => void;
+  dateRange: [number | null, number | null];
+  onDateRangeChange: (v: [number | null, number | null]) => void;
+  importanceRange: [number, number];
+  onImportanceRangeChange: (v: [number, number]) => void;
 }
 
 function AllMemoriesTab({
@@ -549,8 +655,16 @@ function AllMemoriesTab({
   onSortChange,
   typeFilter,
   onTypeFilterChange,
+  keywordFilter,
+  onKeywordFilterChange,
+  dateRange,
+  onDateRangeChange,
+  importanceRange,
+  onImportanceRangeChange,
 }: AllMemoriesTabProps) {
   const { t } = useTranslation();
+  const [showFilters, setShowFilters] = useState(false);
+
   return (
     <Stack spacing={2}>
       {/* Stats summary */}
@@ -586,6 +700,84 @@ function AllMemoriesTab({
           </Stack>
         </Paper>
       )}
+
+      {/* Search + Filter toggle */}
+      <Stack direction="row" spacing={1} alignItems="center">
+        <TextField
+          size="small"
+          placeholder={t('memoryPanel.filterKeyword')}
+          value={keywordFilter}
+          onChange={(e) => onKeywordFilterChange(e.target.value)}
+          sx={{ flex: 1, fontSize: 12 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ fontSize: 16 }} />
+              </InputAdornment>
+            ),
+            endAdornment: keywordFilter && (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => onKeywordFilterChange('')}>
+                  <ClearIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Button size="small" variant="outlined" onClick={() => setShowFilters(!showFilters)} sx={{ fontSize: 10 }}>
+          <CalendarIcon sx={{ fontSize: 14, mr: 0.5 }} /> {t('memoryPanel.filters')}
+        </Button>
+      </Stack>
+
+      {/* Advanced filters */}
+      <Collapse in={showFilters}>
+        <Paper sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 1 }}>
+          <Stack spacing={1.5}>
+            {/* Date range */}
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', mb: 0.5 }}>
+                {t('memoryPanel.dateRange')}
+              </Typography>
+              <Stack direction="row" spacing={1}>
+                <TextField
+                  size="small"
+                  type="date"
+                  label={t('memoryPanel.startDate')}
+                  value={dateRange[0] ? new Date(dateRange[0]).toISOString().split('T')[0] : ''}
+                  onChange={(e) => onDateRangeChange([e.target.value ? new Date(e.target.value).getTime() : null, dateRange[1]])}
+                  sx={{ flex: 1, fontSize: 12 }}
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  size="small"
+                  type="date"
+                  label={t('memoryPanel.endDate')}
+                  value={dateRange[1] ? new Date(dateRange[1]).toISOString().split('T')[0] : ''}
+                  onChange={(e) => onDateRangeChange([dateRange[0], e.target.value ? new Date(e.target.value).getTime() : null])}
+                  sx={{ flex: 1, fontSize: 12 }}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Stack>
+            </Box>
+
+            {/* Importance range */}
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                {t('memoryPanel.importanceRange')}: {importanceRange[0]} - {importanceRange[1]}
+              </Typography>
+              <Slider
+                value={importanceRange}
+                onChange={(_, v) => onImportanceRangeChange(v as [number, number])}
+                valueLabelDisplay="auto"
+                min={0}
+                max={100}
+                size="small"
+                valueLabelFormat={(v) => `${v}`}
+              />
+            </Box>
+          </Stack>
+        </Paper>
+      </Collapse>
 
       {/* Type filter */}
       <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
@@ -679,7 +871,10 @@ function AllMemoriesTab({
                       color: MEMORY_TYPE_COLORS[memory.type],
                     }}
                   />
-                  {memory.importance >= 7 && <StarIcon sx={{ fontSize: 12, color: 'warning.main' }} />}
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'primary.main', fontWeight: 600 }}>
+                    {memory.importance}
+                  </Typography>
+                  {memory.importance >= 70 && <StarIcon sx={{ fontSize: 12, color: 'warning.main' }} />}
                   <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled', ml: 'auto' }}>
                     {formatRelativeTime(memory.createdAt)}
                   </Typography>
@@ -828,72 +1023,148 @@ function EntitiesTab({ entityStats, onRefresh }: EntitiesTabProps) {
   );
 }
 
-// Timeline Tab
+// Timeline Tab - shows memories sorted by createdAt descending as a timeline
 interface TimelineTabProps {
-  clusters: Array<{
-    id: string;
-    memories: MemoryEntry[];
-    commonTags: string[];
-    description: string;
-  }>;
+  onRefresh: () => void;
 }
 
-function TimelineTab({ clusters }: TimelineTabProps) {
+function TimelineTab({ onRefresh }: TimelineTabProps) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [timelineMemories, setTimelineMemories] = useState<MemoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadTimeline();
+  }, []);
+
+  const loadTimeline = async () => {
+    setLoading(true);
+    try {
+      const all = await queryMemories({ limit: 100 });
+      // Sort by createdAt descending (newest first)
+      const sorted = [...all].sort((a, b) => b.createdAt - a.createdAt);
+      setTimelineMemories(sorted);
+    } catch (err) {
+      console.error('Failed to load timeline:', err);
+    }
+    setLoading(false);
+  };
+
+  // Group memories by date (year-month-day)
+  const groupedByDate: Record<string, MemoryEntry[]> = {};
+  for (const m of timelineMemories) {
+    const dateKey = new Date(m.createdAt).toISOString().split('T')[0];
+    if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
+    groupedByDate[dateKey].push(m);
+  }
+  const dateKeys = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
 
   return (
     <Stack spacing={2}>
-      <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
-        {t('memoryPanel.memoryClusters')}
-      </Typography>
+      <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+        <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
+          {t('memoryPanel.timelineView')}
+        </Typography>
+        <IconButton size="small" onClick={() => { loadTimeline(); onRefresh(); }}>
+          <RefreshIcon sx={{ fontSize: 14 }} />
+        </IconButton>
+      </Stack>
 
-      {clusters.length === 0 ? (
+      {loading ? (
+        <LinearProgress />
+      ) : timelineMemories.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 4 }}>
-          <HubIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+          <TimelineIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
           <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: 12 }}>
-            {t('memoryPanel.noClusters')}
+            {t('memoryPanel.noMemories')}
           </Typography>
         </Box>
       ) : (
-        clusters.map(cluster => (
-          <Paper key={cluster.id} sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 1 }}>
-            <Box
-              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-              onClick={() => setExpanded(expanded === cluster.id ? null : cluster.id)}
-            >
-              <Stack direction="row" spacing={1} alignItems="center">
-                <HubIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 600 }}>
-                  {cluster.id}
-                </Typography>
-                <Chip label={t('memoryPanel.clusterMemories', { count: cluster.memories.length })} size="small" sx={{ height: 18, fontSize: 9 }} />
-              </Stack>
-              {expanded === cluster.id ? <CollapseIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
-            </Box>
+        <Box sx={{ position: 'relative', pl: 2 }}>
+          {/* Vertical timeline line */}
+          <Box sx={{ position: 'absolute', left: 8, top: 0, bottom: 0, width: 2, bgcolor: 'divider' }} />
+          
+          <Stack spacing={2}>
+            {dateKeys.map(dateKey => (
+              <Box key={dateKey} sx={{ position: 'relative' }}>
+                {/* Date marker */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5, ml: -2 }}>
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'primary.main', mr: 1, zIndex: 1 }} />
+                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: 'primary.main' }}>
+                    {formatDate(new Date(dateKey).getTime())}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled', ml: 0.5 }}>
+                    ({groupedByDate[dateKey].length} {t('memoryPanel.entries')})
+                  </Typography>
+                </Box>
 
-            <Collapse in={expanded === cluster.id}>
-              <Stack spacing={0.5} sx={{ mt: 1 }}>
-                {cluster.memories.slice(0, 5).map((memory) => (
-                  <Box key={memory.id} sx={{ pl: 4 }}>
-                    <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
-                      {formatRelativeTime(memory.createdAt)}
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: 11 }}>
-                      {memory.content.slice(0, 100)}...
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            </Collapse>
-          </Paper>
-        ))
+                {/* Memories for this date */}
+                <Stack spacing={0.5} sx={{ ml: 2 }}>
+                  {groupedByDate[dateKey].map(memory => (
+                    <Paper
+                      key={memory.id}
+                      sx={{
+                        p: 1,
+                        bgcolor: 'rgba(255,255,255,0.03)',
+                        borderRadius: 1,
+                        cursor: 'pointer',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' },
+                      }}
+                      onClick={() => setExpandedId(expandedId === memory.id ? null : memory.id)}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                        <Chip
+                          label={i18next.t('memory.memoryTypes.' + memory.type)}
+                          size="small"
+                          sx={{
+                            height: 14,
+                            fontSize: 7,
+                            bgcolor: MEMORY_TYPE_COLORS[memory.type] + '33',
+                            color: MEMORY_TYPE_COLORS[memory.type],
+                          }}
+                        />
+                        <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled' }}>
+                          {new Date(memory.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: 9, color: 'primary.main', ml: 'auto' }}>
+                          {memory.importance}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontSize: 11,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: expandedId === memory.id ? 'pre-wrap' : 'nowrap',
+                          maxHeight: expandedId === memory.id ? 'none' : 40,
+                        }}
+                      >
+                        {memory.content}
+                      </Typography>
+                      {memory.tags.length > 0 && expandedId === memory.id && (
+                        <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }} flexWrap="wrap">
+                          {memory.tags.map(tag => (
+                            <Typography key={tag} variant="caption" sx={{ fontSize: 8, color: 'text.secondary' }}>
+                              #{tag}
+                            </Typography>
+                          ))}
+                        </Stack>
+                      )}
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
       )}
     </Stack>
   );
 }
 
-// Insights Tab
+// Insights Tab - word cloud + memory distribution
 interface InsightsTabProps {
   insights: string[];
   stats: MemoryStats | null;
@@ -903,15 +1174,76 @@ interface InsightsTabProps {
     totalRelationships: number;
     mostConnected: Entity[];
   } | null;
+  memories: MemoryEntry[];
 }
 
-function InsightsTab({ insights, stats, entityStats }: InsightsTabProps) {
+function InsightsTab({ insights, stats, entityStats, memories }: InsightsTabProps) {
   const { t } = useTranslation();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Generate word cloud from memory content
+  useEffect(() => {
+    if (!canvasRef.current || memories.length === 0) return;
+
+    // Extract words from memory content
+    const wordCounts: Record<string, number> = {};
+    const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'was', 'are', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'what', 'which', 'who', 'when', 'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'also', 'now', 'here', 'there', 'then', 'once', 'if', 'about', 'after', 'before', 'above', 'below', 'between', 'into', 'through', 'during', 'under', 'again', 'further', 'because', 'as', 'until', 'while', 'out', 'over', 'up', 'down', 'from', 'like', 'get', 'got', 'go', 'went', 'come', 'came', 'make', 'made', 'take', 'took', 'see', 'saw', 'know', 'knew', 'think', 'thought', 'want', 'use', 'find', 'give', 'tell', 'try', 'leave', 'call']);
+
+    for (const memory of memories) {
+      const words = memory.content.toLowerCase()
+        .replace(/[^\w\s]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length > 2 && !stopWords.has(w) && !/^\d+$/.test(w));
+      
+      for (const word of words) {
+        wordCounts[word] = (wordCounts[word] || 0) + 1;
+      }
+    }
+
+    // Get top 20 words
+    const topWords = Object.entries(wordCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([word, count]) => [word, Math.max(12, Math.min(48, count * 4))] as [string, number]);
+
+    if (topWords.length === 0) return;
+
+    // Draw word cloud
+    try {
+      const colors = Object.values(MEMORY_TYPE_COLORS);
+      WordCloud(canvasRef.current, {
+        list: topWords,
+        gridSize: 6,
+        weightFactor: 1,
+        fontFamily: 'Roboto, sans-serif',
+        color: () => colors[Math.floor(Math.random() * colors.length)] || '#9B7FD4',
+        backgroundColor: 'transparent',
+        rotateRatio: 0.3,
+        minSize: 10,
+        maxSpeed: 3,
+      });
+    } catch (err) {
+      console.error('Word cloud error:', err);
+    }
+  }, [memories]);
+
   return (
     <Stack spacing={2}>
       <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
         {t('memoryPanel.memoryInsights')}
       </Typography>
+
+      {/* Word Cloud */}
+      {memories.length > 0 && (
+        <Paper sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 1 }}>
+          <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', mb: 1, display: 'block' }}>
+            {t('memoryPanel.wordCloud')}
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 180 }}>
+            <canvas ref={canvasRef} width={400} height={180} style={{ maxWidth: '100%' }} />
+          </Box>
+        </Paper>
+      )}
 
       {/* Generated insights */}
       {insights.length > 0 ? (

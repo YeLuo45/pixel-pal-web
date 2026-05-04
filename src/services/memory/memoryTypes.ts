@@ -9,7 +9,8 @@ export interface MemoryEntry {
   id: string;
   type: MemoryType;
   content: string;
-  importance: number;         // 0-10, auto-summarization threshold
+  importance: number;         // 0-100, dynamic score recalculated by algorithm
+  importanceScore: number;    // Initial calculated score at creation (0-100)
   createdAt: number;          // Unix timestamp ms
   updatedAt: number;
   lastAccessedAt: number;
@@ -32,7 +33,11 @@ export interface MemoryQuery {
   type?: MemoryType;
   tags?: string[];
   minImportance?: number;
+  maxImportance?: number;
   since?: number;            // Unix timestamp, filter by createdAt
+  startDate?: number;        // Start date for date range filter (createdAt >= startDate)
+  endDate?: number;          // End date for date range filter (createdAt <= endDate)
+  keyword?: string;          // Keyword search in content
   limit?: number;
   offset?: number;
 }
@@ -53,13 +58,13 @@ export interface MemorySummary {
   lastUpdated: number;
 }
 
-// Memory importance thresholds
+// Memory importance thresholds (0-100 scale)
 export const MEMORY_IMPORTANCE = {
-  TRIVIAL: 1,
-  LOW: 3,
-  NORMAL: 5,
-  IMPORTANT: 7,
-  CRITICAL: 9,
+  TRIVIAL: 10,
+  LOW: 30,
+  NORMAL: 50,
+  IMPORTANT: 70,
+  CRITICAL: 90,
 } as const;
 
 // Auto-summarize if access count exceeds this (for low-importance entries)

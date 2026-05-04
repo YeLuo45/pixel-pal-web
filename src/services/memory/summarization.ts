@@ -234,6 +234,7 @@ export function createMemoryFromSummary(
     type: result.suggestedMemoryType,
     content: result.summary,
     importance: result.importanceScore,
+    importanceScore: result.importanceScore,
     tags: result.suggestedTags,
     metadata: {
       topics: result.topics,
