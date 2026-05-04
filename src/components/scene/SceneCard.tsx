@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Card, CardContent, Typography, Switch, IconButton, Chip, Tooltip } from '@mui/material';
+import { Box, Card, CardContent, Typography, Switch, IconButton, Chip } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Bolt as BoltIcon } from '@mui/icons-material';
 import type { Scene } from '../../types/scene';
 
@@ -55,17 +55,27 @@ export const SceneCard: React.FC<SceneCardProps> = ({ scene, onEdit, onDelete, o
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           {scene.isQuick && onQuickTrigger && (
-            <Tooltip title="快速触发">
-              <IconButton size="small" onClick={() => onQuickTrigger(scene)} sx={{ color: 'primary.main' }}>
-                <BoltIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            <IconButton
+              size="small"
+              onClick={() => onQuickTrigger(scene)}
+              sx={{ color: 'primary.main', minWidth: 44, minHeight: 44 }}
+            >
+              <BoltIcon fontSize="small" />
+            </IconButton>
           )}
           <Box sx={{ flex: 1 }} />
-          <IconButton size="small" onClick={() => onEdit(scene)}>
+          <IconButton
+            size="small"
+            onClick={() => onEdit(scene)}
+            sx={{ minWidth: 44, minHeight: 44 }}
+          >
             <EditIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small" onClick={() => onDelete(scene.id)} sx={{ color: 'error.main' }}>
+          <IconButton
+            size="small"
+            onClick={() => onDelete(scene.id)}
+            sx={{ color: 'error.main', minWidth: 44, minHeight: 44 }}
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>

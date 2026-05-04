@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
-  FormControlLabel, Switch,
+  FormControlLabel, Switch, useMediaQuery,
 } from '@mui/material';
 import type { Scene, Trigger, Action } from '../../types/scene';
 import { TriggerConfig } from './TriggerConfig';
@@ -15,6 +15,7 @@ interface SceneEditorDialogProps {
 }
 
 export const SceneEditorDialog: React.FC<SceneEditorDialogProps> = ({ open, onClose, onSave, editingScene }) => {
+  const isMobile = useMediaQuery('(max-width: 600px)');
   const [name, setName] = useState('');
   const [isQuick, setIsQuick] = useState(false);
   const [triggers, setTriggers] = useState<Trigger[]>([]);
@@ -52,9 +53,23 @@ export const SceneEditorDialog: React.FC<SceneEditorDialogProps> = ({ open, onCl
   const isValid = name.trim().length > 0 && triggers.length > 0 && actions.length > 0;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ pb: 1 }}>{editingScene ? '编辑场景' : '新建场景'}</DialogTitle>
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      fullScreen={isMobile}
+      PaperProps={{
+        sx: {
+          borderRadius: isMobile ? 0 : 2,
+          minHeight: isMobile ? '100%' : undefined,
+        },
+      }}
+    >
+      <DialogTitle sx={{ pb: 1, fontSize: isMobile ? 18 : undefined }}>
+        {editingScene ? '编辑场景' : '新建场景'}
+      </DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, overflowY: isMobile ? 'auto' : undefined }}>
         <TextField
           label="场景名称"
           value={name}
@@ -74,9 +89,11 @@ export const SceneEditorDialog: React.FC<SceneEditorDialogProps> = ({ open, onCl
 
         <ActionConfig actions={actions} onChange={setActions} />
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose}>取消</Button>
-        <Button variant="contained" onClick={handleSave} disabled={!isValid}>
+      <DialogActions sx={{ px: 3, pb: 2, flexDirection: { xs: 'column-reverse', sm: 'row' }, gap: 1 }}>
+        <Button onClick={onClose} fullWidth={isMobile} variant="outlined">
+          取消
+        </Button>
+        <Button variant="contained" onClick={handleSave} disabled={!isValid} fullWidth={isMobile}>
           保存
         </Button>
       </DialogActions>
