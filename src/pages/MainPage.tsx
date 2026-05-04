@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Drawer, useMediaQuery, IconButton } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
-import { Sidebar } from '../components/Layout/Sidebar';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { ChatPanel } from '../components/ChatPanel/ChatPanel';
 import { Calendar } from '../components/Calendar/Calendar';
 import { Tasks } from '../components/Tasks/Tasks';
@@ -18,6 +16,8 @@ import { MemoryPanel } from '../components/Memory/MemoryPanel';
 import { AnalyticsPanel } from '../components/Analytics/AnalyticsPanel';
 import { ScenesPage } from '../pages/ScenesPage';
 import { QuickSceneBar } from '../components/scene/QuickSceneBar';
+import { ResponsiveSidebar } from '../components/Layout/ResponsiveSidebar';
+import { OfflineBanner } from '../components/Layout/OfflineBanner';
 import { registerBuiltinPlugins, registerOptionalPlugins } from '../plugins';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
@@ -243,8 +243,10 @@ export const MainPage: React.FC = () => {
   const activePanel = useStore((s) => s.activePanel);
   const activePluginId = useStore((s) => s.activePluginId);
   const setActivePluginId = useStore((s) => s.setActivePluginId);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
 
   // Register built-in and optional plugins once on mount
   useEffect(() => {
@@ -277,27 +279,11 @@ export const MainPage: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: 'rgba(10, 5, 20, 1)' }}>
-      {/* Desktop sidebar */}
-      {!isMobile && <Sidebar />}
+      {/* Offline Banner */}
+      <OfflineBanner />
 
-      {/* Mobile drawer */}
-      {isMobile && (
-        <>
-          <IconButton
-            onClick={() => setMobileOpen(true)}
-            sx={{ position: 'fixed', top: 8, left: 8, zIndex: 1300, bgcolor: 'rgba(0,0,0,0.5)', color: 'white' }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Drawer
-            open={mobileOpen}
-            onClose={() => setMobileOpen(false)}
-            sx={{ '& .MuiDrawer-paper': { bgcolor: 'rgba(15, 10, 30, 0.98)', width: 200 } }}
-          >
-            <Sidebar onNavigate={() => setMobileOpen(false)} />
-          </Drawer>
-        </>
-      )}
+      {/* Responsive Sidebar (handles mobile/tablet/desktop) */}
+      <ResponsiveSidebar />
 
       {/* Main content */}
       <Box
@@ -307,7 +293,8 @@ export const MainPage: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          ml: isMobile ? 0 : '0 !important',
+          ml: isDesktop ? '0 !important' : 0,
+          transition: 'margin-left 0.2s ease',
         }}
       >
         {/* Panel */}

@@ -18,7 +18,14 @@
     "menu": "Menu",
     "close": "Close",
     "analytics": "Analytics",
-    "scenes": "Scenes"
+    "scenes": "Scenes",
+    "sidebar": {
+      "expand": "Expand sidebar",
+      "collapse": "Collapse sidebar"
+    }
+  },
+  "offline": {
+    "banner": "You are offline. Some features may be unavailable."
   },
   "chat": {
     "title": "AI Chat",
