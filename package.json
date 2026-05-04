@@ -74,7 +74,7 @@
     "asarUnpack": [
       "node_modules/canvas/**/*"
     ],
-    "nativeRebuilder": "skip",
+    "nativeRebuilder": null,
     "win": {
       "target": [
         {
