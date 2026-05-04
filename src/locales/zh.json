@@ -229,7 +229,60 @@
     "panel": "面板",
     "noPlugins": "暂无注册的插件",
     "notFound": "插件未找到",
-    "noPanelContent": "此插件没有面板内容"
+    "noPanelContent": "此插件没有面板内容",
+    "availablePlugins": "可用插件",
+    "install": "安装",
+    "uninstall": "卸载",
+    "builtIn": "内置"
+  },
+  "news": {
+    "title": "新闻阅读器设置",
+    "subtitle": "配置自动刷新和聊天通知",
+    "enabled": "启用新闻插件",
+    "refreshInterval": "自动刷新间隔",
+    "refreshIntervalOptions": {
+      "5min": "每5分钟",
+      "15min": "每15分钟",
+      "30min": "每30分钟",
+      "1hr": "每小时",
+      "2hr": "每2小时",
+      "off": "关闭（仅手动）"
+    },
+    "notifyToChat": "推送新文章到聊天面板",
+    "notifyToChatHint": "检测到新文章时在聊天中通知你",
+    "saved": "已保存！",
+    "intervalHint": "启用后，将自动轮询第一个配置的订阅源。设置为0可禁用轮询。"
+  },
+  "webhook": {
+    "title": "Webhooks",
+    "add": "添加 Webhook",
+    "edit": "编辑 Webhook",
+    "name": "名称",
+    "url": "URL",
+    "method": "方法",
+    "triggerType": "触发类型",
+    "scheduled": "定时执行（Cron）",
+    "event": "事件触发",
+    "cron": "Cron 表达式",
+    "eventType": "事件类型",
+    "headers": "请求头",
+    "body": "请求体",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "runNow": "立即运行",
+    "lastRun": "上次运行",
+    "lastStatus": "上次状态",
+    "success": "成功",
+    "failure": "失败",
+    "logs": "执行日志",
+    "noLogs": "暂无执行日志",
+    "cronPresets": {
+      "every5min": "每5分钟",
+      "every15min": "每15分钟",
+      "everyHour": "每小时",
+      "everyDay": "每天午夜",
+      "everyMonday": "每周一"
+    }
   },
   "common": {
     "loading": "加载中...",

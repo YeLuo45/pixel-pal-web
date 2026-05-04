@@ -8,9 +8,10 @@ import { PluginService } from '../../services/plugin/PluginService';
 interface PluginPanelProps {
   pluginId: string;
   onBack?: () => void;
+  onSettings?: () => void;
 }
 
-export const PluginPanel: React.FC<PluginPanelProps> = ({ pluginId, onBack }) => {
+export const PluginPanel: React.FC<PluginPanelProps> = ({ pluginId, onBack, onSettings }) => {
   const { t } = useTranslation();
   const plugin = PluginService.getPlugin(pluginId);
 
@@ -55,7 +56,7 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ pluginId, onBack }) =>
             <ArrowBackIcon sx={{ fontSize: 16 }} />
           </IconButton>
         )}
-        <IconButton size="small" sx={{ ml: 0.5 }}>
+        <IconButton size="small" onClick={onSettings} sx={{ ml: 0.5 }}>
           <SettingsIcon sx={{ fontSize: 16 }} />
         </IconButton>
       </Box>

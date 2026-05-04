@@ -15,7 +15,7 @@ import { CompanionCanvas } from '../components/PixelPal/CompanionCanvas';
 import { PluginPanel } from '../components/Plugin/PluginPanel';
 import { PluginHub } from '../components/Plugin/PluginHub';
 import { MemoryPanel } from '../components/Memory/MemoryPanel';
-import { registerBuiltinPlugins } from '../plugins';
+import { registerBuiltinPlugins, registerOptionalPlugins } from '../plugins';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
 
@@ -241,9 +241,10 @@ export const MainPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // Register built-in plugins once on mount
+  // Register built-in and optional plugins once on mount
   useEffect(() => {
     registerBuiltinPlugins();
+    registerOptionalPlugins();
   }, []);
 
   // Resolve the active component

@@ -11,6 +11,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { MemoryEntry, MemoryQuery, MemoryStats, MemorySummary } from './memoryTypes';
 import { MAX_MEMORY_ENTRIES, COMPRESS_KEEP_PER_TYPE } from './memoryTypes';
 import { calculateInitialScore, recalculateImportance } from './memoryScoring';
+import { memoryEvents } from '../webhook/WebhookService';
 
 const DB_NAME = 'pixelpal-memory';
 const DB_VERSION = 1;
@@ -99,6 +100,7 @@ export async function addMemory(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'u
   };
 
   await db.put('memories', fullEntry);
+  memoryEvents.emit('memory:created', fullEntry);
   return fullEntry;
 }
 
@@ -118,6 +120,7 @@ export async function updateMemory(id: string, updates: Partial<MemoryEntry>): P
   };
 
   await db.put('memories', updated);
+  memoryEvents.emit('memory:updated', updated);
   return updated;
 }
 
@@ -149,6 +152,7 @@ export async function getMemory(id: string): Promise<MemoryEntry | null> {
     importance: newImportance,
   };
   await db.put('memories', updated);
+  memoryEvents.emit('memory:accessed', updated);
   return updated;
 }
 

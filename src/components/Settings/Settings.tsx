@@ -17,6 +17,7 @@ import { testModel } from '../../services/ai/model-registry-adapter';
 import { PERSONAS, MOODS } from '../../services/companion/personalityTypes';
 import { getMemoryStats, clearAllMemories, compactMemory } from '../../services/memory/memoryStorage';
 import { voiceService } from '../../services/voice/voiceService';
+import { WebhookSettings } from './WebhookSettings';
 import type { ModelConfig } from '../../services/ai/model-registry';
 import type { PersonaId } from '../../types';
 
@@ -866,6 +867,9 @@ export const Settings: React.FC = () => {
             </Typography>
           )}
         </Paper>
+
+        {/* Webhook Settings */}
+        <WebhookSettings />
 
         {/* About */}
         <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>

@@ -229,7 +229,60 @@
     "panel": "Panel",
     "noPlugins": "No plugins registered",
     "notFound": "Plugin not found",
-    "noPanelContent": "This plugin has no panel content"
+    "noPanelContent": "This plugin has no panel content",
+    "availablePlugins": "Available Plugins",
+    "install": "Install",
+    "uninstall": "Uninstall",
+    "builtIn": "Built-in"
+  },
+  "news": {
+    "title": "News Reader Settings",
+    "subtitle": "Configure auto-refresh and chat notifications",
+    "enabled": "Enable News plugin",
+    "refreshInterval": "Auto-refresh Interval",
+    "refreshIntervalOptions": {
+      "5min": "Every 5 minutes",
+      "15min": "Every 15 minutes",
+      "30min": "Every 30 minutes",
+      "1hr": "Every hour",
+      "2hr": "Every 2 hours",
+      "off": "Off (manual only)"
+    },
+    "notifyToChat": "Push new articles to ChatPanel",
+    "notifyToChatHint": "Notify you in chat when new articles are detected",
+    "saved": "Saved!",
+    "intervalHint": "When enabled, the first configured feed is polled automatically. Set to 0 to disable polling."
+  },
+  "webhook": {
+    "title": "Webhooks",
+    "add": "Add Webhook",
+    "edit": "Edit Webhook",
+    "name": "Name",
+    "url": "URL",
+    "method": "Method",
+    "triggerType": "Trigger Type",
+    "scheduled": "Scheduled (Cron)",
+    "event": "Event-based",
+    "cron": "Cron Expression",
+    "eventType": "Event Type",
+    "headers": "Headers",
+    "body": "Request Body",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "runNow": "Run Now",
+    "lastRun": "Last run",
+    "lastStatus": "Last status",
+    "success": "Success",
+    "failure": "Failure",
+    "logs": "Execution Logs",
+    "noLogs": "No execution logs yet",
+    "cronPresets": {
+      "every5min": "Every 5 minutes",
+      "every15min": "Every 15 minutes",
+      "everyHour": "Every hour",
+      "everyDay": "Every day at midnight",
+      "everyMonday": "Every Monday"
+    }
   },
   "common": {
     "loading": "Loading...",
