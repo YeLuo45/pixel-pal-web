@@ -5,6 +5,7 @@ export interface Scene {
   isQuick: boolean;
   triggers: Trigger[];
   actions: Action[];
+  tags: string[];
   createdAt: number;
 }
 
@@ -99,6 +100,7 @@ export function createDefaultScene(): Omit<Scene, 'id' | 'createdAt'> {
     isQuick: false,
     triggers: [],
     actions: [],
+    tags: [],
   };
 }
 

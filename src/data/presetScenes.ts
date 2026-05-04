@@ -23,6 +23,7 @@ export const PRESET_SCENES: PresetScene[] = [
         { type: 'speak', params: { text: '早上好！新的一天开始了。' } },
         { type: 'notify', params: { title: '🌅 起床啦', body: '新的一天，记得给自己一个微笑' } },
       ],
+      tags: ['早晨', '日常'],
     },
   },
   {
@@ -39,6 +40,7 @@ export const PRESET_SCENES: PresetScene[] = [
         { type: 'speak', params: { text: '晚安！祝你有个好梦。' } },
         { type: 'notify', params: { title: '🌙 晚安', body: '早点休息，明天见' } },
       ],
+      tags: ['夜间', '日常'],
     },
   },
   {
@@ -55,6 +57,7 @@ export const PRESET_SCENES: PresetScene[] = [
         { type: 'notify', params: { title: '🎯 专注模式已开启', body: '保持专注，中途不要分心哦' } },
         { type: 'speak', params: { text: '专注模式已开启，加油！' } },
       ],
+      tags: ['工作', '效率'],
     },
   },
   {
@@ -71,6 +74,7 @@ export const PRESET_SCENES: PresetScene[] = [
         { type: 'notify', params: { title: '☕ 休息一下', body: '工作了一小时，站起来动一动吧' } },
         { type: 'speak', params: { text: '该休息一下了，站起来活动活动。' } },
       ],
+      tags: ['工作', '健康'],
     },
   },
   {
@@ -87,6 +91,7 @@ export const PRESET_SCENES: PresetScene[] = [
         { type: 'speak', params: { text: '加油！今天也要元气满满！' } },
         { type: 'notify', params: { title: '💪 每日激励', body: '你比你想象的更强大' } },
       ],
+      tags: ['早晨', '激励'],
     },
   },
 ];

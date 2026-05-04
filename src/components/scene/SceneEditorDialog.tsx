@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
-  FormControlLabel, Switch, useMediaQuery,
+  FormControlLabel, Switch, useMediaQuery, Box, Chip,
 } from '@mui/material';
 import type { Scene, Trigger, Action } from '../../types/scene';
 import { TriggerConfig } from './TriggerConfig';
@@ -20,6 +20,8 @@ export const SceneEditorDialog: React.FC<SceneEditorDialogProps> = ({ open, onCl
   const [isQuick, setIsQuick] = useState(false);
   const [triggers, setTriggers] = useState<Trigger[]>([]);
   const [actions, setActions] = useState<Action[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     if (editingScene) {
@@ -27,12 +29,15 @@ export const SceneEditorDialog: React.FC<SceneEditorDialogProps> = ({ open, onCl
       setIsQuick(editingScene.isQuick);
       setTriggers([...editingScene.triggers]);
       setActions([...editingScene.actions]);
+      setTags([...(editingScene.tags ?? [])]);
     } else {
       setName('');
       setIsQuick(false);
       setTriggers([]);
       setActions([]);
+      setTags([]);
     }
+    setTagInput('');
   }, [editingScene, open]);
 
   const handleSave = () => {
@@ -44,10 +49,23 @@ export const SceneEditorDialog: React.FC<SceneEditorDialogProps> = ({ open, onCl
       isQuick,
       triggers,
       actions,
+      tags,
       createdAt: editingScene?.createdAt ?? Date.now(),
     };
     onSave(scene);
     onClose();
+  };
+
+  const addTag = () => {
+    const t = tagInput.trim();
+    if (t && !tags.includes(t)) {
+      setTags([...tags, t]);
+    }
+    setTagInput('');
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag));
   };
 
   const isValid = name.trim().length > 0 && triggers.length > 0 && actions.length > 0;
@@ -84,6 +102,42 @@ export const SceneEditorDialog: React.FC<SceneEditorDialogProps> = ({ open, onCl
           control={<Switch checked={isQuick} onChange={(e) => setIsQuick(e.target.checked)} />}
           label="显示在快捷栏"
         />
+
+        {/* Tags */}
+        <Box>
+          <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+            <TextField
+              size="small"
+              placeholder="输入标签，回车添加"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addTag();
+                }
+              }}
+              sx={{ flex: 1 }}
+            />
+            <Button size="small" variant="outlined" onClick={addTag} disabled={!tagInput.trim()}>
+              添加
+            </Button>
+          </Box>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {tags.map((tag) => (
+              <Chip
+                key={tag}
+                label={tag}
+                size="small"
+                onDelete={() => removeTag(tag)}
+                sx={{
+                  bgcolor: 'rgba(155, 127, 212, 0.15)',
+                  color: 'primary.light',
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
 
         <TriggerConfig triggers={triggers} onChange={setTriggers} />
 

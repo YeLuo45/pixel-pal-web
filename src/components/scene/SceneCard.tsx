@@ -47,9 +47,22 @@ export const SceneCard: React.FC<SceneCardProps> = ({ scene, onEdit, onDelete, o
           />
         </Box>
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.5 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
           {triggerLabels.map((label, i) => (
             <Chip key={i} label={label} size="small" sx={{ fontSize: 10, height: 20 }} />
+          ))}
+          {scene.tags.map((tag) => (
+            <Chip
+              key={tag}
+              label={tag}
+              size="small"
+              sx={{
+                fontSize: 10,
+                height: 20,
+                bgcolor: 'rgba(155, 127, 212, 0.15)',
+                color: 'primary.light',
+              }}
+            />
           ))}
         </Box>
 
