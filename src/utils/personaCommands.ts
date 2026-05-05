@@ -3,9 +3,11 @@
  */
 
 export interface ParseResult {
-  type: 'switch' | 'help' | 'list' | 'unknown';
+  type: 'switch' | 'help' | 'list' | 'unknown' | 'collab' | 'endcollab' | 'savecollab' | 'loadcollab' | 'listcollab';
   personaId?: string;
   rawCommand?: string;
+  collabNames?: string[];   // For /collab friend teacher
+  presetName?: string;      // For /savecollab name, /loadcollab name
 }
 
 // Preset persona command mappings
@@ -24,6 +26,13 @@ const PRESET_COMMANDS: Record<string, string> = {
   '/列表': 'list',
 };
 
+// Collab-specific commands (not in PRESET_COMMANDS to avoid conflicts)
+const COLLABC_MD_START_COMMANDS = ['/collab', '/协作', '/collab'];
+const ENDCOLLAP_COMMANDS = ['/endcollab', '/结束协作', '/end'];
+const SAVECOLLAP_COMMANDS = ['/savecollab', '/保存协作'];
+const LOADCOLLAP_COMMANDS = ['/loadcollab', '/加载协作'];
+const LISTCOLLAP_COMMANDS = ['/listcollab', '/列表协作'];
+
 /**
  * Parse a user input string for persona commands.
  * Returns ParseResult if command detected, null otherwise.
@@ -33,7 +42,7 @@ export function parsePersonaCommand(input: string): ParseResult | null {
 
   if (!trimmed) return null;
 
-  // Check slash commands
+  // Check slash commands (preset persona commands)
   for (const [cmd, personaId] of Object.entries(PRESET_COMMANDS)) {
     if (trimmed === cmd || trimmed.startsWith(cmd + ' ')) {
       if (personaId === 'help') {
@@ -52,6 +61,60 @@ export function parsePersonaCommand(input: string): ParseResult | null {
     return { type: 'switch', rawCommand: atMatch[1] };
   }
 
+  // Check /collab [name1] [name2] or /collab [preset-name]
+  for (const cmd of COLLABC_MD_START_COMMANDS) {
+    if (trimmed === cmd) {
+      // /collab alone — return type so ChatPanel shows usage
+      return { type: 'collab', collabNames: [] };
+    }
+    if (trimmed.startsWith(cmd + ' ')) {
+      const after = trimmed.slice(cmd.length + 1).trim();
+      // Check if it's a preset name (single word, no spaces)
+      if (!after.includes(' ')) {
+        return { type: 'collab', presetName: after };
+      }
+      // Otherwise parse persona names
+      const names = after.split(/\s+/).filter(Boolean);
+      return { type: 'collab', collabNames: names };
+    }
+  }
+
+  // Check /endcollab or /end
+  for (const cmd of ENDCOLLAP_COMMANDS) {
+    if (trimmed === cmd || trimmed === '/end') {
+      return { type: 'endcollab' };
+    }
+  }
+
+  // Check /savecollab [name]
+  for (const cmd of SAVECOLLAP_COMMANDS) {
+    if (trimmed === cmd) {
+      return { type: 'savecollab' };
+    }
+    if (trimmed.startsWith(cmd + ' ')) {
+      const name = trimmed.slice(cmd.length + 1).trim();
+      return { type: 'savecollab', presetName: name };
+    }
+  }
+
+  // Check /loadcollab [name]
+  for (const cmd of LOADCOLLAP_COMMANDS) {
+    if (trimmed === cmd) {
+      return { type: 'loadcollab' };
+    }
+    if (trimmed.startsWith(cmd + ' ')) {
+      const name = trimmed.slice(cmd.length + 1).trim();
+      return { type: 'loadcollab', presetName: name };
+    }
+  }
+
+  // Check /listcollab
+  for (const cmd of LISTCOLLAP_COMMANDS) {
+    if (trimmed === cmd) {
+      return { type: 'listcollab' };
+    }
+  }
+
   return null;
 }
 
@@ -63,4 +126,22 @@ export function fuzzyMatchPersona(personas: Array<{ id: string; name: string; av
   const lowerName = name.toLowerCase();
   const matched = personas.find(p => p.name.toLowerCase().includes(lowerName));
   return matched ? matched.id : null;
+}
+
+/**
+ * Match multiple persona names from a list of names.
+ * Returns array of matched personaIds (in order).
+ */
+export function fuzzyMatchPersonas(
+  personas: Array<{ id: string; name: string; avatar: string }>,
+  names: string[]
+): string[] {
+  const matched: string[] = [];
+  for (const name of names) {
+    const id = fuzzyMatchPersona(personas, name);
+    if (id && !matched.includes(id)) {
+      matched.push(id);
+    }
+  }
+  return matched;
 }

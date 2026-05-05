@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Box, TextField, IconButton,
   Typography, Paper, Divider,
-  Tooltip,
+  Tooltip, Chip, Avatar,
 } from '@mui/material';
-import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon, Stop as StopIcon } from '@mui/icons-material';
+import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon, Stop as StopIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { chatCompletion, chatCompletionWithTools, initModelRegistry, getDefaultModel } from '../../services/ai/model-registry-adapter';
 import { injectCompanionContext, autoSummarizeChat, adjustMoodForInteraction } from '../../services/companion';
@@ -16,8 +16,8 @@ import type { Message } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { useSceneStore } from '../../stores/sceneStore';
 import { checkKeywordTrigger, executeScene, initSceneScheduler } from '../../utils/sceneScheduler';
-import { parsePersonaCommand, fuzzyMatchPersona } from '../../utils/personaCommands';
-import { getAllPersonas } from '../../services/persona/personaStorage';
+import { parsePersonaCommand, fuzzyMatchPersona, fuzzyMatchPersonas } from '../../utils/personaCommands';
+import { getAllPersonas, getPersonaSystemPrompt } from '../../services/persona/personaStorage';
 import { getIntimacyLevel } from '../../store';
 
 // Three-dot typing indicator component
@@ -44,6 +44,50 @@ const TypingIndicator: React.FC = () => {
     </Box>
   );
 };
+
+// Collab message bubble component
+interface CollabBubbleProps {
+  personaId: string;
+  personaName: string;
+  avatar: string;
+  content: string;
+  color: string;
+  isUser?: boolean;
+}
+
+const CollabBubble: React.FC<CollabBubbleProps> = ({ personaName, avatar, content, color, isUser }) => (
+  <Box sx={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
+    <Paper
+      sx={{
+        maxWidth: '80%',
+        p: 1.5,
+        borderRadius: 2,
+        bgcolor: isUser ? 'primary.main' : 'rgba(30, 20, 55, 0.95)',
+        border: isUser ? 'none' : `1px solid ${color}40`,
+        color: 'white',
+        fontSize: 13,
+        borderBottomRightRadius: isUser ? 4 : 16,
+        borderBottomLeftRadius: isUser ? 16 : 4,
+        boxShadow: isUser ? 'none' : '0 2px 8px rgba(0,0,0,0.3)',
+      }}
+    >
+      {/* Persona header */}
+      {!isUser && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+          <Avatar sx={{ width: 18, height: 18, bgcolor: color, fontSize: 10 }}>
+            {avatar}
+          </Avatar>
+          <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600, color }}>
+            {personaName}
+          </Typography>
+        </Box>
+      )}
+      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.6 }}>
+        {content}
+      </Typography>
+    </Paper>
+  </Box>
+);
 
 export const ChatPanel: React.FC = () => {
   const { t } = useTranslation();
@@ -74,6 +118,17 @@ export const ChatPanel: React.FC = () => {
   const voiceSettings = useStore((s) => s.voiceSettings);
   const personaIntimacy = useStore((s) => s.personaIntimacy);
   const setPersonaIntimacy = useStore((s) => s.setPersonaIntimacy);
+
+  // Collab state
+  const collabSession = useStore((s) => s.collabSession);
+  const collabMessages = useStore((s) => s.collabMessages);
+  const collabPresets = useStore((s) => s.collabPresets);
+  const startCollab = useStore((s) => s.startCollab);
+  const endCollab = useStore((s) => s.endCollab);
+  const addCollabMessage = useStore((s) => s.addCollabMessage);
+  const saveCollabPreset = useStore((s) => s.saveCollabPreset);
+  const loadCollabPreset = useStore((s) => s.loadCollabPreset);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceUnsubscribeRef = useRef<(() => void) | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -89,7 +144,6 @@ export const ChatPanel: React.FC = () => {
     setTtsSupported(support.tts);
     setTtsEnabled(voiceSettings.ttsEnabled);
 
-    // Subscribe to voice service state changes
     const unsubscribe = voiceService.subscribe((event) => {
       if (event.type === 'stateChange' && event.state) {
         setIsListening(event.state.isListening);
@@ -97,11 +151,9 @@ export const ChatPanel: React.FC = () => {
       }
       if (event.type === 'transcription' && event.transcription) {
         setInput((prev) => {
-          // Append transcription to existing input (or replace if empty)
           return prev ? `${prev} ${event.transcription}` : event.transcription || prev;
         });
-        // Detect emotion from speech characteristics
-        const result = detectEmotion(event.transcription, 2000); // 2sec estimated duration
+        const result = detectEmotion(event.transcription, 2000);
         setCurrentEmotionLocal(result.emotion);
         setCurrentEmotion(result.emotion);
         addEmotionEntry(result.emotion, result.confidence);
@@ -109,18 +161,13 @@ export const ChatPanel: React.FC = () => {
     });
 
     voiceUnsubscribeRef.current = unsubscribe;
-
-    return () => {
-      unsubscribe();
-    };
+    return () => { unsubscribe(); };
   }, [voiceSettings.ttsEnabled]);
 
-  // Sync ttsEnabled with voiceSettings
   useEffect(() => {
     setTtsEnabled(voiceSettings.ttsEnabled);
   }, [voiceSettings.ttsEnabled]);
 
-  // Get default model for display
   const defaultModel = getDefaultModel();
   const displayModel = defaultModel ? `${defaultModel.name} (${defaultModel.provider})` : `${aiConfig.model} · ${aiConfig.provider}`;
 
@@ -130,9 +177,8 @@ export const ChatPanel: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isAIThinking]);
+  }, [messages, collabMessages, isAIThinking]);
 
-  // Voice: Toggle listening
   const handleVoiceToggle = () => {
     if (isListening) {
       voiceService.stopListening();
@@ -143,14 +189,12 @@ export const ChatPanel: React.FC = () => {
     }
   };
 
-  // Voice: Toggle TTS for AI responses
   const handleTtsToggle = () => {
     const newTtsEnabled = !ttsEnabled;
     setTtsEnabled(newTtsEnabled);
     useStore.getState().setVoiceSettings({ ttsEnabled: newTtsEnabled });
   };
 
-  // Voice: Interrupt current AI speech
   const handleInterrupt = () => {
     voiceService.interrupt();
     if (abortControllerRef.current) {
@@ -161,7 +205,6 @@ export const ChatPanel: React.FC = () => {
     setPetStatus({ state: 'idle' });
   };
 
-  // Speak text chunk immediately (streaming TTS)
   const speakChunkImmediate = (text: string) => {
     if (ttsEnabled && ttsSupported) {
       try {
@@ -172,10 +215,171 @@ export const ChatPanel: React.FC = () => {
     }
   };
 
+  // ---- Collab helpers ----
+  const getPersonaColor = (personaId: string): string => {
+    const personas = getAllPersonas();
+    const p = personas.find(p => p.id === personaId);
+    return p?.theme?.primaryColor || '#9B7FD4';
+  };
+
+  const getPersonaAvatar = (personaId: string): string => {
+    const personas = getAllPersonas();
+    const p = personas.find(p => p.id === personaId);
+    return p?.avatar || '❓';
+  };
+
+  const getPersonaName = (personaId: string): string => {
+    const personas = getAllPersonas();
+    const p = personas.find(p => p.id === personaId);
+    return p?.name || personaId;
+  };
+
+  // Parse AI multi-persona response into separate messages
+  const parseCollabAIResponse = (response: string, participants: string[]): Array<{ personaId: string; content: string }> => {
+    const results: Array<{ personaId: string; content: string }> = [];
+    const participantNames = participants.map(p => getPersonaName(p));
+
+    // Pattern: [Name]: content or [Name] content
+    // Try each participant's name as anchor
+    for (const pid of participants) {
+      const name = getPersonaName(pid);
+      const patterns = [
+        new RegExp(`\\[${name}\\]:?\\s*([\\s\\S]*?)(?=\\n\\[|$)`, 'i'),
+        new RegExp(`^${name}:\\s*([\\s\\S]*?)$`, 'im'),
+      ];
+
+      for (const pattern of patterns) {
+        const match = response.match(pattern);
+        if (match && match[1]?.trim()) {
+          results.push({ personaId: pid, content: match[1].trim() });
+          break;
+        }
+      }
+    }
+
+    // Fallback: if no participant patterns matched, split by double newlines and distribute
+    if (results.length === 0) {
+      const paragraphs = response.split(/\n\n+/).filter(p => p.trim());
+      if (paragraphs.length >= participants.length) {
+        paragraphs.slice(0, participants.length).forEach((content, i) => {
+          results.push({ personaId: participants[i], content: content.trim() });
+        });
+      } else if (paragraphs.length > 0) {
+        // One paragraph per participant in round-robin
+        paragraphs.forEach((content, i) => {
+          results.push({ personaId: participants[i % participants.length], content: content.trim() });
+        });
+      } else {
+        // No parse possible — treat as single message from first participant
+        results.push({ personaId: participants[0], content: response.trim() });
+      }
+    }
+
+    return results;
+  };
+
+  // ---- Collab mode send ----
+  const handleCollabSend = async () => {
+    if (!input.trim() || isAIThinking) return;
+
+    const userMsg = input.trim();
+    setInput('');
+
+    // Add user message to collab messages
+    addCollabMessage({ personaId: 'user', content: userMsg });
+    updateLastActivity();
+
+    // Create AbortController
+    abortControllerRef.current = voiceService.createAbortController();
+    const abortSignal = abortControllerRef.current.signal;
+
+    setPetStatus({ state: 'thinking', message: undefined });
+    let errorOccurred = false;
+
+    try {
+      setAIThinking(true);
+
+      const participants = collabSession.participants;
+      const personas = getAllPersonas();
+
+      // Build combined system prompt from all participants
+      const combinedPrompts = participants.map(pid => {
+        const persona = personas.find(p => p.id === pid);
+        const prompt = persona ? getPersonaSystemPrompt(persona) : '';
+        return `[${getPersonaName(pid)}]\n${prompt}`;
+      }).join('\n\n---\n\n');
+
+      const participantNames = participants.map(p => getPersonaName(p)).join('、');
+      const collabContext = `你正在参与一个多人协作讨论。参与者：${participantNames}。请以各参与者的身份轮流发表观点。\n格式要求：每个参与者的发言必须以 "[姓名]:" 开头，例如：[朋友]: 我觉得这个想法很棒！`;
+
+      const systemPrompt = `${combinedPrompts}\n\n${collabContext}`;
+
+      // Build conversation for API
+      const collabHistoryText = collabMessages.map(m => {
+        if (m.personaId === 'user') {
+          return `[用户]: ${m.content}`;
+        }
+        return `[${getPersonaName(m.personaId)}]: ${m.content}`;
+      }).join('\n');
+
+      const apiMessages: Message[] = [
+        { id: 'sys', role: 'system', content: systemPrompt, timestamp: Date.now() },
+        { id: 'hist', role: 'system', content: `[讨论历史]\n${collabHistoryText}`, timestamp: Date.now() },
+        { id: 'temp', role: 'user', content: `用户说了：${userMsg}\n请依次以[${participantNames}]的身份各自发表看法，用[姓名]:格式。`, timestamp: Date.now() },
+      ];
+
+      const result = await chatCompletion(apiMessages);
+
+      if (!result.success) {
+        throw new Error(result.error || 'AI request failed');
+      }
+
+      const aiResponse = result.content || '';
+
+      // Parse AI response into per-persona messages
+      const parsed = parseCollabAIResponse(aiResponse, participants);
+
+      for (const { personaId, content } of parsed) {
+        addCollabMessage({ personaId, content });
+      }
+
+      // TTS: speak first response
+      if (ttsEnabled && ttsSupported && parsed.length > 0) {
+        const firstContent = parsed[0].content;
+        const sentences = firstContent.match(/[^.!?。！？]+[.!?。！？]*/g) || [firstContent];
+        for (const sentence of sentences) {
+          if (abortSignal.aborted) break;
+          const trimmed = sentence.trim();
+          if (trimmed) {
+            speakChunkImmediate(trimmed);
+          }
+        }
+      }
+    } catch (err) {
+      errorOccurred = true;
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      addCollabMessage({ personaId: 'system', content: `${t('chat.errorPrefix')}: ${errorMsg}` });
+    } finally {
+      setAIThinking(false);
+      updateLastActivity();
+      if (!errorOccurred) {
+        setPetStatus({ state: 'idle' });
+      }
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isAIThinking) return;
 
     const userMsg = input.trim();
+
+    // ---- COLLAP MODE ----
+    if (collabSession.active) {
+      await handleCollabSend();
+      return;
+    }
+
+    // ---- NORMAL MODE ----
     setInput('');
 
     // Add user message
@@ -186,7 +390,6 @@ export const ChatPanel: React.FC = () => {
     const currentIntimacy = personaIntimacy[activePersonaId] || 0;
     const newIntimacy = Math.min(100, currentIntimacy + 0.5);
     setPersonaIntimacy(activePersonaId, newIntimacy);
-    // Update last active time for this persona
     localStorage.setItem(`persona_lastActive_${activePersonaId}`, String(Date.now()));
 
     adjustMoodForInteraction('chat');
@@ -202,6 +405,11 @@ export const ChatPanel: React.FC = () => {
 /lover 或 /恋人 - 切换到恋人人格
 @名字 - 切换到指定人格
 /list 或 /列表 - 查看所有人格
+/collab [名字1] [名字2] - 启动多人协作
+/endcollab 或 /end - 结束协作
+/savecollab [名称] - 保存当前协作配置
+/loadcollab [名称] - 加载协作配置
+/listcollab - 查看已保存的协作配置
 /help 或 /帮助 - 显示此帮助`;
         addMessage({ role: 'system', content: helpText, personaId: activePersonaId });
         return;
@@ -212,9 +420,105 @@ export const ChatPanel: React.FC = () => {
         addMessage({ role: 'system', content: listText, personaId: activePersonaId });
         return;
       }
+      // Collab commands in normal mode
+      if (parsed.type === 'collab') {
+        const personas = getAllPersonas();
+        if (parsed.presetName) {
+          // Try loading as preset first
+          const preset = loadCollabPreset(parsed.presetName);
+          if (preset) {
+            startCollab(preset);
+            const names = preset.map(pid => getPersonaName(pid)).join(' + ');
+            addMessage({ role: 'system', content: `协作模式已启动：${names}`, personaId: activePersonaId });
+          } else {
+            // Try fuzzy matching as persona name
+            const matched = fuzzyMatchPersonas(personas, [parsed.presetName!]);
+            if (matched.length > 0) {
+              startCollab(matched);
+              const names = matched.map(pid => getPersonaName(pid)).join(' + ');
+              addMessage({ role: 'system', content: `协作模式已启动：${names}`, personaId: activePersonaId });
+            } else {
+              addMessage({ role: 'system', content: `未找到 "${parsed.presetName}" 对应的协作配置或人格`, personaId: activePersonaId });
+            }
+          }
+        } else if (parsed.collabNames && parsed.collabNames.length >= 2) {
+          const matched = fuzzyMatchPersonas(personas, parsed.collabNames);
+          if (matched.length >= 2) {
+            startCollab(matched.slice(0, 4));
+            const names = matched.map(pid => getPersonaName(pid)).join(' + ');
+            addMessage({ role: 'system', content: `协作模式已启动：${names}`, personaId: activePersonaId });
+          } else {
+            addMessage({ role: 'system', content: `需要至少2个人格来启动协作，当前匹配到 ${matched.length} 个人格`, personaId: activePersonaId });
+          }
+        } else {
+          addMessage({ role: 'system', content: `用法：/collab [名字1] [名字2] 或 /collab [preset-name]\n例如：/collab 朋友 老师\n例如：/collab 我的团队`, personaId: activePersonaId });
+        }
+        return;
+      }
+      if (parsed.type === 'endcollab') {
+        if (collabSession.active) {
+          // Generate summary
+          const summaryPrompt = `请总结以下多人协作讨论的要点：\n${collabMessages.map(m => `[${m.personaId === 'user' ? '用户' : getPersonaName(m.personaId)}]: ${m.content}`).join('\n')}`;
+          let summary = '';
+          try {
+            const result = await chatCompletion([{ id: 's', role: 'user', content: summaryPrompt, timestamp: Date.now() }]);
+            if (result.success) {
+              summary = result.content || '';
+            }
+          } catch (e) {
+            summary = '(无法生成摘要)';
+          }
+          endCollab();
+          addMessage({ role: 'system', content: `协作已结束。\n摘要：${summary}`, personaId: activePersonaId });
+        } else {
+          addMessage({ role: 'system', content: '当前没有进行中的协作', personaId: activePersonaId });
+        }
+        return;
+      }
+      if (parsed.type === 'savecollab') {
+        if (collabSession.active) {
+          if (parsed.presetName) {
+            saveCollabPreset(parsed.presetName, collabSession.participants);
+            addMessage({ role: 'system', content: `协作配置 "${parsed.presetName}" 已保存`, personaId: activePersonaId });
+          } else {
+            addMessage({ role: 'system', content: '请提供保存名称：/savecollab [名称]', personaId: activePersonaId });
+          }
+        } else {
+          addMessage({ role: 'system', content: '当前没有进行中的协作', personaId: activePersonaId });
+        }
+        return;
+      }
+      if (parsed.type === 'loadcollab') {
+        if (parsed.presetName) {
+          const preset = loadCollabPreset(parsed.presetName);
+          if (preset) {
+            startCollab(preset);
+            const names = preset.map(pid => getPersonaName(pid)).join(' + ');
+            addMessage({ role: 'system', content: `协作配置 "${parsed.presetName}" 已加载：${names}`, personaId: activePersonaId });
+          } else {
+            addMessage({ role: 'system', content: `未找到名为 "${parsed.presetName}" 的协作配置`, personaId: activePersonaId });
+          }
+        } else {
+          const names = Object.keys(collabPresets);
+          if (names.length > 0) {
+            addMessage({ role: 'system', content: `已保存的协作配置：\n${names.join('\n')}`, personaId: activePersonaId });
+          } else {
+            addMessage({ role: 'system', content: '暂无保存的协作配置', personaId: activePersonaId });
+          }
+        }
+        return;
+      }
+      if (parsed.type === 'listcollab') {
+        const names = Object.keys(collabPresets);
+        if (names.length > 0) {
+          addMessage({ role: 'system', content: `已保存的协作配置：\n${names.join('\n')}`, personaId: activePersonaId });
+        } else {
+          addMessage({ role: 'system', content: '暂无保存的协作配置', personaId: activePersonaId });
+        }
+        return;
+      }
       if (parsed.type === 'switch') {
         let targetPersonaId: string | null = parsed.personaId || null;
-        // Fuzzy match if @mention style
         if (!targetPersonaId && parsed.rawCommand) {
           const personas = getAllPersonas();
           targetPersonaId = fuzzyMatchPersona(personas, parsed.rawCommand);
@@ -237,7 +541,6 @@ export const ChatPanel: React.FC = () => {
     if (resetMatch) {
       const targetName = resetMatch[1]?.trim();
       if (targetName) {
-        // Find persona by name
         const personas = getAllPersonas();
         const matched = personas.find(p => p.name.toLowerCase().includes(targetName.toLowerCase()));
         if (matched) {
@@ -253,7 +556,7 @@ export const ChatPanel: React.FC = () => {
       return;
     }
 
-    // Text-based emotion detection: analyze user message and log emotion
+    // Text-based emotion detection
     try {
       const { createEmotionLogEntry, addEmotionLog } = await import('../../services/emotion');
       const emotionEntry = createEmotionLogEntry(userMsg);
@@ -263,7 +566,7 @@ export const ChatPanel: React.FC = () => {
       console.warn('[Emotion] Text emotion detection failed:', err);
     }
 
-    // Keyword trigger: check and execute matching scenes
+    // Keyword trigger
     const { loaded: scenesLoaded, loadScenes } = useSceneStore.getState();
     if (!scenesLoaded) {
       await loadScenes();
@@ -274,16 +577,14 @@ export const ChatPanel: React.FC = () => {
       executeScene(scene);
     }
 
-    // Create AbortController for interrupt support
+    // Create AbortController
     abortControllerRef.current = voiceService.createAbortController();
     const abortSignal = abortControllerRef.current.signal;
 
-    // Set pet to thinking
     setPetStatus({ state: 'thinking', message: undefined });
     setAIThinkingContent(null);
     setShowThinkingContent(false);
 
-    // Add placeholder for AI
     let aiContent = '';
     let thinkingContent: string | null = null;
     let errorOccurred = false;
@@ -291,19 +592,16 @@ export const ChatPanel: React.FC = () => {
     try {
       setAIThinking(true);
 
-      // Build messages with companion context (personality + memory + emotion)
       const apiMessages: Message[] = [
         ...messages,
         { id: 'temp', role: 'user', content: userMsg, timestamp: Date.now() },
       ];
 
-      // Get emotion context for system prompt
       const emotionState = useStore.getState().currentEmotion;
       const emotionContext = emotionState !== 'unknown' ? emotionState : undefined;
 
-      // Get intimacy level for prompt
-      const currentIntimacy = personaIntimacy[activePersonaId] || 0;
-      const intimacyLevel = getIntimacyLevel(currentIntimacy);
+      const currentIntimacy2 = personaIntimacy[activePersonaId] || 0;
+      const intimacyLevel = getIntimacyLevel(currentIntimacy2);
       const intimacyPrompt = intimacyLevel ? `\n[当前关系：${intimacyLevel} — ${{
         '陌生人': '初次见面，保持礼貌距离',
         '熟人': '有些了解，但还不够熟悉',
@@ -312,22 +610,17 @@ export const ChatPanel: React.FC = () => {
         '灵魂伴侣': '心意相通，最深层的理解',
       }[intimacyLevel] || ''}]` : '';
 
-      // Inject companion context (personality system prompt + memory + emotion)
       const messagesWithContext = await injectCompanionContext(apiMessages, { emotionContext, personaSystemPrompt: personaSystemPrompt + intimacyPrompt });
 
-      // RAG Enhancement: Query knowledge base and add relevant context
+      // RAG Enhancement
       let ragContext = '';
       try {
-        // Check if we have indexed documents
         const docs = useStore.getState().documents;
         if (docs.length > 0) {
-          // Ensure documents are indexed (reindex if needed)
           const needsReindex = docs.some(doc => !isDocumentIndexed(doc.id));
           if (needsReindex) {
             reindexAllDocuments(docs);
           }
-
-          // Query the knowledge base
           const ragResults = queryKnowledgeBase({ query: userMsg, topK: 3, minScore: 0.5 });
           if (ragResults.chunks.length > 0) {
             ragContext = buildRAGContext(ragResults, 2000);
@@ -337,7 +630,6 @@ export const ChatPanel: React.FC = () => {
         console.warn('[RAG] Knowledge base query failed:', ragErr);
       }
 
-      // Add RAG context as additional system context if available
       let finalMessages = messagesWithContext;
       if (ragContext) {
         const ragSystemMessage: Message = {
@@ -346,11 +638,9 @@ export const ChatPanel: React.FC = () => {
           content: `\n[KNOWLEDGE BASE - Answer using this information when relevant]\n${ragContext}\n[/KNOWLEDGE BASE]`,
           timestamp: Date.now(),
         };
-        // Insert RAG context right after the existing system prompt
         finalMessages = [messagesWithContext[0], ragSystemMessage, ...messagesWithContext.slice(1)];
       }
 
-      // Get AI tools from plugins
       const pluginTools = PluginService.getAITools();
       const openAITools = pluginTools.map(t => ({
         type: 'function' as const,
@@ -361,25 +651,18 @@ export const ChatPanel: React.FC = () => {
         },
       }));
 
-      // Build conversation messages for this turn
-      const currentMessages: Message[] = [
-        ...finalMessages,
-      ];
+      const currentMessages: Message[] = [...finalMessages];
 
-      // First call: get AI response with tools
       const result = await chatCompletionWithTools(currentMessages, openAITools.length > 0 ? openAITools : undefined);
 
       if (!result.success) {
         throw new Error(result.error || 'AI request failed');
       }
 
-      // Handle tool calls
       let toolCalls = result.toolCalls;
       let finalContent = result.content;
 
-      // Tool execution loop: execute tools and feed results back to AI
       while (toolCalls && toolCalls.length > 0) {
-        // Show tool execution indicator
         addMessage({ role: 'assistant', content: `🧩 正在调用 ${toolCalls.length} 个工具...`, personaId: activePersonaId });
 
         for (const tc of toolCalls) {
@@ -388,7 +671,6 @@ export const ChatPanel: React.FC = () => {
             const args = JSON.parse(tc.arguments);
             const toolResult = await PluginService.callTool(pluginId, toolName, args);
 
-            // Add tool result as a special message
             currentMessages.push({
               id: crypto.randomUUID(),
               role: 'tool',
@@ -407,7 +689,6 @@ export const ChatPanel: React.FC = () => {
           }
         }
 
-        // Second call: send tool results back to AI
         const followUpResult = await chatCompletionWithTools(currentMessages, openAITools.length > 0 ? openAITools : undefined);
 
         if (!followUpResult.success) {
@@ -417,18 +698,15 @@ export const ChatPanel: React.FC = () => {
         finalContent = followUpResult.content;
         toolCalls = followUpResult.toolCalls;
 
-        // If no more tool calls, use this as final content
         if (!toolCalls || toolCalls.length === 0) {
           aiContent = finalContent;
         }
       }
 
-      // If no tool calls, use the initial result
       if (!aiContent) {
         aiContent = finalContent;
       }
 
-      // Extract thinking content if present (format: <thinking>...</thinking> or 【思考】...【/思考】)
       const thinkingMatch = aiContent.match(/<(?:think(?:ing)?|thought)>([\s\S]*?)<\/(?:think(?:ing)?|thought)>/i)
         || aiContent.match(/【思考】([\s\S]*?)【\/思考】/)
         || aiContent.match(/\[(?:思考|thinking|reasoning)\]([\s\S]*?)\[\/(?:思考|thinking|reasoning)\]/i);
@@ -443,9 +721,7 @@ export const ChatPanel: React.FC = () => {
 
       addMessage({ role: 'assistant', content: aiContent, personaId: activePersonaId });
 
-      // TTS: Speak AI response aloud using streaming (chunk by chunk)
       if (ttsEnabled && ttsSupported && aiContent) {
-        // Speak in chunks for immediate feedback (streaming TTS)
         const sentences = aiContent.match(/[^.!?。！？]+[.!?。！？]*/g) || [aiContent];
         for (const sentence of sentences) {
           if (abortSignal.aborted) break;
@@ -456,7 +732,6 @@ export const ChatPanel: React.FC = () => {
         }
       }
 
-      // Auto-summarize chat to memory if enabled
       const companionState = useStore.getState().companion;
       if (companionState.autoSummarize && messagesWithContext.length > 10) {
         autoSummarizeChat(messagesWithContext).catch(() => {});
@@ -486,36 +761,90 @@ export const ChatPanel: React.FC = () => {
     }
   };
 
+  // Determine which messages to show
+  const displayMessages = collabSession.active ? collabMessages : filteredMessages;
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="h6" sx={{ fontSize: 15, fontWeight: 600 }}>
-              💬 {t('chat.title')}
+              {collabSession.active ? '🤝 协作模式' : `💬 ${t('chat.title')}`}
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-              {displayModel}
-            </Typography>
+            {collabSession.active && (
+              <Chip
+                size="small"
+                label={`${collabSession.participants.length}人`}
+                sx={{ height: 18, fontSize: 10 }}
+              />
+            )}
           </Box>
-          {/* Emotion Display */}
-          {currentEmotion !== 'unknown' && (
-            <Box sx={{
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 2,
-              bgcolor: 'rgba(155, 127, 212, 0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-            }}>
-              <Typography variant="caption" sx={{ fontSize: 12 }}>
-                {getEmotionLabel(currentEmotion)}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {!collabSession.active && currentEmotion !== 'unknown' && (
+              <Box sx={{
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 2,
+                bgcolor: 'rgba(155, 127, 212, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+              }}>
+                <Typography variant="caption" sx={{ fontSize: 12 }}>
+                  {getEmotionLabel(currentEmotion)}
+                </Typography>
+              </Box>
+            )}
+            {!collabSession.active && (
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
+                {displayModel}
               </Typography>
-            </Box>
-          )}
+            )}
+            {collabSession.active && (
+              <Tooltip title="结束协作">
+                <IconButton size="small" onClick={() => {
+                  if (collabMessages.length > 0) {
+                    const summaryPrompt = `请总结以下多人协作讨论的要点：\n${collabMessages.map(m => `[${m.personaId === 'user' ? '用户' : getPersonaName(m.personaId)}]: ${m.content}`).join('\n')}`;
+                    chatCompletion([{ id: 's', role: 'user', content: summaryPrompt, timestamp: Date.now() }]).then(result => {
+                      const summary = result.success ? (result.content || '') : '(无法生成摘要)';
+                      endCollab();
+                      addMessage({ role: 'system', content: `协作已结束。\n摘要：${summary}`, personaId: activePersonaId });
+                    }).catch(() => {
+                      endCollab();
+                      addMessage({ role: 'system', content: '协作已结束。', personaId: activePersonaId });
+                    });
+                  } else {
+                    endCollab();
+                    addMessage({ role: 'system', content: '协作已结束。', personaId: activePersonaId });
+                  }
+                }} sx={{ p: 0.5 }}>
+                  <CloseIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         </Box>
+
+        {/* Collab participant avatars */}
+        {collabSession.active && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+            {collabSession.participants.map(pid => (
+              <Chip
+                key={pid}
+                size="small"
+                avatar={
+                  <Avatar sx={{ bgcolor: getPersonaColor(pid), width: 18, height: 18, fontSize: 10 }}>
+                    {getPersonaAvatar(pid)}
+                  </Avatar>
+                }
+                label={getPersonaName(pid)}
+                sx={{ height: 24, fontSize: 11 }}
+              />
+            ))}
+          </Box>
+        )}
       </Box>
 
       {/* Messages */}
@@ -527,54 +856,92 @@ export const ChatPanel: React.FC = () => {
         flexDirection: 'column',
         gap: 1.5,
         minHeight: 0,
-        // Center chat on wide screens
         maxWidth: { lg: 800 },
         mx: 'auto',
         width: '100%',
       }}>
-        {messages.length === 0 && (
+        {displayMessages.length === 0 && (
           <Box sx={{ textAlign: 'center', mt: 4, opacity: 0.5 }}>
             <Typography variant="body2" sx={{ fontSize: 13 }}>
-              {t('chat.emptyState')}
+              {collabSession.active ? '协作模式已启动，输入消息开始讨论' : t('chat.emptyState')}
             </Typography>
           </Box>
         )}
-        {filteredMessages.map((msg) => (
-          <Box
-            key={msg.id}
-            sx={{
-              display: 'flex',
-              justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-            }}
-          >
-            <Paper
+
+        {displayMessages.map((msg) => {
+          // Collab mode rendering
+          if (collabSession.active) {
+            if (msg.personaId === 'user') {
+              return (
+                <CollabBubble
+                  key={msg.id}
+                  personaId="user"
+                  personaName="你"
+                  avatar="👤"
+                  content={msg.content}
+                  color="#9B7FD4"
+                  isUser
+                />
+              );
+            }
+            if (msg.personaId === 'system') {
+              return (
+                <Box key={msg.id} sx={{ textAlign: 'center', my: 0.5 }}>
+                  <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary', fontStyle: 'italic }}>
+                    {msg.content}
+                  </Typography>
+                </Box>
+              );
+            }
+            return (
+              <CollabBubble
+                key={msg.id}
+                personaId={msg.personaId}
+                personaName={getPersonaName(msg.personaId)}
+                avatar={getPersonaAvatar(msg.personaId)}
+                content={msg.content}
+                color={getPersonaColor(msg.personaId)}
+              />
+            );
+          }
+
+          // Normal mode rendering
+          return (
+            <Box
+              key={msg.id}
               sx={{
-                maxWidth: '80%',
-                p: 1.5,
-                borderRadius: 2,
-                // User: right-aligned, primary color bg
-                // AI: left-aligned, dark elevated bg
-                bgcolor: msg.role === 'user'
-                  ? 'primary.main'
-                  : 'rgba(30, 20, 55, 0.95)',
-                color: 'white',
-                fontSize: 13,
-                borderBottomRightRadius: msg.role === 'user' ? 4 : 16,
-                borderBottomLeftRadius: msg.role === 'assistant' ? 4 : 16,
-                boxShadow: msg.role === 'assistant'
-                  ? '0 2px 8px rgba(0,0,0,0.3)'
-                  : 'none',
-                border: msg.role === 'assistant'
-                  ? '1px solid rgba(155, 127, 212, 0.2)'
-                  : 'none',
+                display: 'flex',
+                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
               }}
             >
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.6 }}>
-                {msg.content}
-              </Typography>
-            </Paper>
-          </Box>
-        ))}
+              <Paper
+                sx={{
+                  maxWidth: '80%',
+                  p: 1.5,
+                  borderRadius: 2,
+                  bgcolor: msg.role === 'user'
+                    ? 'primary.main'
+                    : 'rgba(30, 20, 55, 0.95)',
+                  color: 'white',
+                  fontSize: 13,
+                  borderBottomRightRadius: msg.role === 'user' ? 4 : 16,
+                  borderBottomLeftRadius: msg.role === 'assistant' ? 4 : 16,
+                  boxShadow: msg.role === 'assistant'
+                    ? '0 2px 8px rgba(0,0,0,0.3)'
+                    : 'none',
+                  border: msg.role === 'assistant'
+                    ? '1px solid rgba(155, 127, 212, 0.2)'
+                    : 'none',
+                }}
+              >
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.6 }}>
+                  {msg.content}
+                </Typography>
+              </Paper>
+            </Box>
+          );
+        })}
+
         {isAIThinking && (
           <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: 0.5 }}>
             <Paper
@@ -592,63 +959,10 @@ export const ChatPanel: React.FC = () => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-                  {t('chat.thinking')}
+                  {collabSession.active ? '🤔 讨论中...' : t('chat.thinking')}
                 </Typography>
                 <TypingIndicator />
               </Box>
-
-              {/* Thinking content toggle */}
-              {aiThinkingContent && (
-                <Box sx={{ mt: 1 }}>
-                  <Box
-                    component="button"
-                    onClick={() => setShowThinkingContent(!showThinkingContent)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'rgba(155, 127, 212, 0.8)',
-                      fontSize: 11,
-                      p: 0,
-                      '&:hover': { color: 'rgba(155, 127, 212, 1)' },
-                    }}
-                  >
-                    <Typography variant="caption" sx={{ fontSize: 10, color: 'inherit' }}>
-                      {showThinkingContent ? t('chat.hideReasoning') : t('chat.showReasoning')}
-                    </Typography>
-                  </Box>
-
-                  {showThinkingContent && (
-                    <Box
-                      sx={{
-                        mt: 1,
-                        p: 1,
-                        borderRadius: 1,
-                        bgcolor: 'rgba(0,0,0,0.3)',
-                        border: '1px solid rgba(155, 127, 212, 0.1)',
-                        maxHeight: 120,
-                        overflowY: 'auto',
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontSize: 11,
-                          color: 'rgba(255,255,255,0.7)',
-                          whiteSpace: 'pre-wrap',
-                          fontFamily: 'monospace',
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {aiThinkingContent}
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              )}
             </Paper>
           </Box>
         )}
@@ -657,7 +971,7 @@ export const ChatPanel: React.FC = () => {
 
       <Divider />
 
-      {/* Input — sticky on mobile */}
+      {/* Input */}
       <Box
         sx={{
           p: 1.5,
@@ -665,7 +979,6 @@ export const ChatPanel: React.FC = () => {
           gap: 1,
           alignItems: 'flex-end',
           flexShrink: 0,
-          // Sticky bottom on mobile for thumb-friendly typing
           position: { xs: 'sticky', md: 'relative' },
           bottom: { xs: 0, md: 'auto' },
           zIndex: { xs: 10, md: 0 },
@@ -676,7 +989,7 @@ export const ChatPanel: React.FC = () => {
         <TextField
           fullWidth
           size="small"
-          placeholder={t('chat.placeholder')}
+          placeholder={collabSession.active ? '输入消息参与讨论...' : t('chat.placeholder')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -771,7 +1084,7 @@ export const ChatPanel: React.FC = () => {
         </IconButton>
       </Box>
 
-      {messages.length > 0 && (
+      {!collabSession.active && messages.length > 0 && (
         <Box sx={{ p: 1, textAlign: 'center' }}>
           <Typography
             variant="caption"

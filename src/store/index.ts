@@ -6,6 +6,20 @@ import { getActivePersona, getAllPersonas } from '../services/persona/personaSto
 import { applyPersonaTheme, resetPersonaTheme } from '../utils/personaTheme';
 import { getPersonaSystemPrompt } from '../services/persona/personaPrompt';
 
+// CollabSession — multi-persona collaboration (not persisted)
+export interface CollabSession {
+  active: boolean;
+  participants: string[]; // personaIds
+}
+
+// CollabMessage — message from a specific persona in collab mode
+export interface CollabMessage {
+  id: string;
+  personaId: string;
+  content: string;
+  timestamp: number;
+}
+
 interface AppState {
   // AI Config
   aiConfig: AIConfig;
@@ -110,6 +124,17 @@ interface AppState {
   setMessages: (messages: Message[]) => void;
   loadMessagesForPersona: (personaId: string) => void;
   setPersonaIntimacy: (personaId: string, value: number) => void;
+
+  // Collab Session (multi-persona collaboration, NOT persisted)
+  collabSession: CollabSession;
+  collabMessages: CollabMessage[];
+  collabPresets: Record<string, string[]>;
+  startCollab: (participants: string[]) => void;
+  endCollab: () => void;
+  addCollabMessage: (msg: Omit<CollabMessage, 'id' | 'timestamp'>) => void;
+  saveCollabPreset: (name: string, participants: string[]) => void;
+  loadCollabPreset: (name: string) => string[] | null;
+  deleteCollabPreset: (name: string) => void;
 }
 
 // Default model templates
@@ -435,6 +460,44 @@ export const useStore = create<AppState>()(
             (m) => !m.personaId || m.personaId === personaId
           ),
         })),
+
+      // Collab Session (NOT persisted)
+      collabSession: { active: false, participants: [] },
+      collabMessages: [],
+      collabPresets: JSON.parse(localStorage.getItem('pixelpal_collab_presets') || '{}'),
+      startCollab: (participants) =>
+        set({
+          collabSession: { active: true, participants },
+          collabMessages: [],
+        }),
+      endCollab: () =>
+        set({
+          collabSession: { active: false, participants: [] },
+          collabMessages: [],
+        }),
+      addCollabMessage: (msg) =>
+        set((state) => ({
+          collabMessages: [
+            ...state.collabMessages,
+            { ...msg, id: crypto.randomUUID(), timestamp: Date.now() },
+          ],
+        })),
+      saveCollabPreset: (name, participants) => {
+        const presets = JSON.parse(localStorage.getItem('pixelpal_collab_presets') || '{}');
+        presets[name] = participants;
+        localStorage.setItem('pixelpal_collab_presets', JSON.stringify(presets));
+        set({ collabPresets: presets });
+      },
+      loadCollabPreset: (name) => {
+        const presets = JSON.parse(localStorage.getItem('pixelpal_collab_presets') || '{}');
+        return presets[name] || null;
+      },
+      deleteCollabPreset: (name) => {
+        const presets = JSON.parse(localStorage.getItem('pixelpal_collab_presets') || '{}');
+        delete presets[name];
+        localStorage.setItem('pixelpal_collab_presets', JSON.stringify(presets));
+        set({ collabPresets: presets });
+      },
     }),
     {
       name: 'pixelpal-storage',
