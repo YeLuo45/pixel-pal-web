@@ -5,12 +5,21 @@
  *   pixelpal_active_persona_id — current active persona ID
  */
 
+export interface PersonaTheme {
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+  textColor: string;
+}
+
 export interface Persona {
   id: string;
   name: string;
   avatar: string;        // emoji
   bio: string;            // short description
   voice: 'warm' | 'rational' | 'humorous' | 'serious';
+  theme?: PersonaTheme;
   isDefault: boolean;
   createdAt: number;
   updatedAt: number;
@@ -27,6 +36,13 @@ const DEFAULT_PERSONAS: Persona[] = [
     avatar: '😊',
     bio: '温暖友善的朋友，随时陪伴你',
     voice: 'warm',
+    theme: {
+      primaryColor: '#f472b6',
+      secondaryColor: '#c084fc',
+      accentColor: '#f9a8d4',
+      backgroundColor: 'rgba(244,114,182,0.1)',
+      textColor: '#fce7f3',
+    },
     isDefault: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -37,6 +53,13 @@ const DEFAULT_PERSONAS: Persona[] = [
     avatar: '📚',
     bio: '耐心的老师，帮你解答问题',
     voice: 'rational',
+    theme: {
+      primaryColor: '#3b82f6',
+      secondaryColor: '#60a5fa',
+      accentColor: '#93c5fd',
+      backgroundColor: 'rgba(59,130,246,0.1)',
+      textColor: '#dbeafe',
+    },
     isDefault: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -47,6 +70,13 @@ const DEFAULT_PERSONAS: Persona[] = [
     avatar: '💪',
     bio: '激励型教练，帮你达成目标',
     voice: 'humorous',
+    theme: {
+      primaryColor: '#f97316',
+      secondaryColor: '#fb923c',
+      accentColor: '#fdba74',
+      backgroundColor: 'rgba(249,115,22,0.1)',
+      textColor: '#fed7aa',
+    },
     isDefault: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -57,6 +87,13 @@ const DEFAULT_PERSONAS: Persona[] = [
     avatar: '💕',
     bio: '浪漫贴心的伴侣，情感支持',
     voice: 'warm',
+    theme: {
+      primaryColor: '#ef4444',
+      secondaryColor: '#f87171',
+      accentColor: '#fca5a5',
+      backgroundColor: 'rgba(239,68,68,0.1)',
+      textColor: '#fee2e2',
+    },
     isDefault: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),

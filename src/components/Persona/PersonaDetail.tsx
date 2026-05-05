@@ -21,6 +21,8 @@ import {
   Tabs,
   Tab,
   Chip,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -29,6 +31,7 @@ import {
   Message as MessageIcon,
   Memory as MemoryIcon,
   BarChart as StatsIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { getPersonaSystemPrompt, updatePersona, type Persona } from '../../services/persona';
 import { useStore } from '../../store';
@@ -85,6 +88,8 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
   // Stats from store
   const messages = useStore((s) => s.messages);
   const personaUsageCount = useStore((s) => s.personaUsageCount);
+  const personaFollowTheme = useStore((s) => s.personaFollowTheme);
+  const setPersonaFollowTheme = useStore((s) => s.setPersonaFollowTheme);
   const setPersonaSystemPrompt = useStore((s) => s.personaSystemPrompt); // read-only, we need to update via setActivePersonaId
 
   // Reset form when persona changes
@@ -197,6 +202,12 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
           icon={<TimeIcon sx={{ fontSize: 14 }} />}
           iconPosition="start"
           label="预览"
+          sx={{ minHeight: 36, fontSize: 12, gap: 0.5 }}
+        />
+        <Tab
+          icon={<SettingsIcon sx={{ fontSize: 14 }} />}
+          iconPosition="start"
+          label="设置"
           sx={{ minHeight: 36, fontSize: 12, gap: 0.5 }}
         />
       </Tabs>
@@ -356,6 +367,76 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
                 variant="outlined"
               />
             </Box>
+          </Box>
+        )}
+
+        {activeTab === 3 && (
+          /* Settings tab */
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                主题设置
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={personaFollowTheme}
+                    onChange={(e) => setPersonaFollowTheme(e.target.checked)}
+                    size="small"
+                    color="primary"
+                  />
+                }
+                label="跟随人格切换主题"
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.04)',
+                  borderRadius: 1.5,
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  pr: 2,
+                  width: '100%',
+                  justifyContent: 'space-between',
+                }}
+              />
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block', fontSize: 10 }}>
+                开启后，切换人格将自动应用该人格的主题配色
+              </Typography>
+            </Box>
+            {persona.theme && (
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: 'block' }}>
+                  当前主题色
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  {[
+                    { label: '主色', color: persona.theme.primaryColor },
+                    { label: '副色', color: persona.theme.secondaryColor },
+                    { label: '强调', color: persona.theme.accentColor },
+                    { label: '背景', color: persona.theme.backgroundColor },
+                    { label: '文字', color: persona.theme.textColor },
+                  ].map((swatch) => (
+                    <Box
+                      key={swatch.label}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 1,
+                          bgcolor: swatch.color,
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
+                      />
+                      <Typography sx={{ fontSize: 9, color: 'text.secondary' }}>{swatch.label}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Box>
         )}
       </DialogContent>

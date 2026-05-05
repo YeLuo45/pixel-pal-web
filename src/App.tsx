@@ -6,6 +6,8 @@ import type { EmailAccount } from './types';
 import { initCompanion } from './services/companion';
 import { compactMemory } from './services/memory';
 import { checkGreeting, checkReminders } from './services/actions/ActionTrigger';
+import { applyPersonaTheme, resetPersonaTheme } from './utils/personaTheme';
+import { getAllPersonas } from './services/persona/personaStorage';
 import './services/i18n';
 
 const darkTheme = createTheme({
@@ -126,6 +128,8 @@ function App() {
   const setEmailAccount = useStore((s) => s.setEmailAccount);
   const setActivePanel = useStore((s) => s.setActivePanel);
   const companion = useStore((s) => s.companion);
+  const personaFollowTheme = useStore((s) => s.personaFollowTheme);
+  const activePersonaId = useStore((s) => s.activePersonaId);
 
   // Initialize companion service and memory on startup
   useEffect(() => {
@@ -136,6 +140,15 @@ function App() {
       // Trigger proactive actions on app open
       checkGreeting();
       checkReminders();
+      // Apply initial persona theme if enabled
+      if (personaFollowTheme) {
+        const persona = getAllPersonas().find((p) => p.id === activePersonaId);
+        if (persona?.theme) {
+          applyPersonaTheme(persona.theme);
+        }
+      } else {
+        resetPersonaTheme();
+      }
     };
     init();
   }, []);

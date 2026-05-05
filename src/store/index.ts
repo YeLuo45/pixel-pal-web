@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AIConfig, Message, Event, Task, DocumentFile, PetStatus, EmailAccount, InteractionSettings, InteractionCooldowns, CompanionState, PersonaId, VoiceSettings } from '../types';
 import type { EmotionState } from '../services/voice/emotionDetector';
-import { getActivePersona } from '../services/persona/personaStorage';
+import { getActivePersona, getAllPersonas } from '../services/persona/personaStorage';
+import { applyPersonaTheme, resetPersonaTheme } from '../utils/personaTheme';
 import { getPersonaSystemPrompt } from '../services/persona/personaPrompt';
 
 interface AppState {
@@ -101,7 +102,9 @@ interface AppState {
   activePersonaId: string;
   personaSystemPrompt: string;
   personaUsageCount: Record<string, number>;
+  personaFollowTheme: boolean;
   setActivePersonaId: (id: string) => void;
+  setPersonaFollowTheme: (v: boolean) => void;
   clearMessagesForPersona: (personaId: string) => void;
   setMessages: (messages: Message[]) => void;
   loadMessagesForPersona: (personaId: string) => void;
@@ -371,10 +374,21 @@ export const useStore = create<AppState>()(
       activePersonaId: 'preset-friend',
       personaSystemPrompt: getPersonaSystemPrompt(getActivePersona()),
       personaUsageCount: {},
+      personaFollowTheme: true,
       setActivePersonaId: (id) => {
         // Update active persona in localStorage (for personaStorage)
         const { setActivePersonaId: setStorageId } = require('../services/persona/personaStorage');
         setStorageId(id);
+        // Apply persona theme if personaFollowTheme is enabled
+        const { personaFollowTheme } = useStore.getState();
+        if (personaFollowTheme) {
+          const persona = getAllPersonas().find((p) => p.id === id);
+          if (persona?.theme) {
+            applyPersonaTheme(persona.theme);
+          } else {
+            resetPersonaTheme();
+          }
+        }
         // Update store state and load persona-specific messages
         // Increment usage count for this persona
         set((state) => {
@@ -389,6 +403,19 @@ export const useStore = create<AppState>()(
             personaUsageCount: newUsageCount,
           };
         });
+      },
+      setPersonaFollowTheme: (v) => {
+        set({ personaFollowTheme: v });
+        // If enabling, immediately apply current persona's theme
+        if (v) {
+          const { activePersonaId } = useStore.getState();
+          const persona = getAllPersonas().find((p) => p.id === activePersonaId);
+          if (persona?.theme) {
+            applyPersonaTheme(persona.theme);
+          }
+        } else {
+          resetPersonaTheme();
+        }
       },
       clearMessagesForPersona: (personaId) =>
         set((state) => ({
@@ -412,6 +439,15 @@ export const useStore = create<AppState>()(
           state.messages = state.messages.filter(
             (m) => !m.personaId || m.personaId === state.activePersonaId
           );
+          // Apply initial persona theme after rehydration
+          if (state.personaFollowTheme) {
+            const persona = getAllPersonas().find((p) => p.id === state.activePersonaId);
+            if (persona?.theme) {
+              applyPersonaTheme(persona.theme);
+            }
+          } else {
+            resetPersonaTheme();
+          }
         }
       },
       partialize: (state) => ({
@@ -430,6 +466,7 @@ export const useStore = create<AppState>()(
         language: state.language,
         activePersonaId: state.activePersonaId,
         personaUsageCount: state.personaUsageCount,
+        personaFollowTheme: state.personaFollowTheme,
       }),
     }
   )
