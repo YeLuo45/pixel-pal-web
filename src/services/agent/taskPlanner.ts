@@ -479,3 +479,177 @@ export function validateStep(step: Partial<TaskStep>): { valid: boolean; error?:
   
   return { valid: true };
 }
+
+// ============================================================================
+// Task Creation & Execution (V20 Agent Chat Integration)
+// ============================================================================
+
+/**
+ * Goal-oriented intent detection patterns
+ * Matches: "帮我X" "规划X" "完成X" "帮我整理X" "帮我查一下" etc.
+ */
+const GOAL_PATTERNS: RegExp[] = [
+  /^帮我[做些些]/,
+  /^帮我整理/,
+  /^帮我查一下/,
+  /^帮我搜索/,
+  /^帮我规划/,
+  /^帮我完成/,
+  /^帮我处理/,
+  /^帮我解决/,
+  /^帮我安排/,
+  /^帮我找到/,
+  /^帮我创建/,
+  /^帮我生成/,
+  /^帮我写/,
+  /^帮我分析/,
+  /^帮我总结/,
+  /^帮我执行/,
+  /^帮我开始/,
+  /^请帮我/,
+  /^帮我/,
+  /规划/,
+  /完成.+/,
+  /^做.+\/计划/,
+  /^制定.+\/计划/,
+  /^开始.+\/任务/,
+  /^执行.+\/任务/,
+];
+
+export function isGoalOriented(text: string): boolean {
+  const trimmed = text.trim();
+  return GOAL_PATTERNS.some(pattern => pattern.test(trimmed));
+}
+
+/**
+ * Create a task from a user goal string
+ * Returns the created Task object with steps
+ */
+export async function createTaskFromGoal(
+  goal: string,
+  options: {
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+    personaId?: string;
+  } = {}
+): Promise<Task> {
+  const taskId = `task_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  
+  // Plan the task using ReAct pattern
+  const plan = await planTask(goal, { personaId: options.personaId });
+  
+  // Create task steps with full properties
+  const steps: TaskStep[] = plan.steps.map((step, index) => ({
+    id: `step_${taskId}_${index}`,
+    taskId,
+    index,
+    description: step.description,
+    toolName: step.toolName,
+    toolArgs: step.toolArgs,
+    status: 'pending' as const,
+    retryCount: 0,
+  }));
+
+  const task: Task = {
+    id: taskId,
+    goal,
+    status: 'pending',
+    priority: options.priority || 'normal',
+    steps,
+    currentStepIndex: 0,
+    context: {
+      createdFrom: 'chat',
+      reasoning: plan.reasoning,
+      personaId: options.personaId,
+    },
+    createdAt: Date.now(),
+    progress: 0,
+    personaId: options.personaId,
+  };
+
+  console.log(`[TaskPlanner] Created task "${taskId}" for goal: "${goal}"`);
+  console.log(`[TaskPlanner] Task has ${steps.length} steps:`, steps.map(s => s.description).join(' → '));
+
+  return task;
+}
+
+/**
+ * Execute a task and return a report when done/failed
+ * Calls onProgress for each step completion
+ * Calls onComplete when done, onFail when error
+ */
+export async function executeTask(
+  task: Task,
+  callbacks: {
+    onProgress?: (task: Task, stepIndex: number, stepDescription: string) => void;
+    onComplete?: (task: Task, result: unknown) => void;
+    onFail?: (task: Task, error: string) => void;
+  } = {}
+): Promise<void> {
+  console.log(`[TaskPlanner] Executing task "${task.id}": ${task.goal}`);
+  
+  task.status = 'running';
+  task.startedAt = Date.now();
+
+  const toolContext: ToolExecutionContext = {
+    taskId: task.id,
+    stepId: '',
+    personaId: task.personaId,
+    conversationHistory: [],
+  };
+
+  try {
+    for (let i = task.currentStepIndex; i < task.steps.length; i++) {
+      const step = task.steps[i];
+      step.status = 'running';
+      step.startedAt = Date.now();
+      task.currentStepIndex = i;
+
+      console.log(`[TaskPlanner] Step ${i + 1}/${task.steps.length}: ${step.description}`);
+
+      callbacks.onProgress?.(task, i, step.description);
+
+      // Execute tool if specified
+      if (step.toolName) {
+        const toolResult = await toolRegistry.execute(
+          step.toolName,
+          step.toolArgs || {},
+          { ...toolContext, stepId: step.id }
+        );
+
+        if (toolResult.success) {
+          step.status = 'completed';
+          step.result = toolResult.data;
+          step.completedAt = Date.now();
+        } else {
+          step.status = 'failed';
+          step.error = toolResult.error;
+          step.completedAt = Date.now();
+          throw new Error(`Step "${step.description}" failed: ${toolResult.error}`);
+        }
+      } else {
+        // No tool, mark as completed directly
+        step.status = 'completed';
+        step.completedAt = Date.now();
+      }
+
+      task.progress = Math.round(((i + 1) / task.steps.length) * 100);
+    }
+
+    // All steps completed
+    task.status = 'completed';
+    task.completedAt = Date.now();
+    task.progress = 100;
+
+    console.log(`[TaskPlanner] Task "${task.id}" completed successfully`);
+    callbacks.onComplete?.(task, task.result);
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    task.status = 'failed';
+    task.error = errorMessage;
+    task.completedAt = Date.now();
+
+    console.error(`[TaskPlanner] Task "${task.id}" failed:`, errorMessage);
+    callbacks.onFail?.(task, errorMessage);
+  }
+}

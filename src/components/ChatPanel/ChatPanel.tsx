@@ -22,6 +22,8 @@ import { getAllPersonas, getPersonaSystemPrompt } from '../../services/persona/p
 import { getIntimacyLevel } from '../../store';
 import { checkAndTagImportantMessage } from '../../services/summary/dailySummary';
 import { checkAndCreateMilestones } from '../../services/milestone/milestoneTracker';
+import { isGoalOriented, createTaskFromGoal, executeTask } from '../../services/agent/taskPlanner';
+import type { Task } from '../../services/agent/types';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -612,6 +614,61 @@ export const ChatPanel: React.FC = () => {
     const matchedScenes = checkKeywordTrigger(userMsg);
     for (const scene of matchedScenes) {
       executeScene(scene);
+    }
+
+    // ---- AGENT MODE: Goal-oriented task detection ----
+    if (isGoalOriented(userMsg)) {
+      console.log('[AgentChat] Goal-oriented intent detected:', userMsg);
+      
+      // Add a system message showing agent is activated
+      addMessage({ role: 'system', content: `🎯 检测到任务目标，正在规划...`, personaId: activePersonaId });
+
+      try {
+        // Create task from the goal
+        const task: Task = await createTaskFromGoal(userMsg, { personaId: activePersonaId });
+
+        // Add thinking message to show planning progress
+        addMessage({ role: 'system', content: `📋 任务规划完成：${task.steps.length} 个步骤\n${task.steps.map((s, i) => `${i + 1}. ${s.description}`).join('\n')}`, personaId: activePersonaId });
+
+        // Execute the task with callbacks for proactive reporting
+        await executeTask(task, {
+          onProgress: (t, stepIndex, stepDesc) => {
+            // Report step progress to chat
+            addMessage({ role: 'system', content: `⚙️ 步骤 ${stepIndex + 1}/${t.steps.length} 完成：${stepDesc}`, personaId: activePersonaId });
+          },
+          onComplete: (t, result) => {
+            // Report task completion to chat
+            const duration = t.completedAt && t.startedAt 
+              ? `（用时 ${Math.round((t.completedAt - t.startedAt) / 1000)} 秒）` 
+              : '';
+            const resultText = t.result ? `\n📊 结果：${JSON.stringify(t.result)}` : '';
+            addMessage({ 
+              role: 'assistant', 
+              content: `✅ 任务已完成！${duration}${resultText}`, 
+              personaId: activePersonaId 
+            });
+            console.log('[AgentChat] Task completed:', t.id);
+          },
+          onFail: (t, error) => {
+            // Report task failure to chat
+            addMessage({ 
+              role: 'assistant', 
+              content: `❌ 任务失败：${error}`, 
+              personaId: activePersonaId 
+            });
+            console.error('[AgentChat] Task failed:', t.id, error);
+          },
+        });
+
+        // Task execution is complete (either success or failure), stop here
+        updateLastActivity();
+        return;
+      } catch (err) {
+        // Fallback to normal chat if task creation fails
+        console.warn('[AgentChat] Task creation failed, falling back to normal chat:', err);
+        addMessage({ role: 'system', content: `⚠️ 任务规划失败，将使用普通模式继续...`, personaId: activePersonaId });
+        // Continue to normal chat mode below
+      }
     }
 
     // Create AbortController
