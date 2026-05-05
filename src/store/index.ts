@@ -103,11 +103,13 @@ interface AppState {
   personaSystemPrompt: string;
   personaUsageCount: Record<string, number>;
   personaFollowTheme: boolean;
+  personaIntimacy: Record<string, number>;
   setActivePersonaId: (id: string) => void;
   setPersonaFollowTheme: (v: boolean) => void;
   clearMessagesForPersona: (personaId: string) => void;
   setMessages: (messages: Message[]) => void;
   loadMessagesForPersona: (personaId: string) => void;
+  setPersonaIntimacy: (personaId: string, value: number) => void;
 }
 
 // Default model templates
@@ -375,6 +377,11 @@ export const useStore = create<AppState>()(
       personaSystemPrompt: getPersonaSystemPrompt(getActivePersona()),
       personaUsageCount: {},
       personaFollowTheme: true,
+      personaIntimacy: {},
+      setPersonaIntimacy: (personaId, value) =>
+        set((state) => ({
+          personaIntimacy: { ...state.personaIntimacy, [personaId]: Math.min(100, Math.max(0, value)) },
+        })),
       setActivePersonaId: (id) => {
         // Update active persona in localStorage (for personaStorage)
         const { setActivePersonaId: setStorageId } = require('../services/persona/personaStorage');
@@ -467,7 +474,44 @@ export const useStore = create<AppState>()(
         activePersonaId: state.activePersonaId,
         personaUsageCount: state.personaUsageCount,
         personaFollowTheme: state.personaFollowTheme,
+        personaIntimacy: state.personaIntimacy,
       }),
     }
   )
 );
+
+/**
+ * Get intimacy level label from intimacy value.
+ */
+export function getIntimacyLevel(intimacy: number): string {
+  if (intimacy <= 20) return '陌生人';
+  if (intimacy <= 40) return '熟人';
+  if (intimacy <= 60) return '朋友';
+  if (intimacy <= 80) return '挚友';
+  return '灵魂伴侣';
+}
+
+/**
+ * Get intimacy level description.
+ */
+export function getIntimacyDescription(level: string): string {
+  const descriptions: Record<string, string> = {
+    '陌生人': '初次见面，保持礼貌距离',
+    '熟人': '有些了解，但还不够熟悉',
+    '朋友': '已经认识，可以畅所欲言',
+    '挚友': '非常亲密，无话不谈',
+    '灵魂伴侣': '心意相通，最深层的理解',
+  };
+  return descriptions[level] || '';
+}
+
+/**
+ * Get color for intimacy level.
+ */
+export function getIntimacyColor(intimacy: number): string {
+  if (intimacy <= 20) return '#f44336';    // red - 陌生人
+  if (intimacy <= 40) return '#ff9800';     // orange - 熟人
+  if (intimacy <= 60) return '#ffeb3b';     // yellow - 朋友
+  if (intimacy <= 80) return '#4caf50';     // green - 挚友
+  return '#9c27b0';                         // purple - 灵魂伴侣
+}
