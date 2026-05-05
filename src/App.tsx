@@ -203,10 +203,10 @@ function App() {
 
       // Intimacy decay: check last active time for each persona on app load
       const { personaIntimacy, setPersonaIntimacy } = useStore.getState();
-      const personas = getAllPersonas();
+      const allPersonas = getAllPersonas();
       const now = Date.now();
       const DAY = 24 * 60 * 60 * 1000;
-      for (const p of personas) {
+      for (const p of allPersonas) {
         const lastActive = localStorage.getItem(`persona_lastActive_${p.id}`);
         if (lastActive) {
           const elapsed = now - parseInt(lastActive, 10);

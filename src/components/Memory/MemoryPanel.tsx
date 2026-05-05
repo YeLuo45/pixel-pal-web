@@ -1674,10 +1674,7 @@ function EmotionTimelineTab({ logs, warning, onRefresh }: EmotionTimelineTabProp
         </Box>
       )}
     </Stack>
-
-    {/* Relation Graph Dialog */}
-    <RelationGraph open={relationGraphOpen} onClose={() => setRelationGraphOpen(false)} />
   );
-}
+};
 
 export default MemoryPanel;
