@@ -127,17 +127,23 @@ export async function buildCompanionSystemPrompt(additionalContext = '', emotion
  */
 export async function injectCompanionContext(
   messages: Message[],
-  options: { includeMemory?: boolean; additionalContext?: string; emotionContext?: string } = {}
+  options: { includeMemory?: boolean; additionalContext?: string; emotionContext?: string; personaSystemPrompt?: string } = {}
 ): Promise<Message[]> {
-  const { includeMemory = true, additionalContext = '', emotionContext } = options;
+  const { includeMemory = true, additionalContext = '', emotionContext, personaSystemPrompt } = options;
 
   const systemPrompt = await buildCompanionSystemPrompt(additionalContext, emotionContext);
+
+  // Prepend persona-specific prompt if provided
+  let finalSystemPrompt = systemPrompt;
+  if (personaSystemPrompt) {
+    finalSystemPrompt = `${personaSystemPrompt}\n\n${systemPrompt}`;
+  }
 
   // Build the system message
   const systemMessage: Message = {
     id: crypto.randomUUID(),
     role: 'system',
-    content: systemPrompt,
+    content: finalSystemPrompt,
     timestamp: Date.now(),
   };
 

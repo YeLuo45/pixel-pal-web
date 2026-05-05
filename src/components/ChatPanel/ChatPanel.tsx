@@ -56,6 +56,7 @@ export const ChatPanel: React.FC = () => {
   const messages = useStore((s) => s.messages);
   const activePersonaId = useStore((s) => s.activePersonaId);
   const filteredMessages = messages.filter((m) => !m.personaId || m.personaId === activePersonaId);
+  const personaSystemPrompt = useStore((s) => s.personaSystemPrompt);
   const models = useStore((s) => s.models);
   const addMessage = useStore((s) => s.addMessage);
   const clearMessages = useStore((s) => s.clearMessages);
@@ -225,7 +226,7 @@ export const ChatPanel: React.FC = () => {
       const emotionContext = emotionState !== 'unknown' ? emotionState : undefined;
 
       // Inject companion context (personality system prompt + memory + emotion)
-      const messagesWithContext = await injectCompanionContext(apiMessages, { emotionContext });
+      const messagesWithContext = await injectCompanionContext(apiMessages, { emotionContext, personaSystemPrompt });
 
       // RAG Enhancement: Query knowledge base and add relevant context
       let ragContext = '';

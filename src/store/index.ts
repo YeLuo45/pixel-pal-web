@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AIConfig, Message, Event, Task, DocumentFile, PetStatus, EmailAccount, InteractionSettings, InteractionCooldowns, CompanionState, PersonaId, VoiceSettings } from '../types';
 import type { EmotionState } from '../services/voice/emotionDetector';
+import { getActivePersona } from '../services/persona/personaStorage';
+import { getPersonaSystemPrompt } from '../services/persona/personaPrompt';
 
 interface AppState {
   // AI Config
@@ -97,6 +99,7 @@ interface AppState {
 
   // Active Persona (multi-persona system)
   activePersonaId: string;
+  personaSystemPrompt: string;
   setActivePersonaId: (id: string) => void;
   clearMessagesForPersona: (personaId: string) => void;
 }
@@ -363,7 +366,17 @@ export const useStore = create<AppState>()(
 
       // Active Persona (multi-persona system)
       activePersonaId: 'preset-friend',
-      setActivePersonaId: (id) => set({ activePersonaId: id }),
+      personaSystemPrompt: getPersonaSystemPrompt(getActivePersona()),
+      setActivePersonaId: (id) => {
+        // Update active persona in localStorage (for personaStorage)
+        const { setActivePersonaId: setStorageId } = require('../services/persona/personaStorage');
+        setStorageId(id);
+        // Update store state
+        set({
+          activePersonaId: id,
+          personaSystemPrompt: getPersonaSystemPrompt(require('../services/persona/personaStorage').getActivePersona()),
+        });
+      },
       clearMessagesForPersona: (personaId) =>
         set((state) => ({
           messages: state.messages.filter((m) => m.personaId !== personaId),
