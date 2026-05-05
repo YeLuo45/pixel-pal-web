@@ -49,6 +49,7 @@ import { useStore } from '../../store';
 import { queryMemories } from '../../services/memory/memoryStorage';
 import { getIntimacyLevel, getIntimacyColor } from '../../store';
 import { exportPersonaData, downloadJSON } from '../../services/backup/personaBackup';
+import { GameDialog } from '../Game/GameDialog';
 
 interface PersonaDetailProps {
   open: boolean;
@@ -110,6 +111,9 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
   const [memoContent, setMemoContent] = useState('');
   const [memoSnackbar, setMemoSnackbar] = useState('');
   const sendMemo = useStore((s) => s.sendMemo);
+
+  // V39: Game dialog state
+  const [gameDialogOpen, setGameDialogOpen] = useState(false);
 
   // Stats from store
   const messages = useStore((s) => s.messages);
@@ -647,6 +651,22 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
               </Button>
             </Box>
 
+            {/* V39: Interactive Games */}
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                互动游戏
+              </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<span style={{ fontSize: 14 }}>🎮</span>}
+                onClick={() => setGameDialogOpen(true)}
+                sx={{ fontSize: 10 }}
+              >
+                互动游戏
+              </Button>
+            </Box>
+
             {/* V36: Send Memo */}
             <Box>
               <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
@@ -833,6 +853,12 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
         personaId={persona.id}
         open={profileOpen}
         onClose={() => setProfileOpen(false)}
+      />
+      {/* V39: Game Dialog */}
+      <GameDialog
+        personaId={persona.id}
+        open={gameDialogOpen}
+        onClose={() => setGameDialogOpen(false)}
       />
       {/* V36: Send Memo Dialog */}
       <Dialog
