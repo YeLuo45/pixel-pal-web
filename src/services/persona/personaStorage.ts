@@ -13,12 +13,20 @@ export interface PersonaTheme {
   textColor: string;
 }
 
+// V37: Voice personality differentiation
+export interface PersonaVoice {
+  rate: number;    // 0.5-2.0, default 1.0
+  pitch: number;   // 0.5-2.0, default 1.0
+  volume: number;  // 0-1, default 1.0
+  voiceName?: string; // from Web Speech API available voices
+}
+
 export interface Persona {
   id: string;
   name: string;
   avatar: string;        // emoji
   bio: string;            // short description
-  voice: 'warm' | 'rational' | 'humorous' | 'serious';
+  voice: PersonaVoice;
   theme?: PersonaTheme;
   isDefault: boolean;
   createdAt: number;
@@ -35,7 +43,7 @@ const DEFAULT_PERSONAS: Persona[] = [
     name: '朋友',
     avatar: '😊',
     bio: '温暖友善的朋友，随时陪伴你',
-    voice: 'warm',
+    voice: { rate: 1.0, pitch: 1.1, volume: 1.0 },
     theme: {
       primaryColor: '#f472b6',
       secondaryColor: '#c084fc',
@@ -52,7 +60,7 @@ const DEFAULT_PERSONAS: Persona[] = [
     name: '老师',
     avatar: '📚',
     bio: '耐心的老师，帮你解答问题',
-    voice: 'rational',
+    voice: { rate: 0.9, pitch: 1.0, volume: 1.0 },
     theme: {
       primaryColor: '#3b82f6',
       secondaryColor: '#60a5fa',
@@ -69,7 +77,7 @@ const DEFAULT_PERSONAS: Persona[] = [
     name: '教练',
     avatar: '💪',
     bio: '激励型教练，帮你达成目标',
-    voice: 'humorous',
+    voice: { rate: 1.1, pitch: 0.9, volume: 1.0 },
     theme: {
       primaryColor: '#f97316',
       secondaryColor: '#fb923c',
@@ -86,7 +94,7 @@ const DEFAULT_PERSONAS: Persona[] = [
     name: '恋人',
     avatar: '💕',
     bio: '浪漫贴心的伴侣，情感支持',
-    voice: 'warm',
+    voice: { rate: 0.95, pitch: 0.95, volume: 1.0 },
     theme: {
       primaryColor: '#ef4444',
       secondaryColor: '#f87171',
