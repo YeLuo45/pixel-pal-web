@@ -9,6 +9,7 @@ import { checkGreeting, checkReminders } from './services/actions/ActionTrigger'
 import { applyPersonaTheme, resetPersonaTheme } from './utils/personaTheme';
 import { getAllPersonas } from './services/persona/personaStorage';
 import { generateYesterdaySummaryIfNeeded } from './services/summary/dailySummary';
+import { checkAndCreateMilestones } from './services/milestone/milestoneTracker';
 import { applyAppTheme, getPresetById, getSystemTheme, resetToDefault, applyCustomTheme } from './utils/appTheme';
 import './services/i18n';
 
@@ -186,6 +187,12 @@ function App() {
       
       // V32: Generate yesterday's summary if > 24 hours since last summary
       generateYesterdaySummaryIfNeeded().catch(() => {});
+
+      // V35: Check active day milestones for all personas on startup
+      const personas = getAllPersonas();
+      for (const p of personas) {
+        checkAndCreateMilestones(p.id).catch(() => {});
+      }
 
       // Apply initial persona theme if enabled
       if (personaFollowTheme) {

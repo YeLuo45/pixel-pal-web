@@ -20,6 +20,7 @@ import { parsePersonaCommand, fuzzyMatchPersona, fuzzyMatchPersonas } from '../.
 import { getAllPersonas, getPersonaSystemPrompt } from '../../services/persona/personaStorage';
 import { getIntimacyLevel } from '../../store';
 import { checkAndTagImportantMessage } from '../../services/summary/dailySummary';
+import { checkAndCreateMilestones } from '../../services/milestone/milestoneTracker';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -394,6 +395,8 @@ export const ChatPanel: React.FC = () => {
     const currentIntimacy = personaIntimacy[activePersonaId] || 0;
     const newIntimacy = Math.min(100, currentIntimacy + 0.5);
     setPersonaIntimacy(activePersonaId, newIntimacy);
+    // V35: Check for milestone on intimacy change
+    checkAndCreateMilestones(activePersonaId).catch(() => {});
     localStorage.setItem(`persona_lastActive_${activePersonaId}`, String(Date.now()));
 
     adjustMoodForInteraction('chat');
@@ -432,6 +435,8 @@ export const ChatPanel: React.FC = () => {
           const preset = loadCollabPreset(parsed.presetName);
           if (preset) {
             startCollab(preset);
+            // V35: Trigger milestone check for each participant
+            preset.forEach(pid => checkAndCreateMilestones(pid).catch(() => {}));
             const names = preset.map(pid => getPersonaName(pid)).join(' + ');
             addMessage({ role: 'system', content: `协作模式已启动：${names}`, personaId: activePersonaId });
           } else {
@@ -439,6 +444,8 @@ export const ChatPanel: React.FC = () => {
             const matched = fuzzyMatchPersonas(personas, [parsed.presetName!]);
             if (matched.length > 0) {
               startCollab(matched);
+              // V35: Trigger milestone check for each matched participant
+              matched.forEach(pid => checkAndCreateMilestones(pid).catch(() => {}));
               const names = matched.map(pid => getPersonaName(pid)).join(' + ');
               addMessage({ role: 'system', content: `协作模式已启动：${names}`, personaId: activePersonaId });
             } else {
@@ -448,8 +455,11 @@ export const ChatPanel: React.FC = () => {
         } else if (parsed.collabNames && parsed.collabNames.length >= 2) {
           const matched = fuzzyMatchPersonas(personas, parsed.collabNames);
           if (matched.length >= 2) {
-            startCollab(matched.slice(0, 4));
-            const names = matched.map(pid => getPersonaName(pid)).join(' + ');
+            const participants = matched.slice(0, 4);
+            startCollab(participants);
+            // V35: Trigger milestone check for each participant
+            participants.forEach(pid => checkAndCreateMilestones(pid).catch(() => {}));
+            const names = participants.map(pid => getPersonaName(pid)).join(' + ');
             addMessage({ role: 'system', content: `协作模式已启动：${names}`, personaId: activePersonaId });
           } else {
             addMessage({ role: 'system', content: `需要至少2个人格来启动协作，当前匹配到 ${matched.length} 个人格`, personaId: activePersonaId });
@@ -497,6 +507,8 @@ export const ChatPanel: React.FC = () => {
           const preset = loadCollabPreset(parsed.presetName);
           if (preset) {
             startCollab(preset);
+            // V35: Trigger milestone check for each participant
+            preset.forEach(pid => checkAndCreateMilestones(pid).catch(() => {}));
             const names = preset.map(pid => getPersonaName(pid)).join(' + ');
             addMessage({ role: 'system', content: `协作配置 "${parsed.presetName}" 已加载：${names}`, personaId: activePersonaId });
           } else {

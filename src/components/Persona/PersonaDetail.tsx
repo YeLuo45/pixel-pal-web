@@ -28,7 +28,7 @@ import {
 import {
   Close as CloseIcon,
   Edit as EditIcon,
-  AccessTime as TimeIcon,
+  Timeline as TimelineIcon,
   Message as MessageIcon,
   Memory as MemoryIcon,
   BarChart as StatsIcon,
@@ -37,6 +37,7 @@ import {
   Share as ShareIcon,
   Save as SaveIcon,
 } from '@mui/icons-material';
+import { PersonaProfile } from './PersonaProfile';
 import { encodeTemplate, copyToClipboard } from '../../services/template/templateShare';
 import { getPersonaSystemPrompt, updatePersona, type Persona } from '../../services/persona';
 import { useStore } from '../../store';
@@ -93,6 +94,7 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
   const [saving, setSaving] = useState(false);
   const [exportSnackbar, setExportSnackbar] = useState<string>('');
   const [shareSnackbar, setShareSnackbar] = useState<string>('');
+  const [profileOpen, setProfileOpen] = useState(false);
   const saveAsTemplate = useStore((s) => s.saveAsTemplate);
 
   // Stats from store
@@ -554,6 +556,22 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
                 </Button>
               </Box>
             </Box>
+
+            {/* Growth Diary */}
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                成长档案
+              </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<TimelineIcon sx={{ fontSize: 14 }} />}
+                onClick={() => setProfileOpen(true)}
+                sx={{ fontSize: 10 }}
+              >
+                查看成长档案
+              </Button>
+            </Box>
           </Box>
         )}
       </DialogContent>
@@ -585,6 +603,11 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
         onClose={() => setShareSnackbar('')}
         message={shareSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+      <PersonaProfile
+        personaId={persona.id}
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
       />
     </Dialog>
   );
