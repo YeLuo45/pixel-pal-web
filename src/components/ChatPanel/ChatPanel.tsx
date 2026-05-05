@@ -174,6 +174,16 @@ export const ChatPanel: React.FC = () => {
     updateLastActivity();
     adjustMoodForInteraction('chat');
 
+    // Text-based emotion detection: analyze user message and log emotion
+    try {
+      const { createEmotionLogEntry, addEmotionLog } = await import('../../services/emotion');
+      const emotionEntry = createEmotionLogEntry(userMsg);
+      addEmotionLog(emotionEntry);
+      console.log('[Emotion] Text emotion detected:', emotionEntry.emotion, 'intensity:', emotionEntry.intensity);
+    } catch (err) {
+      console.warn('[Emotion] Text emotion detection failed:', err);
+    }
+
     // Keyword trigger: check and execute matching scenes
     const { loaded: scenesLoaded, loadScenes } = useSceneStore.getState();
     if (!scenesLoaded) {

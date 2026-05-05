@@ -18,7 +18,8 @@
     "menu": "Menu",
     "close": "Close",
     "analytics": "Analytics",
-    "scenes": "Scenes"
+    "scenes": "Scenes",
+    "search": "Search"
   },
   "chat": {
     "title": "AI Chat",
@@ -387,5 +388,43 @@
   "emotionLowEnergy": "Low Energy",
   "emotionUnknown": "Unknown",
   "emotionDetected": "Emotion Detected",
-  "interruptVoice": "Interrupt Voice"
+  "interruptVoice": "Interrupt Voice",
+  "emotion": {
+    "happy": "Happy",
+    "calm": "Calm",
+    "anxious": "Anxious",
+    "angry": "Angry",
+    "sad": "Sad",
+    "excited": "Excited",
+    "exhausted": "Exhausted",
+    "unknown": "Unknown"
+  },
+  "emotionPanel": {
+    "title": "Emotion Timeline",
+    "currentEmotion": "Current Mood",
+    "emotionTrend": "Emotion Trend",
+    "exportEmotions": "Export Emotions",
+    "noEmotionData": "No emotion data yet",
+    "startChatHint": "Start chatting to track your emotions!",
+    "intensity": "Intensity",
+    "emotionDistribution": "Emotion Distribution",
+    "recentEmotions": "Recent Emotions",
+    "exportSuccess": "Emotion data exported successfully!",
+    "anxiousWarning": "You've been feeling anxious lately. Remember to take care of yourself 💙",
+    "sadWarning": "I notice you've been feeling down. I'm here if you want to talk 💙"
+  },
+  "search": {
+    "placeholder": "Search memories...",
+    "sortBy": "Sort",
+    "recent": "Recent",
+    "relevance": "Relevance",
+    "type": "Type",
+    "allTypes": "All",
+    "noResults": "No matching memories found",
+    "hint": "Enter keywords to search memories",
+    "shortcut": "Press Cmd/Ctrl+K to open search",
+    "results": "results",
+    "esc": "ESC",
+    "close": "close"
+  }
 }

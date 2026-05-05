@@ -18,6 +18,7 @@ import { MemoryPanel } from '../components/Memory/MemoryPanel';
 import { AnalyticsPanel } from '../components/Analytics/AnalyticsPanel';
 import { ScenesPage } from '../pages/ScenesPage';
 import { QuickSceneBar } from '../components/scene/QuickSceneBar';
+import { SearchPanel } from '../components/Search/SearchPanel';
 import { registerBuiltinPlugins, registerOptionalPlugins } from '../plugins';
 import { useStore } from '../store';
 import { fetchGmailMessages, type GmailMessageSummary } from '../services/email/gmailAdapter';
@@ -338,6 +339,9 @@ export const MainPage: React.FC = () => {
 
       {/* Scene Quick Bar */}
       <QuickSceneBar />
+
+      {/* Global Search Panel */}
+      <SearchPanel />
     </Box>
   );
 };

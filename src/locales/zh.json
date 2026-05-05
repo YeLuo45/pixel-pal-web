@@ -18,7 +18,8 @@
     "menu": "菜单",
     "close": "关闭",
     "analytics": "数据分析",
-    "scenes": "场景"
+    "scenes": "场景",
+    "search": "搜索"
   },
   "chat": {
     "title": "AI 聊天",
@@ -387,5 +388,43 @@
   "emotionLowEnergy": "低落",
   "emotionUnknown": "未知",
   "emotionDetected": "检测到情绪",
-  "interruptVoice": "打断语音"
+  "interruptVoice": "打断语音",
+  "emotion": {
+    "happy": "开心",
+    "calm": "平静",
+    "anxious": "焦虑",
+    "angry": "愤怒",
+    "sad": "悲伤",
+    "excited": "兴奋",
+    "exhausted": "疲惫",
+    "unknown": "未知"
+  },
+  "emotionPanel": {
+    "title": "情绪时间轴",
+    "currentEmotion": "当前心情",
+    "emotionTrend": "情绪趋势",
+    "exportEmotions": "导出情绪数据",
+    "noEmotionData": "暂无情绪数据",
+    "startChatHint": "开始聊天来跟踪你的情绪吧！",
+    "intensity": "强度",
+    "emotionDistribution": "情绪分布",
+    "recentEmotions": "最近情绪",
+    "exportSuccess": "情绪数据导出成功！",
+    "anxiousWarning": "你最近似乎有些焦虑。记得照顾好自己哦 💙",
+    "sadWarning": "我注意到你最近情绪有些低落。如果想聊聊，我在这里 💙"
+  },
+  "search": {
+    "placeholder": "搜索记忆...",
+    "sortBy": "排序",
+    "recent": "最新",
+    "relevance": "相关",
+    "type": "类型",
+    "allTypes": "全部",
+    "noResults": "未找到相关记忆",
+    "hint": "输入关键词开始搜索记忆",
+    "shortcut": "按 Cmd/Ctrl+K 打开搜索",
+    "results": "条结果",
+    "esc": "ESC",
+    "close": "关闭"
+  }
 }

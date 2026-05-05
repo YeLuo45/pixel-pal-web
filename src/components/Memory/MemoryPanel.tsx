@@ -54,6 +54,7 @@ import {
   TrendingUp as TrendingUpIcon,
   Upload as UploadIcon,
   CalendarMonth as CalendarIcon,
+  EmojiEmotions as EmotionIcon,
 } from '@mui/icons-material';
 import {
   getMemoryStats,
@@ -77,6 +78,21 @@ import {
   type ScoredMemory,
 } from '../../services/memory/smartRetrieval';
 import { generateMemoryInsights } from '../../services/memory/summarization';
+import {
+  getEmotionLogs,
+  getEmotionLogsForDay,
+  getRecentEmotionLogs,
+  downloadEmotionLogs,
+  getEmotionStats,
+  type EmotionLogEntry,
+  type TextEmotion,
+  getTextEmotionEmoji,
+  getTextEmotionColor,
+  getTextEmotionLabel,
+  groupEmotionLogsByDate,
+  calculateEmotionDistribution,
+  checkPersistentNegativeEmotion,
+} from '../../services/emotion';
 
 const MEMORY_TYPE_COLORS: Record<MemoryType, string> = {
   conversation_summary: '#9B7FD4',
@@ -114,6 +130,29 @@ export const MemoryPanel: React.FC = () => {
   const { t } = useTranslation();
   // Tab state
   const [tab, setTab] = useState(0);
+
+  // Emotion state
+  const [emotionLogs, setEmotionLogs] = useState<EmotionLogEntry[]>([]);
+  const [emotionWarning, setEmotionWarning] = useState<string | null>(null);
+
+  // Load emotion logs
+  const loadEmotionLogs = useCallback(() => {
+    const logs = getEmotionLogs();
+    setEmotionLogs(logs);
+    
+    // Check for persistent negative emotion (P1 feature)
+    if (checkPersistentNegativeEmotion(logs, 3)) {
+      const recentLogs = getRecentEmotionLogs(3);
+      const lastEmotion = recentLogs[0]?.emotion;
+      if (lastEmotion === 'anxious') {
+        setEmotionWarning(t('emotionPanel.anxiousWarning'));
+      } else if (lastEmotion === 'sad') {
+        setEmotionWarning(t('emotionPanel.sadWarning'));
+      }
+    } else {
+      setEmotionWarning(null);
+    }
+  }, [t]);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -205,7 +244,19 @@ export const MemoryPanel: React.FC = () => {
     loadMemories();
     loadStats();
     loadInsights();
-  }, [loadMemories, loadStats, loadInsights]);
+    loadEmotionLogs();
+  }, [loadMemories, loadStats, loadInsights, loadEmotionLogs]);
+
+  // Listen for emotion updates
+  useEffect(() => {
+    const handleEmotionUpdate = () => loadEmotionLogs();
+    window.addEventListener('emotion:logAdded', handleEmotionUpdate);
+    window.addEventListener('emotion:logsCleared', handleEmotionUpdate);
+    return () => {
+      window.removeEventListener('emotion:logAdded', handleEmotionUpdate);
+      window.removeEventListener('emotion:logsCleared', handleEmotionUpdate);
+    };
+  }, [loadEmotionLogs]);
 
   // Sort memories
   const sortedMemories = [...memories].sort((a, b) => {
@@ -415,6 +466,7 @@ export const MemoryPanel: React.FC = () => {
           <Tab icon={<GraphIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.entities')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
           <Tab icon={<TimelineIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.timeline')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
           <Tab icon={<InsightIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.insights')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
+          <Tab icon={<EmotionIcon sx={{ fontSize: 16 }} />} label={t('emotionPanel.title')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
         </Tabs>
       </Box>
 
@@ -461,6 +513,14 @@ export const MemoryPanel: React.FC = () => {
             stats={stats}
             entityStats={entityStats}
             memories={memories}
+          />
+        )}
+
+        {tab === 4 && (
+          <EmotionTimelineTab
+            logs={emotionLogs}
+            warning={emotionWarning}
+            onRefresh={loadEmotionLogs}
           />
         )}
       </Box>
@@ -1345,6 +1405,236 @@ function InsightsTab({ insights, stats, entityStats, memories }: InsightsTabProp
             ))}
           </Stack>
         </>
+      )}
+    </Stack>
+  );
+}
+
+// Emotion Timeline Tab - shows emotion logs with trend visualization
+interface EmotionTimelineTabProps {
+  logs: EmotionLogEntry[];
+  warning: string | null;
+  onRefresh: () => void;
+}
+
+function EmotionTimelineTab({ logs, warning, onRefresh }: EmotionTimelineTabProps) {
+  const { t } = useTranslation();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Group logs by date
+  const groupedByDate = groupEmotionLogsByDate(logs);
+  const dateKeys = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+
+  // Get current (most recent) emotion
+  const latestLog = logs.length > 0 ? logs[logs.length - 1] : null;
+
+  // Calculate emotion distribution
+  const distribution = calculateEmotionDistribution(logs);
+
+  // Emotion colors
+  const emotionColors: Record<TextEmotion, string> = {
+    happy: '#FFD700',
+    calm: '#4CAF50',
+    anxious: '#FF9800',
+    angry: '#F44336',
+    sad: '#2196F3',
+    excited: '#E91E63',
+    exhausted: '#9E9E9E',
+    unknown: '#757575',
+  };
+
+  const handleExport = () => {
+    downloadEmotionLogs();
+    alert(t('emotionPanel.exportSuccess'));
+  };
+
+  return (
+    <Stack spacing={2}>
+      {/* Header */}
+      <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+        <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
+          {t('emotionPanel.emotionTrend')}
+        </Typography>
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={handleExport}
+            startIcon={<DownloadIcon sx={{ fontSize: 12 }} />}
+            sx={{ fontSize: 10, py: 0.25, px: 1 }}
+          >
+            {t('emotionPanel.exportEmotions')}
+          </Button>
+          <IconButton size="small" onClick={onRefresh}>
+            <RefreshIcon sx={{ fontSize: 14 }} />
+          </IconButton>
+        </Stack>
+      </Stack>
+
+      {/* Current Emotion Card */}
+      {latestLog && (
+        <Paper sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 1 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="h4" sx={{ fontSize: 32 }}>
+              {getTextEmotionEmoji(latestLog.emotion)}
+            </Typography>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                {t('emotionPanel.currentEmotion')}
+              </Typography>
+              <Typography variant="body2" sx={{ fontSize: 14, fontWeight: 600 }}>
+                {getTextEmotionLabel(latestLog.emotion, (key) => t(key))}
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'right' }}>
+              <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                {t('emotionPanel.intensity')}
+              </Typography>
+              <Typography variant="body2" sx={{ fontSize: 14, fontWeight: 600 }}>
+                {latestLog.intensity}%
+              </Typography>
+            </Box>
+          </Stack>
+        </Paper>
+      )}
+
+      {/* Emotion Warning (P1 feature) */}
+      {warning && (
+        <Paper sx={{ p: 1.5, bgcolor: 'rgba(33, 150, 243, 0.1)', borderRadius: 1, border: '1px solid rgba(33, 150, 243, 0.3)' }}>
+          <Typography variant="body2" sx={{ fontSize: 12 }}>
+            {warning}
+          </Typography>
+        </Paper>
+      )}
+
+      {/* Emotion Distribution (Simple Bar Chart) */}
+      {logs.length > 0 && (
+        <Paper sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 1 }}>
+          <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', mb: 1, display: 'block' }}>
+            {t('emotionPanel.emotionDistribution')}
+          </Typography>
+          <Stack spacing={0.5}>
+            {Object.entries(distribution)
+              .filter(([_, count]) => count > 0)
+              .sort(([, a], [, b]) => b - a)
+              .map(([emotion, count]) => {
+                const percentage = logs.length > 0 ? Math.round((count / logs.length) * 100) : 0;
+                return (
+                  <Box key={emotion} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="caption" sx={{ fontSize: 10, width: 60 }}>
+                      {getTextEmotionEmoji(emotion as TextEmotion)} {t('emotion.' + emotion)}
+                    </Typography>
+                    <Box sx={{ flex: 1, height: 8, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, overflow: 'hidden' }}>
+                      <Box
+                        sx={{
+                          width: `${percentage}%`,
+                          height: '100%',
+                          bgcolor: emotionColors[emotion as TextEmotion],
+                          borderRadius: 1,
+                        }}
+                      />
+                    </Box>
+                    <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled', width: 30, textAlign: 'right' }}>
+                      {percentage}%
+                    </Typography>
+                  </Box>
+                );
+              })}
+          </Stack>
+        </Paper>
+      )}
+
+      {/* Emotion Timeline */}
+      {logs.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <EmotionIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: 12 }}>
+            {t('emotionPanel.noEmotionData')}
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: 10 }}>
+            {t('emotionPanel.startChatHint')}
+          </Typography>
+        </Box>
+      ) : (
+        <Box sx={{ position: 'relative', pl: 2 }}>
+          {/* Vertical timeline line */}
+          <Box sx={{ position: 'absolute', left: 8, top: 0, bottom: 0, width: 2, bgcolor: 'divider' }} />
+
+          <Stack spacing={2}>
+            {dateKeys.map(dateKey => (
+              <Box key={dateKey} sx={{ position: 'relative' }}>
+                {/* Date marker */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5, ml: -2 }}>
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      bgcolor: emotionColors[groupedByDate[dateKey][0]?.emotion as TextEmotion] || '#757575',
+                      mr: 1,
+                      zIndex: 1,
+                    }}
+                  />
+                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: 'primary.main' }}>
+                    {formatDate(new Date(dateKey).getTime())}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled', ml: 0.5 }}>
+                    ({groupedByDate[dateKey].length} {t('memoryPanel.entries')})
+                  </Typography>
+                </Box>
+
+                {/* Emotion entries for this date */}
+                <Stack spacing={0.5} sx={{ ml: 2 }}>
+                  {groupedByDate[dateKey].map(log => (
+                    <Paper
+                      key={log.id}
+                      sx={{
+                        p: 1,
+                        bgcolor: 'rgba(255,255,255,0.03)',
+                        borderRadius: 1,
+                        cursor: 'pointer',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' },
+                      }}
+                      onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontSize: 16 }}>
+                          {getTextEmotionEmoji(log.emotion)}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600 }}>
+                          {getTextEmotionLabel(log.emotion, (key) => t(key))}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled', ml: 'auto' }}>
+                          {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Typography>
+                      </Box>
+                      {expandedId === log.id && (
+                        <Box>
+                          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary' }}>
+                              {t('emotionPanel.intensity')}:
+                            </Typography>
+                            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: emotionColors[log.emotion] }}>
+                              {log.intensity}%
+                            </Typography>
+                            <Chip
+                              label={log.source === 'voice' ? 'Voice' : 'Text'}
+                              size="small"
+                              sx={{ height: 14, fontSize: 7 }}
+                            />
+                          </Stack>
+                          <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                            {log.context}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
       )}
     </Stack>
   );
