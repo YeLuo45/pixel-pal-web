@@ -54,6 +54,8 @@ export const ChatPanel: React.FC = () => {
   const setCurrentEmotion = useStore((s) => s.setCurrentEmotion);
   const addEmotionEntry = useStore((s) => s.addEmotionEntry);
   const messages = useStore((s) => s.messages);
+  const activePersonaId = useStore((s) => s.activePersonaId);
+  const filteredMessages = messages.filter((m) => !m.personaId || m.personaId === activePersonaId);
   const models = useStore((s) => s.models);
   const addMessage = useStore((s) => s.addMessage);
   const clearMessages = useStore((s) => s.clearMessages);
@@ -170,7 +172,7 @@ export const ChatPanel: React.FC = () => {
     setInput('');
 
     // Add user message
-    addMessage({ role: 'user', content: userMsg });
+    addMessage({ role: 'user', content: userMsg, personaId: activePersonaId });
     updateLastActivity();
     adjustMoodForInteraction('chat');
 
@@ -290,7 +292,7 @@ export const ChatPanel: React.FC = () => {
       // Tool execution loop: execute tools and feed results back to AI
       while (toolCalls && toolCalls.length > 0) {
         // Show tool execution indicator
-        addMessage({ role: 'assistant', content: `🧩 正在调用 ${toolCalls.length} 个工具...` });
+        addMessage({ role: 'assistant', content: `🧩 正在调用 ${toolCalls.length} 个工具...`, personaId: activePersonaId });
 
         for (const tc of toolCalls) {
           try {
@@ -351,7 +353,7 @@ export const ChatPanel: React.FC = () => {
         setAIThinkingContent(null);
       }
 
-      addMessage({ role: 'assistant', content: aiContent });
+      addMessage({ role: 'assistant', content: aiContent, personaId: activePersonaId });
 
       // TTS: Speak AI response aloud using streaming (chunk by chunk)
       if (ttsEnabled && ttsSupported && aiContent) {
@@ -374,7 +376,7 @@ export const ChatPanel: React.FC = () => {
     } catch (err) {
       errorOccurred = true;
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
-      addMessage({ role: 'assistant', content: `${t('chat.errorPrefix')}: ${errorMsg}` });
+      addMessage({ role: 'assistant', content: `${t('chat.errorPrefix')}: ${errorMsg}`, personaId: activePersonaId });
     } finally {
       setAIThinking(false);
       updateLastActivity();
@@ -449,7 +451,7 @@ export const ChatPanel: React.FC = () => {
             </Typography>
           </Box>
         )}
-        {messages.map((msg) => (
+        {filteredMessages.map((msg) => (
           <Box
             key={msg.id}
             sx={{

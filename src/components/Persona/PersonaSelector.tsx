@@ -1,0 +1,231 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Menu,
+  MenuItem,
+  Divider,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Select,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
+import {
+  Person as PersonIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
+import {
+  getAllPersonas,
+  createPersona,
+  deletePersona,
+  getActivePersona,
+  type Persona,
+} from '../../services/persona';
+import { useStore } from '../../store';
+
+interface PersonaSelectorProps {
+  collapsed?: boolean;
+}
+
+const VOICE_LABELS = {
+  warm: '温暖',
+  rational: '理性',
+  humorous: '幽默',
+  serious: '严肃',
+};
+
+export const PersonaSelector: React.FC<PersonaSelectorProps> = ({ collapsed }) => {
+  const { t } = useTranslation?.() || { t: (k: string) => k };
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [activePersona, setActive] = useState<Persona | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newAvatar, setNewAvatar] = useState('😊');
+  const [newBio, setNewBio] = useState('');
+  const [newVoice, setNewVoice] = useState<'warm' | 'rational' | 'humorous' | 'serious'>('warm');
+  const setActivePersonaId = useStore((s) => s.setActivePersonaId);
+
+  useEffect(() => {
+    setPersonas(getAllPersonas());
+    setActive(getActivePersona());
+  }, []);
+
+  const handleSelect = (persona: Persona) => {
+    setActivePersonaId(persona.id);
+    setActive(persona);
+    setAnchorEl(null);
+  };
+
+  const handleCreate = () => {
+    if (!newName.trim()) return;
+    const created = createPersona({
+      name: newName.trim(),
+      avatar: newAvatar,
+      bio: newBio.trim(),
+      voice: newVoice,
+    });
+    setPersonas(getAllPersonas());
+    setActive(created);
+    setActivePersonaId(created.id);
+    setCreateOpen(false);
+    setNewName('');
+    setNewAvatar('😊');
+    setNewBio('');
+    setNewVoice('warm');
+  };
+
+  const handleDelete = (e: React.MouseEvent, persona: Persona) => {
+    e.stopPropagation();
+    if (deletePersona(persona.id)) {
+      setPersonas(getAllPersonas());
+      const next = getActivePersona();
+      setActive(next);
+      setActivePersonaId(next.id);
+    }
+  };
+
+  if (collapsed) {
+    return (
+      <Tooltip title={activePersona ? `${activePersona.avatar} ${activePersona.name}` : '选择人格'} placement="right">
+        <IconButton
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          size="small"
+          sx={{ mx: 'auto', my: 1 }}
+        >
+          <Typography sx={{ fontSize: 18 }}>{activePersona?.avatar || '🧑'}</Typography>
+        </IconButton>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Box sx={{ px: 1, py: 1 }}>
+      {/* Current persona button */}
+      <Button
+        fullWidth
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        startIcon={<Typography sx={{ fontSize: 16 }}>{activePersona?.avatar || '🧑'}</Typography>}
+        endIcon={<PersonIcon sx={{ fontSize: 14, opacity: 0.5 }} />}
+        sx={{
+          justifyContent: 'flex-start',
+          textAlign: 'left',
+          bgcolor: 'rgba(255,255,255,0.05)',
+          borderRadius: 1.5,
+          py: 0.75,
+          px: 1.5,
+          '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+        }}
+      >
+        <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 600 }}>
+          {activePersona?.name || '选择人格'}
+        </Typography>
+      </Button>
+
+      {/* Dropdown menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+        PaperProps={{ sx: { minWidth: 220, bgcolor: 'background.paper' } }}
+      >
+        <Box sx={{ px: 2, py: 1 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            人格
+          </Typography>
+        </Box>
+        {personas.map((p) => (
+          <MenuItem
+            key={p.id}
+            selected={p.id === activePersona?.id}
+            onClick={() => handleSelect(p)}
+            sx={{ gap: 1.5, py: 1 }}
+          >
+            <Typography sx={{ fontSize: 18 }}>{p.avatar}</Typography>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body2" sx={{ fontSize: 13, fontWeight: p.id === activePersona?.id ? 600 : 400 }}>
+                {p.name}
+              </Typography>
+              <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                {p.bio?.slice(0, 20) || VOICE_LABELS[p.voice]}
+              </Typography>
+            </Box>
+            {!p.isDefault && (
+              <IconButton
+                size="small"
+                onClick={(e) => handleDelete(e, p)}
+                sx={{ p: 0.5 }}
+              >
+                <DeleteIcon sx={{ fontSize: 14 }} />
+              </IconButton>
+            )}
+          </MenuItem>
+        ))}
+        <Divider />
+        <MenuItem onClick={() => { setCreateOpen(true); setAnchorEl(null); }} sx={{ gap: 1 }}>
+          <AddIcon sx={{ fontSize: 16 }} />
+          <Typography variant="body2" sx={{ fontSize: 13 }}>创建新人格</Typography>
+        </MenuItem>
+      </Menu>
+
+      {/* Create dialog */}
+      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>创建新人格</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '16px !important' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <TextField
+              label="头像"
+              value={newAvatar}
+              onChange={(e) => setNewAvatar(e.target.value.slice(0, 2))}
+              size="small"
+              sx={{ width: 80 }}
+              placeholder="😊"
+            />
+            <TextField
+              label="名称"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              size="small"
+              fullWidth
+              autoFocus
+            />
+          </Box>
+          <TextField
+            label="简介"
+            value={newBio}
+            onChange={(e) => setNewBio(e.target.value)}
+            size="small"
+            fullWidth
+            multiline
+            rows={2}
+          />
+          <Box>
+            <Typography variant="caption" sx={{ mb: 0.5, display: 'block', color: 'text.secondary' }}>语气</Typography>
+            <Select
+              value={newVoice}
+              onChange={(e) => setNewVoice(e.target.value as typeof newVoice)}
+              size="small"
+              fullWidth
+            >
+              <MenuItem value="warm">温暖</MenuItem>
+              <MenuItem value="rational">理性</MenuItem>
+              <MenuItem value="humorous">幽默</MenuItem>
+              <MenuItem value="serious">严肃</MenuItem>
+            </Select>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateOpen(false)}>取消</Button>
+          <Button onClick={handleCreate} variant="contained" disabled={!newName.trim()}>创建</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};

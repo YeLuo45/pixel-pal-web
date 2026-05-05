@@ -65,7 +65,7 @@ interface AppState {
   updateLastActivity: () => void;
 
   // UI
-  activePanel: 'chat' | 'calendar' | 'tasks' | 'document' | 'knowledge' | 'email' | 'writing' | 'settings' | 'team' | 'plugin' | 'memory' | 'analytics' | 'scenes';
+  activePanel: 'chat' | 'calendar' | 'tasks' | 'document' | 'knowledge' | 'email' | 'writing' | 'settings' | 'team' | 'plugin' | 'memory' | 'analytics' | 'scenes' | 'mall';
   setActivePanel: (panel: AppState['activePanel']) => void;
 
   // Active plugin (used when activePanel === 'plugin')
@@ -94,6 +94,11 @@ interface AppState {
   // Language
   language: 'zh' | 'en';
   setLanguage: (lang: 'zh' | 'en') => void;
+
+  // Active Persona (multi-persona system)
+  activePersonaId: string;
+  setActivePersonaId: (id: string) => void;
+  clearMessagesForPersona: (personaId: string) => void;
 }
 
 // Default model templates
@@ -355,6 +360,14 @@ export const useStore = create<AppState>()(
       // Language
       language: 'zh',
       setLanguage: (language) => set({ language }),
+
+      // Active Persona (multi-persona system)
+      activePersonaId: 'preset-friend',
+      setActivePersonaId: (id) => set({ activePersonaId: id }),
+      clearMessagesForPersona: (personaId) =>
+        set((state) => ({
+          messages: state.messages.filter((m) => m.personaId !== personaId),
+        })),
     }),
     {
       name: 'pixelpal-storage',
@@ -373,6 +386,7 @@ export const useStore = create<AppState>()(
         companion: state.companion,
         voiceSettings: state.voiceSettings,
         language: state.language,
+        activePersonaId: state.activePersonaId,
       }),
     }
   )

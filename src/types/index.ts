@@ -13,6 +13,7 @@ export interface Message {
   content: string;
   timestamp: number;
   toolCallId?: string; // For tool role messages
+  personaId?: string;  // For multi-persona chat isolation
 }
 
 export interface Event {

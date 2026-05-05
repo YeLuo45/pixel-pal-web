@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Tooltip, Divider } from '@mui/material';
-import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon, Memory as MemoryIcon, BarChart as AnalyticsIcon, AutoAwesome as ScenesIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon, Memory as MemoryIcon, BarChart as AnalyticsIcon, AutoAwesome as ScenesIcon, Search as SearchIcon, ShoppingCart as MallIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { PluginService } from '../../services/plugin/PluginService';
 import { useTranslation } from 'react-i18next';
 import { useMemoryStore } from '../../stores/memoryStore';
 import { getLatestEmotionLog, getTextEmotionEmoji } from '../../services/emotion';
 import type { TextEmotion } from '../../services/emotion';
+import { PersonaSelector } from '../Persona/PersonaSelector';
 
 const NAV_ITEMS = [
   { id: 'chat', labelKey: 'nav.chat', icon: ChatIcon },
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { id: 'knowledge', labelKey: 'nav.knowledge', icon: KnowledgeIcon },
   { id: 'writing', labelKey: 'nav.writing', icon: WriteIcon },
   { id: 'email', labelKey: 'nav.email', icon: EmailIcon },
+  { id: 'mall', labelKey: 'nav.mall', icon: MallIcon },
   { id: 'team', labelKey: 'nav.team', icon: GroupIcon },
   { id: 'analytics', labelKey: 'nav.analytics', icon: AnalyticsIcon },
   { id: 'scenes', labelKey: 'nav.scenes', icon: ScenesIcon },
@@ -166,6 +168,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
           </Box>
         </Tooltip>
       </Box>
+
+      {/* Persona Selector */}
+      <PersonaSelector collapsed={collapsed} />
 
       {/* Nav items */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5, px: 1 }}>

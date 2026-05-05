@@ -12,14 +12,14 @@
     "knowledge": "Knowledge",
     "writing": "Writing",
     "email": "Email",
+    "mall": "Mall",
     "team": "Team",
     "settings": "Settings",
     "plugins": "Plugins",
     "menu": "Menu",
     "close": "Close",
     "analytics": "Analytics",
-    "scenes": "Scenes",
-    "search": "Search"
+    "scenes": "Scenes"
   },
   "chat": {
     "title": "AI Chat",
@@ -389,6 +389,20 @@
   "emotionUnknown": "Unknown",
   "emotionDetected": "Emotion Detected",
   "interruptVoice": "Interrupt Voice",
+  "persona": {
+    "title": "Persona",
+    "create": "Create Persona",
+    "name": "Name",
+    "avatar": "Avatar",
+    "bio": "Bio",
+    "voice": "Voice",
+    "warm": "Warm",
+    "rational": "Rational",
+    "humorous": "Humorous",
+    "serious": "Serious",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this persona?"
+  },
   "emotion": {
     "happy": "Happy",
     "calm": "Calm",
@@ -426,5 +440,44 @@
     "results": "results",
     "esc": "ESC",
     "close": "close"
+  },
+  "mall": {
+    "title": "M4 Mall",
+    "searchPlaceholder": "Search products...",
+    "sortBy": "Sort",
+    "sales": "Sales",
+    "price": "Price",
+    "rating": "Rating",
+    "newest": "Newest",
+    "featured": "Featured",
+    "newArrivals": "New Arrivals",
+    "allProducts": "All Products",
+    "products": "products",
+    "noProducts": "No products found",
+    "redeemCode": "Redeem Code",
+    "enterCode": "Enter redemption code",
+    "redeem": "Redeem",
+    "redeemSuccess": "Redeemed successfully",
+    "redeemFailed": "Redemption failed",
+    "invalidCode": "Invalid or expired code",
+    "tryCode": "Try: WELCOME100",
+    "favorites": "My Favorites",
+    "noFavorites": "No favorites yet",
+    "addFavoriteHint": "Tap ❤️ on products to add favorites",
+    "clearAll": "Clear All",
+    "addedAt": "Added",
+    "coins": "Coins",
+    "purchaseSuccess": "Purchased successfully",
+    "insufficientCoins": "Insufficient coins",
+    "categories": {
+      "all": "All",
+      "avatar": "Avatar",
+      "skin": "Skin",
+      "item": "Item",
+      "badge": "Badge",
+      "frame": "Frame",
+      "effect": "Effect",
+      "theme": "Theme"
+    }
   }
 }
