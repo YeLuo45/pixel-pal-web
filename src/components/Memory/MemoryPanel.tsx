@@ -95,6 +95,7 @@ import {
 } from '../../services/emotion';
 import { getAllPersonas, type Persona } from '../../services/persona';
 import { useStore } from '../../store';
+import { RelationGraph } from '../Graph/RelationGraph';
 
 const MEMORY_TYPE_COLORS: Record<MemoryType, string> = {
   conversation_summary: '#9B7FD4',
@@ -212,6 +213,9 @@ export const MemoryPanel: React.FC = () => {
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+
+  // Relation graph dialog
+  const [relationGraphOpen, setRelationGraphOpen] = useState(false);
 
   // Load memories
   const loadMemories = useCallback(async () => {
@@ -472,6 +476,9 @@ export const MemoryPanel: React.FC = () => {
           </Button>
           <Button size="small" variant="outlined" onClick={() => setImportOpen(true)} sx={{ fontSize: 10, py: 0.25, px: 1 }}>
             <UploadIcon sx={{ fontSize: 12, mr: 0.5 }} /> {t('memoryPanel.import')}
+          </Button>
+          <Button size="small" variant="contained" onClick={() => setRelationGraphOpen(true)} sx={{ fontSize: 10, py: 0.25, px: 1, bgcolor: '#6366f1' }}>
+            🔗 关系图谱
           </Button>
         </Stack>
       </Box>
@@ -1667,6 +1674,9 @@ function EmotionTimelineTab({ logs, warning, onRefresh }: EmotionTimelineTabProp
         </Box>
       )}
     </Stack>
+
+    {/* Relation Graph Dialog */}
+    <RelationGraph open={relationGraphOpen} onClose={() => setRelationGraphOpen(false)} />
   );
 }
 
