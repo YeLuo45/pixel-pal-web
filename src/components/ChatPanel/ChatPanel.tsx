@@ -16,6 +16,8 @@ import type { Message } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { useSceneStore } from '../../stores/sceneStore';
 import { checkKeywordTrigger, executeScene, initSceneScheduler } from '../../utils/sceneScheduler';
+import { parsePersonaCommand, fuzzyMatchPersona } from '../../utils/personaCommands';
+import { getAllPersonas } from '../../services/persona/personaStorage';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -55,6 +57,7 @@ export const ChatPanel: React.FC = () => {
   const addEmotionEntry = useStore((s) => s.addEmotionEntry);
   const messages = useStore((s) => s.messages);
   const activePersonaId = useStore((s) => s.activePersonaId);
+  const setActivePersonaId = useStore((s) => s.setActivePersonaId);
   const filteredMessages = messages.filter((m) => !m.personaId || m.personaId === activePersonaId);
   const personaSystemPrompt = useStore((s) => s.personaSystemPrompt);
   const models = useStore((s) => s.models);
@@ -176,6 +179,47 @@ export const ChatPanel: React.FC = () => {
     addMessage({ role: 'user', content: userMsg, personaId: activePersonaId });
     updateLastActivity();
     adjustMoodForInteraction('chat');
+
+    // --- Persona Command Interception ---
+    const parsed = parsePersonaCommand(userMsg);
+    if (parsed) {
+      if (parsed.type === 'help') {
+        const helpText = `可用命令：
+/friend 或 /朋友 - 切换到朋友人格
+/teacher 或 /老师 - 切换到老师人格
+/coach 或 /教练 - 切换到教练人格
+/lover 或 /恋人 - 切换到恋人人格
+@名字 - 切换到指定人格
+/list 或 /列表 - 查看所有人格
+/help 或 /帮助 - 显示此帮助`;
+        addMessage({ role: 'system', content: helpText, personaId: activePersonaId });
+        return;
+      }
+      if (parsed.type === 'list') {
+        const personas = getAllPersonas();
+        const listText = '当前人格：\n' + personas.map(p => `${p.avatar} ${p.name}`).join('\n');
+        addMessage({ role: 'system', content: listText, personaId: activePersonaId });
+        return;
+      }
+      if (parsed.type === 'switch') {
+        let targetPersonaId: string | null = parsed.personaId || null;
+        // Fuzzy match if @mention style
+        if (!targetPersonaId && parsed.rawCommand) {
+          const personas = getAllPersonas();
+          targetPersonaId = fuzzyMatchPersona(personas, parsed.rawCommand);
+        }
+        if (targetPersonaId) {
+          setActivePersonaId(targetPersonaId);
+          const personas = getAllPersonas();
+          const persona = personas.find(p => p.id === targetPersonaId);
+          const switchText = persona ? `已切换到 ${persona.name} ${persona.avatar}` : `已切换到人格 ${targetPersonaId}`;
+          addMessage({ role: 'system', content: switchText, personaId: activePersonaId });
+        } else {
+          addMessage({ role: 'system', content: `未找到匹配的人格 "${parsed.rawCommand || ''}"，请尝试 /list 查看所有人格`, personaId: activePersonaId });
+        }
+        return;
+      }
+    }
 
     // Text-based emotion detection: analyze user message and log emotion
     try {
