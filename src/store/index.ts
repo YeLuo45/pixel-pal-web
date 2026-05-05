@@ -24,6 +24,16 @@ export interface CollabMessage {
   timestamp: number;
 }
 
+// Memo — inter-persona memo/note (V36)
+export interface Memo {
+  id: string;
+  fromPersonaId: string;
+  toPersonaId: string;
+  content: string;
+  read: boolean;
+  createdAt: number;
+}
+
 interface AppState {
   // AI Config
   aiConfig: AIConfig;
@@ -152,6 +162,15 @@ interface AppState {
   setAppThemeMode: (mode: 'light' | 'dark' | 'system') => void;
   setAppThemePreset: (id: string) => void;
   setCustomTheme: (theme: AppThemePreset | null) => void;
+
+  // V36: Inter-Persona Memo System
+  memos: Memo[];
+  memoNotification: string | null;
+  sendMemo: (toPersonaId: string, content: string) => void;
+  markMemoRead: (memoId: string) => void;
+  markAllMemosReadForPersona: (personaId: string) => void;
+  getUnreadMemosCount: (personaId: string) => number;
+  setMemoNotification: (msg: string | null) => void;
 }
 
 // Default model templates
@@ -458,6 +477,19 @@ export const useStore = create<AppState>()(
         set((state) => {
           const newUsageCount = { ...state.personaUsageCount };
           newUsageCount[id] = (newUsageCount[id] || 0) + 1;
+
+          // V36: Check for unread memos and set notification
+          let memoNotification: string | null = null;
+          if (id) {
+            const allPersonas = getAllPersonas();
+            const unreadMemos = state.memos.filter((m: Memo) => m.toPersonaId === id && !m.read);
+            if (unreadMemos.length > 0) {
+              const senderPersona = allPersonas.find((p) => p.id === unreadMemos[0].fromPersonaId);
+              const senderName = senderPersona?.name || '有人';
+              memoNotification = `📬 ${senderName} 给你留了便条`;
+            }
+          }
+
           return {
             activePersonaId: id,
             personaSystemPrompt: getPersonaSystemPrompt(require('../services/persona/personaStorage').getActivePersona()),
@@ -465,6 +497,7 @@ export const useStore = create<AppState>()(
               (m) => !m.personaId || m.personaId === id
             ),
             personaUsageCount: newUsageCount,
+            memoNotification,
           };
         });
       },
@@ -572,6 +605,43 @@ export const useStore = create<AppState>()(
       setAppThemeMode: (mode) => set({ appThemeMode: mode }),
       setAppThemePreset: (id) => set({ appThemePresetId: id }),
       setCustomTheme: (theme) => set({ customTheme: theme }),
+
+      // V36: Inter-Persona Memo System
+      memos: JSON.parse(localStorage.getItem('pixelpal_memos') || '[]'),
+      memoNotification: null,
+      sendMemo: (toPersonaId, content) => {
+        const { activePersonaId, memos } = useStore.getState();
+        const memo: Memo = {
+          id: `memo_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+          fromPersonaId: activePersonaId,
+          toPersonaId,
+          content,
+          read: false,
+          createdAt: Date.now(),
+        };
+        const newMemos = [...memos, memo];
+        localStorage.setItem('pixelpal_memos', JSON.stringify(newMemos));
+        set({ memos: newMemos });
+      },
+      markMemoRead: (memoId) => {
+        const { memos } = useStore.getState();
+        const newMemos = memos.map((m) => (m.id === memoId ? { ...m, read: true } : m));
+        localStorage.setItem('pixelpal_memos', JSON.stringify(newMemos));
+        set({ memos: newMemos });
+      },
+      markAllMemosReadForPersona: (personaId) => {
+        const { memos } = useStore.getState();
+        const newMemos = memos.map((m) =>
+          m.toPersonaId === personaId ? { ...m, read: true } : m
+        );
+        localStorage.setItem('pixelpal_memos', JSON.stringify(newMemos));
+        set({ memos: newMemos });
+      },
+      getUnreadMemosCount: (personaId) => {
+        const { memos } = useStore.getState();
+        return memos.filter((m) => m.toPersonaId === personaId && !m.read).length;
+      },
+      setMemoNotification: (msg) => set({ memoNotification: msg }),
     }),
     {
       name: 'pixelpal-storage',
@@ -631,6 +701,8 @@ export const useStore = create<AppState>()(
         appThemeMode: state.appThemeMode,
         appThemePresetId: state.appThemePresetId,
         customTheme: state.customTheme,
+        // V36: memos
+        memos: state.memos,
       }),
     }
   )
