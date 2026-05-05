@@ -105,6 +105,11 @@ const MEMORY_TYPE_COLORS: Record<MemoryType, string> = {
   preference: '#81C784',
   routine: '#BA68C8',
   custom: '#90A4AE',
+  // V32: Summary types
+  daily_summary: '#FFD54F',
+  weekly_summary: '#FF8A65',
+  monthly_summary: '#EF5350',
+  important_event: '#F44336',
 };
 
 function formatRelativeTime(timestamp: number): string {

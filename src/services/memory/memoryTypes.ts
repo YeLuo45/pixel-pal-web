@@ -28,7 +28,11 @@ export type MemoryType =
   | 'fact'                   // Factual information about user
   | 'preference'             // User preference (shorter term)
   | 'routine'                // User daily/weekday routine
-  | 'custom';                // Custom memory entry
+  | 'custom'                 // Custom memory entry
+  | 'daily_summary'          // Daily conversation summary (V32)
+  | 'weekly_summary'         // Weekly conversation summary (V32)
+  | 'monthly_summary'        // Monthly conversation summary (V32)
+  | 'important_event';       // Auto-tagged important messages (V32)
 
 export interface MemoryQuery {
   type?: MemoryType;

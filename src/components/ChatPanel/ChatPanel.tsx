@@ -19,6 +19,7 @@ import { checkKeywordTrigger, executeScene, initSceneScheduler } from '../../uti
 import { parsePersonaCommand, fuzzyMatchPersona, fuzzyMatchPersonas } from '../../utils/personaCommands';
 import { getAllPersonas, getPersonaSystemPrompt } from '../../services/persona/personaStorage';
 import { getIntimacyLevel } from '../../store';
+import { checkAndTagImportantMessage } from '../../services/summary/dailySummary';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -384,6 +385,9 @@ export const ChatPanel: React.FC = () => {
 
     // Add user message
     addMessage({ role: 'user', content: userMsg, personaId: activePersonaId });
+    
+    // Auto-tag important messages (V32)
+    checkAndTagImportantMessage(userMsg, activePersonaId).catch(() => {});
     updateLastActivity();
 
     // Intimacy: increment by 0.5 on user message (capped at 100)

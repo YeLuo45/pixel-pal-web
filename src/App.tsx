@@ -8,6 +8,7 @@ import { compactMemory } from './services/memory';
 import { checkGreeting, checkReminders } from './services/actions/ActionTrigger';
 import { applyPersonaTheme, resetPersonaTheme } from './utils/personaTheme';
 import { getAllPersonas } from './services/persona/personaStorage';
+import { generateYesterdaySummaryIfNeeded } from './services/summary/dailySummary';
 import './services/i18n';
 
 const darkTheme = createTheme({
@@ -140,6 +141,9 @@ function App() {
       // Trigger proactive actions on app open
       checkGreeting();
       checkReminders();
+      
+      // V32: Generate yesterday's summary if > 24 hours since last summary
+      generateYesterdaySummaryIfNeeded().catch(() => {});
 
       // Apply initial persona theme if enabled
       if (personaFollowTheme) {
