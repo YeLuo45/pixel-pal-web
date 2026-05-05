@@ -23,6 +23,7 @@ import {
   Chip,
   Switch,
   FormControlLabel,
+  Snackbar,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -32,11 +33,13 @@ import {
   Memory as MemoryIcon,
   BarChart as StatsIcon,
   Settings as SettingsIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 import { getPersonaSystemPrompt, updatePersona, type Persona } from '../../services/persona';
 import { useStore } from '../../store';
 import { queryMemories } from '../../services/memory/memoryStorage';
 import { getIntimacyLevel, getIntimacyColor } from '../../store';
+import { exportPersonaData, downloadJSON } from '../../services/backup/personaBackup';
 
 interface PersonaDetailProps {
   open: boolean;
@@ -85,6 +88,7 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
   const [avatar, setAvatar] = useState(persona.avatar);
   const [activeTab, setActiveTab] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [exportSnackbar, setExportSnackbar] = useState<string>('');
 
   // Stats from store
   const messages = useStore((s) => s.messages);
@@ -146,6 +150,19 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
       onClose();
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const data = await exportPersonaData(persona.id);
+      const date = new Date();
+      const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+      const filename = `pixelpal_${persona.name}_${dateStr}.json`;
+      downloadJSON(data, filename);
+      setExportSnackbar(`已导出: ${filename}`);
+    } catch (err) {
+      setExportSnackbar(`导出失败: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -471,6 +488,25 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
                 </Box>
               </Box>
             )}
+
+            {/* Export Data */}
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                数据备份
+              </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<DownloadIcon sx={{ fontSize: 14 }} />}
+                onClick={handleExport}
+                sx={{ fontSize: 11 }}
+              >
+                导出数据
+              </Button>
+              <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.5, display: 'block', fontSize: 10 }}>
+                导出该人格的聊天记录和记忆
+              </Typography>
+            </Box>
           </Box>
         )}
       </DialogContent>
@@ -488,6 +524,14 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
           {saving ? '保存中...' : '保存'}
         </Button>
       </DialogActions>
+
+      <Snackbar
+        open={!!exportSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setExportSnackbar('')}
+        message={exportSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Dialog>
   );
 };

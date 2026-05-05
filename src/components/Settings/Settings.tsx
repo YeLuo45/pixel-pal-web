@@ -11,6 +11,7 @@ import {
   Visibility, VisibilityOff, Save as SaveIcon,
   Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon,
   DragIndicator as DragIcon, ExpandMore as ExpandIcon, ExpandLess as CollapseIcon,
+  Download as DownloadIcon, Upload as UploadIcon,
 } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { testModel } from '../../services/ai/model-registry-adapter';
@@ -527,6 +528,79 @@ export const Settings: React.FC = () => {
               {memoryClearing ? 'Clearing...' : 'Clear All Memory'}
             </Button>
           </Stack>
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
+
+        {/* Data Backup & Restore */}
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+            💾 数据备份
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<DownloadIcon sx={{ fontSize: 14 }} />}
+                onClick={async () => {
+                  try {
+                    const { exportAllData, downloadJSON } = await import('../../services/backup/personaBackup');
+                    const data = await exportAllData();
+                    const date = new Date();
+                    const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+                    downloadJSON(data, `pixelpal_backup_${dateStr}.json`);
+                    setError('');
+                  } catch (err) {
+                    setError(`导出失败: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                  }
+                }}
+                sx={{ fontSize: 10 }}
+              >
+                导出全部数据
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                component="label"
+                startIcon={<UploadIcon sx={{ fontSize: 14 }} />}
+                sx={{ fontSize: 10 }}
+              >
+                导入数据
+                <input
+                  type="file"
+                  accept=".json"
+                  hidden
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const text = await file.text();
+                      const { importPersonaData } = await import('../../services/backup/personaBackup');
+                      const result = await importPersonaData(text);
+                      if (result.success) {
+                        setError('');
+                        // Refresh memory stats
+                        const stats = await getMemoryStats();
+                        setMemoryStats(stats);
+                      } else {
+                        setError(result.message);
+                      }
+                    } catch (err) {
+                      setError(`导入失败: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                    }
+                    // Reset file input
+                    e.target.value = '';
+                  }}
+                />
+              </Button>
+            </Box>
+            <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled' }}>
+              导出包含所有人格、聊天记录和记忆；导入会自动重命名冲突的人格
+            </Typography>
+            {error && <Alert severity="error" sx={{ fontSize: 11 }}>{error}</Alert>}
+          </Box>
         </Paper>
 
         <Divider sx={{ opacity: 0.1 }} />
