@@ -17,6 +17,7 @@ export interface MemoryEntry {
   accessCount: number;
   tags: string[];
   metadata?: Record<string, unknown>;
+  personaId?: string;         // Persona that created this memory (optional for legacy)
 }
 
 export type MemoryType = 
@@ -38,6 +39,7 @@ export interface MemoryQuery {
   startDate?: number;        // Start date for date range filter (createdAt >= startDate)
   endDate?: number;          // End date for date range filter (createdAt <= endDate)
   keyword?: string;          // Keyword search in content
+  personaId?: string;        // Filter by personaId
   limit?: number;
   offset?: number;
 }

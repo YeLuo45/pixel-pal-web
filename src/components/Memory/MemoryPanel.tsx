@@ -93,6 +93,8 @@ import {
   calculateEmotionDistribution,
   checkPersistentNegativeEmotion,
 } from '../../services/emotion';
+import { getAllPersonas, type Persona } from '../../services/persona';
+import { useStore } from '../../store';
 
 const MEMORY_TYPE_COLORS: Record<MemoryType, string> = {
   conversation_summary: '#9B7FD4',
@@ -128,6 +130,13 @@ function formatDate(timestamp: number): string {
 
 export const MemoryPanel: React.FC = () => {
   const { t } = useTranslation();
+
+  // Active persona from store
+  const activePersonaId = useStore((s) => s.activePersonaId);
+
+  // Personas list (loaded once)
+  const [personas, setPersonas] = useState<Persona[]>([]);
+
   // Tab state
   const [tab, setTab] = useState(0);
 
@@ -205,6 +214,7 @@ export const MemoryPanel: React.FC = () => {
     try {
       const results = await queryMemories({
         type: typeFilter === 'all' ? undefined : typeFilter,
+        personaId: activePersonaId,
         limit: 100,
       });
       setMemories(results);
@@ -212,7 +222,7 @@ export const MemoryPanel: React.FC = () => {
       console.error('Failed to load memories:', err);
     }
     setLoading(false);
-  }, [typeFilter]);
+  }, [typeFilter, activePersonaId]);
 
   // Load stats
   const loadStats = useCallback(async () => {
@@ -245,6 +255,7 @@ export const MemoryPanel: React.FC = () => {
     loadStats();
     loadInsights();
     loadEmotionLogs();
+    setPersonas(getAllPersonas());
   }, [loadMemories, loadStats, loadInsights, loadEmotionLogs]);
 
   // Listen for emotion updates
@@ -381,6 +392,7 @@ export const MemoryPanel: React.FC = () => {
             importance: entry.importance || 50,
             tags: entry.tags || [],
             metadata: entry.metadata,
+            personaId: activePersonaId,
           });
           count++;
         }
@@ -478,6 +490,7 @@ export const MemoryPanel: React.FC = () => {
             loading={loading}
             pinnedIds={pinnedIds}
             stats={stats}
+            personas={personas}
             onPin={togglePin}
             onDelete={handleDelete}
             onOpen={openDetail}
@@ -688,6 +701,7 @@ interface AllMemoriesTabProps {
   loading: boolean;
   pinnedIds: Set<string>;
   stats: MemoryStats | null;
+  personas: Persona[];
   onPin: (id: string) => void;
   onDelete: (id: string) => void;
   onOpen: (id: string) => void;
@@ -708,6 +722,7 @@ function AllMemoriesTab({
   loading,
   pinnedIds,
   stats,
+  personas,
   onPin,
   onDelete,
   onOpen,
@@ -724,6 +739,13 @@ function AllMemoriesTab({
 }: AllMemoriesTabProps) {
   const { t } = useTranslation();
   const [showFilters, setShowFilters] = useState(false);
+
+  // Helper to get persona avatar by id
+  const getPersonaAvatar = (personaId?: string): string => {
+    if (!personaId) return '🧠';
+    const persona = personas.find(p => p.id === personaId);
+    return persona?.avatar || '🧠';
+  };
 
   return (
     <Stack spacing={2}>
@@ -921,6 +943,9 @@ function AllMemoriesTab({
             >
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ fontSize: 12 }}>
+                    {getPersonaAvatar(memory.personaId)}
+                  </Typography>
                   <Chip
                     label={i18next.t('memory.memoryTypes.' + memory.type)}
                     size="small"

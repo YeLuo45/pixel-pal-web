@@ -160,6 +160,7 @@ export async function rememberConversation(topic: string, summary: string, impor
     content: `Topic: ${topic}\nSummary: ${summary}`,
     importance,
     tags: ['conversation', topic],
+    personaId: activePersonaId,
   });
 }
 
@@ -172,6 +173,7 @@ export async function rememberPreference(preference: string, importance = MEMORY
     content: preference,
     importance,
     tags: ['preference'],
+    personaId: activePersonaId,
   });
 }
 
@@ -184,6 +186,7 @@ export async function rememberFact(fact: string, importance = MEMORY_IMPORTANCE.
     content: fact,
     importance,
     tags: ['fact'],
+    personaId: activePersonaId,
   });
 }
 
@@ -196,6 +199,7 @@ export async function rememberMilestone(milestone: string, importance = MEMORY_I
     content: milestone,
     importance,
     tags: ['milestone'],
+    personaId: activePersonaId,
   });
 }
 

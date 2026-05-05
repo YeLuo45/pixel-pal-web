@@ -82,7 +82,7 @@ async function ensureSchema(db: IDBPDatabase<PixelPalMemoryDB>): Promise<void> {
 /**
  * Add a new memory entry
  */
-export async function addMemory(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'updatedAt' | 'lastAccessedAt' | 'accessCount' | 'importanceScore'>): Promise<MemoryEntry> {
+export async function addMemory(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'updatedAt' | 'lastAccessedAt' | 'accessCount' | 'importanceScore'> & { personaId?: string }): Promise<MemoryEntry> {
   const db = await getMemoryDB();
   await ensureSchema(db);
 
@@ -170,6 +170,7 @@ export async function queryMemories(query: MemoryQuery = {}): Promise<MemoryEntr
     startDate,
     endDate,
     keyword,
+    personaId,
     limit = 100,
     offset = 0,
   } = query;
@@ -216,6 +217,11 @@ export async function queryMemories(query: MemoryQuery = {}): Promise<MemoryEntr
       e.content.toLowerCase().includes(lowerKeyword) ||
       e.tags.some((t) => t.toLowerCase().includes(lowerKeyword))
     );
+  }
+
+  // Filter by personaId
+  if (personaId) {
+    results = results.filter((e) => e.personaId === personaId);
   }
 
   // Sort by lastAccessedAt descending (most recently accessed first)
