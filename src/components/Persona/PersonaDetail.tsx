@@ -24,6 +24,7 @@ import {
   Switch,
   FormControlLabel,
   Snackbar,
+  Slider,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -37,6 +38,7 @@ import {
   Share as ShareIcon,
   Save as SaveIcon,
   Mail as MailIcon,
+  VolumeUp as VolumeUpIcon,
 } from '@mui/icons-material';
 import { PersonaProfile } from './PersonaProfile';
 import { encodeTemplate, copyToClipboard } from '../../services/template/templateShare';
@@ -257,6 +259,12 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
           icon={<SettingsIcon sx={{ fontSize: 14 }} />}
           iconPosition="start"
           label="设置"
+          sx={{ minHeight: 36, fontSize: 12, gap: 0.5 }}
+        />
+        <Tab
+          icon={<VolumeUpIcon sx={{ fontSize: 14 }} />}
+          iconPosition="start"
+          label="声音"
           sx={{ minHeight: 36, fontSize: 12, gap: 0.5 }}
         />
       </Tabs>
@@ -598,6 +606,19 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
             </Box>
           </Box>
         )}
+
+        {activeTab === 4 && (
+          /* Voice tab - V37 */
+          <VoiceTab
+            persona={persona}
+            onSave={(voice) => {
+              const updated = updatePersona(persona.id, { voice });
+              if (updated && onPersonaUpdated) {
+                onPersonaUpdated(updated);
+              }
+            }}
+          />
+        )}
       </DialogContent>
 
       <DialogActions sx={{ px: 2, pb: 2, gap: 1 }}>
@@ -729,6 +750,177 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </Dialog>
+  );
+};
+
+// VoiceTab - V37: Voice personality differentiation settings
+const VoiceTab: React.FC<{
+  persona: Persona;
+  onSave: (voice: Persona['voice']) => void;
+}> = ({ persona, onSave }) => {
+  const [rate, setRate] = useState(persona.voice.rate);
+  const [pitch, setPitch] = useState(persona.voice.pitch);
+  const [volume, setVolume] = useState(persona.voice.volume);
+  const [voiceName, setVoiceName] = useState(persona.voice.voiceName || '');
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [snackbar, setSnackbar] = useState('');
+
+  const testVoice = useStore((s) => s.testVoice);
+
+  // Load available voices
+  useEffect(() => {
+    const loadVoices = () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        const voices = window.speechSynthesis.getVoices();
+        setAvailableVoices(voices);
+      }
+    };
+    loadVoices();
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  const handleTest = () => {
+    testVoice({ rate, pitch, volume, voiceName: voiceName || undefined }, persona.name);
+  };
+
+  const handleSave = () => {
+    onSave({ rate, pitch, volume, voiceName: voiceName || undefined });
+    setSnackbar('声音设置已保存！');
+  };
+
+  const isModified =
+    rate !== persona.voice.rate ||
+    pitch !== persona.voice.pitch ||
+    volume !== persona.voice.volume ||
+    (voiceName || '') !== (persona.voice.voiceName || '');
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {/* Rate */}
+      <Box>
+        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+          语速: {rate.toFixed(1)}
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: 10 }}>慢</Typography>
+          <Slider
+            value={rate}
+            min={0.5}
+            max={2.0}
+            step={0.1}
+            onChange={(_, v) => setRate(v as number)}
+            sx={{ flex: 1 }}
+          />
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: 10 }}>快</Typography>
+        </Box>
+      </Box>
+
+      {/* Pitch */}
+      <Box>
+        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+          音调: {pitch.toFixed(1)}
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: 10 }}>低</Typography>
+          <Slider
+            value={pitch}
+            min={0.5}
+            max={2.0}
+            step={0.1}
+            onChange={(_, v) => setPitch(v as number)}
+            sx={{ flex: 1 }}
+          />
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: 10 }}>高</Typography>
+        </Box>
+      </Box>
+
+      {/* Volume */}
+      <Box>
+        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+          音量: {Math.round(volume * 100)}%
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: 10 }}>静音</Typography>
+          <Slider
+            value={volume}
+            min={0}
+            max={1}
+            step={0.1}
+            onChange={(_, v) => setVolume(v as number)}
+            sx={{ flex: 1 }}
+          />
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: 10 }}>最大</Typography>
+        </Box>
+      </Box>
+
+      {/* Voice selector */}
+      <Box>
+        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+          语音（可选）
+        </Typography>
+        <Select
+          value={voiceName}
+          onChange={(e) => setVoiceName(e.target.value)}
+          size="small"
+          fullWidth
+          displayEmpty
+        >
+          <MenuItem value="">默认语音</MenuItem>
+          {availableVoices.map((v) => (
+            <MenuItem key={v.name} value={v.name}>
+              {v.name} ({v.lang})
+            </MenuItem>
+          ))}
+        </Select>
+        {availableVoices.length === 0 && (
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: 10, display: 'block', mt: 0.5 }}>
+            加载中...
+          </Typography>
+        )}
+      </Box>
+
+      {/* Test button */}
+      <Button
+        variant="outlined"
+        size="small"
+        onClick={handleTest}
+        startIcon={<VolumeUpIcon sx={{ fontSize: 14 }} />}
+        sx={{ fontSize: 11 }}
+      >
+        测试声音
+      </Button>
+
+      {/* Save button */}
+      <Button
+        variant="contained"
+        size="small"
+        onClick={handleSave}
+        disabled={!isModified}
+        startIcon={<SaveIcon sx={{ fontSize: 14 }} />}
+        sx={{ fontSize: 11 }}
+      >
+        保存
+      </Button>
+
+      {isModified && (
+        <Chip
+          label="已修改（未保存）"
+          size="small"
+          color="warning"
+          variant="outlined"
+        />
+      )}
+
+      <Snackbar
+        open={!!snackbar}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar('')}
+        message={snackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+    </Box>
   );
 };
 
