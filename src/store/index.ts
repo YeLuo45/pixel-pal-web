@@ -35,6 +35,17 @@ export interface Memo {
   createdAt: number;
 }
 
+// GameSession — interactive mini-game session (V39)
+export interface GameSession {
+  id: string;
+  personaId: string;
+  gameType: 'guess-number' | 'trivia' | 'idiom';
+  state: 'idle' | 'playing' | 'won' | 'lost';
+  score: number;
+  rounds: number;
+  data: Record<string, unknown>;
+}
+
 interface AppState {
   // AI Config
   aiConfig: AIConfig;
@@ -174,6 +185,12 @@ interface AppState {
   getUnreadMemosCount: (personaId: string) => number;
   setMemoNotification: (msg: string | null) => void;
   setChatInputMention: (mention: string | null) => void;
+
+  // V39: Game Session
+  gameSession: GameSession | null;
+  setGameSession: (session: GameSession | null) => void;
+  clearGameSession: () => void;
+  addIntimacy: (personaId: string, delta: number) => void;
 
   // V37: Voice personality differentiation
   getActivePersonaVoice: () => PersonaVoice | null;
@@ -656,6 +673,19 @@ export const useStore = create<AppState>()(
       },
       setMemoNotification: (msg) => set({ memoNotification: msg }),
       setChatInputMention: (mention) => set({ chatInputMention: mention }),
+
+      // V39: Game Session
+      gameSession: null,
+      setGameSession: (session) => set({ gameSession: session }),
+      clearGameSession: () => set({ gameSession: null }),
+      addIntimacy: (personaId, delta) =>
+        set((state) => {
+          const current = state.personaIntimacy[personaId] || 0;
+          const next = Math.min(100, Math.max(0, current + delta));
+          return {
+            personaIntimacy: { ...state.personaIntimacy, [personaId]: next },
+          };
+        }),
 
       // V37: Voice personality differentiation
       getActivePersonaVoice: () => {
