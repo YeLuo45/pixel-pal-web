@@ -140,6 +140,7 @@ function App() {
       // Trigger proactive actions on app open
       checkGreeting();
       checkReminders();
+
       // Apply initial persona theme if enabled
       if (personaFollowTheme) {
         const persona = getAllPersonas().find((p) => p.id === activePersonaId);
@@ -148,6 +149,26 @@ function App() {
         }
       } else {
         resetPersonaTheme();
+      }
+
+      // Intimacy decay: check last active time for each persona on app load
+      const { personaIntimacy, setPersonaIntimacy } = useStore.getState();
+      const personas = getAllPersonas();
+      const now = Date.now();
+      const DAY = 24 * 60 * 60 * 1000;
+      for (const p of personas) {
+        const lastActive = localStorage.getItem(`persona_lastActive_${p.id}`);
+        if (lastActive) {
+          const elapsed = now - parseInt(lastActive, 10);
+          const current = personaIntimacy[p.id] || 0;
+          if (elapsed > 30 * DAY && current > 5) {
+            // Dormant: reduce to 5
+            setPersonaIntimacy(p.id, 5);
+          } else if (elapsed > 7 * DAY && current > 0) {
+            // Decay by 5
+            setPersonaIntimacy(p.id, Math.max(0, current - 5));
+          }
+        }
       }
     };
     init();

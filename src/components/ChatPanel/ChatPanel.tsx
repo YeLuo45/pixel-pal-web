@@ -18,6 +18,7 @@ import { useSceneStore } from '../../stores/sceneStore';
 import { checkKeywordTrigger, executeScene, initSceneScheduler } from '../../utils/sceneScheduler';
 import { parsePersonaCommand, fuzzyMatchPersona } from '../../utils/personaCommands';
 import { getAllPersonas } from '../../services/persona/personaStorage';
+import { getIntimacyLevel } from '../../store';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -71,6 +72,8 @@ export const ChatPanel: React.FC = () => {
   const setPetStatus = useStore((s) => s.setPetStatus);
   const updateLastActivity = useStore((s) => s.updateLastActivity);
   const voiceSettings = useStore((s) => s.voiceSettings);
+  const personaIntimacy = useStore((s) => s.personaIntimacy);
+  const setPersonaIntimacy = useStore((s) => s.setPersonaIntimacy);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceUnsubscribeRef = useRef<(() => void) | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -178,6 +181,14 @@ export const ChatPanel: React.FC = () => {
     // Add user message
     addMessage({ role: 'user', content: userMsg, personaId: activePersonaId });
     updateLastActivity();
+
+    // Intimacy: increment by 0.5 on user message (capped at 100)
+    const currentIntimacy = personaIntimacy[activePersonaId] || 0;
+    const newIntimacy = Math.min(100, currentIntimacy + 0.5);
+    setPersonaIntimacy(activePersonaId, newIntimacy);
+    // Update last active time for this persona
+    localStorage.setItem(`persona_lastActive_${activePersonaId}`, String(Date.now()));
+
     adjustMoodForInteraction('chat');
 
     // --- Persona Command Interception ---
@@ -219,6 +230,27 @@ export const ChatPanel: React.FC = () => {
         }
         return;
       }
+    }
+
+    // /reset command — reset intimacy for current or named persona
+    const resetMatch = userMsg.match(/^\/reset(?:\s+(.+))?$/i);
+    if (resetMatch) {
+      const targetName = resetMatch[1]?.trim();
+      if (targetName) {
+        // Find persona by name
+        const personas = getAllPersonas();
+        const matched = personas.find(p => p.name.toLowerCase().includes(targetName.toLowerCase()));
+        if (matched) {
+          setPersonaIntimacy(matched.id, 20);
+          addMessage({ role: 'system', content: `已重置 ${matched.name} 的亲密度为 20（陌生人）`, personaId: activePersonaId });
+        } else {
+          addMessage({ role: 'system', content: `未找到名为 "${targetName}" 的人格`, personaId: activePersonaId });
+        }
+      } else {
+        setPersonaIntimacy(activePersonaId, 20);
+        addMessage({ role: 'system', content: `已重置当前人格的亲密度为 20（陌生人）`, personaId: activePersonaId });
+      }
+      return;
     }
 
     // Text-based emotion detection: analyze user message and log emotion
@@ -269,8 +301,19 @@ export const ChatPanel: React.FC = () => {
       const emotionState = useStore.getState().currentEmotion;
       const emotionContext = emotionState !== 'unknown' ? emotionState : undefined;
 
+      // Get intimacy level for prompt
+      const currentIntimacy = personaIntimacy[activePersonaId] || 0;
+      const intimacyLevel = getIntimacyLevel(currentIntimacy);
+      const intimacyPrompt = intimacyLevel ? `\n[当前关系：${intimacyLevel} — ${{
+        '陌生人': '初次见面，保持礼貌距离',
+        '熟人': '有些了解，但还不够熟悉',
+        '朋友': '已经认识，可以畅所欲言',
+        '挚友': '非常亲密，无话不谈',
+        '灵魂伴侣': '心意相通，最深层的理解',
+      }[intimacyLevel] || ''}]` : '';
+
       // Inject companion context (personality system prompt + memory + emotion)
-      const messagesWithContext = await injectCompanionContext(apiMessages, { emotionContext, personaSystemPrompt });
+      const messagesWithContext = await injectCompanionContext(apiMessages, { emotionContext, personaSystemPrompt: personaSystemPrompt + intimacyPrompt });
 
       // RAG Enhancement: Query knowledge base and add relevant context
       let ragContext = '';

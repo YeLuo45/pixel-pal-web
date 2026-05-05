@@ -36,6 +36,7 @@ import {
 import { getPersonaSystemPrompt, updatePersona, type Persona } from '../../services/persona';
 import { useStore } from '../../store';
 import { queryMemories } from '../../services/memory/memoryStorage';
+import { getIntimacyLevel, getIntimacyColor } from '../../store';
 
 interface PersonaDetailProps {
   open: boolean;
@@ -91,6 +92,7 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
   const personaFollowTheme = useStore((s) => s.personaFollowTheme);
   const setPersonaFollowTheme = useStore((s) => s.setPersonaFollowTheme);
   const setPersonaSystemPrompt = useStore((s) => s.personaSystemPrompt); // read-only, we need to update via setActivePersonaId
+  const personaIntimacy = useStore((s) => s.personaIntimacy);
 
   // Reset form when persona changes
   useEffect(() => {
@@ -238,6 +240,38 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
                 value={String(usageCount)}
               />
             </Box>
+
+            {/* Intimacy Progress */}
+            <Box sx={{ mt: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
+                  亲密度
+                </Typography>
+                <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600 }}>
+                  {(() => {
+                    const intimacy = personaIntimacy[persona.id] || 0;
+                    const level = getIntimacyLevel(intimacy);
+                    const color = getIntimacyColor(intimacy);
+                    return <span style={{ color }}>{level} ({intimacy})</span>;
+                  })()}
+                </Typography>
+              </Box>
+              <Box sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    height: '100%',
+                    borderRadius: 4,
+                    transition: 'width 0.3s ease',
+                    bgcolor: (() => {
+                      const intimacy = personaIntimacy[persona.id] || 0;
+                      return getIntimacyColor(intimacy);
+                    })(),
+                    width: `${Math.max(0, Math.min(100, personaIntimacy[persona.id] || 0))}%`,
+                  }}
+                />
+              </Box>
+            </Box>
+
             <Divider />
             <Box>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>

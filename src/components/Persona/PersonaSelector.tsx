@@ -31,6 +31,7 @@ import {
 } from '../../services/persona';
 import { useStore } from '../../store';
 import { PersonaDetail } from './PersonaDetail';
+import { getIntimacyLevel } from '../../store';
 
 interface PersonaSelectorProps {
   collapsed?: boolean;
@@ -56,6 +57,7 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({ collapsed }) =
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailPersona, setDetailPersona] = useState<Persona | null>(null);
   const setActivePersonaId = useStore((s) => s.setActivePersonaId);
+  const personaIntimacy = useStore((s) => s.personaIntimacy);
 
   useEffect(() => {
     setPersonas(getAllPersonas());
@@ -123,7 +125,21 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({ collapsed }) =
           size="small"
           sx={{ mx: 'auto', my: 1 }}
         >
-          <Typography sx={{ fontSize: 18 }}>{activePersona?.avatar || '🧑'}</Typography>
+          <Typography
+            sx={{
+              fontSize: 18,
+              ...((personaIntimacy[activePersona?.id || ''] || 0) >= 61
+                ? {
+                    filter: 'drop-shadow(0 0 6px #FFD700)',
+                    borderRadius: '50%',
+                    boxShadow: '0 0 8px 2px rgba(255, 215, 0, 0.6)',
+                    p: 0.5,
+                  }
+                : {}),
+            }}
+          >
+            {activePersona?.avatar || '🧑'}
+          </Typography>
         </IconButton>
       </Tooltip>
     );
@@ -171,7 +187,21 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({ collapsed }) =
             onClick={() => handleSelect(p)}
             sx={{ gap: 1.5, py: 1 }}
           >
-            <Typography sx={{ fontSize: 18 }}>{p.avatar}</Typography>
+            <Typography
+              sx={{
+                fontSize: 18,
+                ...((personaIntimacy[p.id] || 0) >= 61
+                  ? {
+                      filter: 'drop-shadow(0 0 6px #FFD700)',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 8px 2px rgba(255, 215, 0, 0.6)',
+                      p: 0.5,
+                    }
+                  : {}),
+              }}
+            >
+              {p.avatar}
+            </Typography>
             <Box sx={{ flex: 1 }}>
               <Typography variant="body2" sx={{ fontSize: 13, fontWeight: p.id === activePersona?.id ? 600 : 400 }}>
                 {p.name}
