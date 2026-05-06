@@ -1023,8 +1023,6 @@ export const ChatPanel: React.FC = () => {
         flexDirection: 'column',
         gap: 1.5,
         minHeight: 0,
-        maxWidth: { lg: 800 },
-        mx: 'auto',
         width: '100%',
       }}>
         {displayMessages.length === 0 && (
