@@ -157,7 +157,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ columnId, tasks, labelKey, 
     <Box
       sx={{
         flex: 1,
-        minWidth: 180,
+        minWidth: 0,
         maxWidth: 260,
         display: 'flex',
         flexDirection: 'column',
