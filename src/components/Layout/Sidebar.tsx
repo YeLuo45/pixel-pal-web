@@ -3,9 +3,10 @@ import { Box, Typography, Tooltip, Divider, Collapse } from '@mui/material';
 import { Chat as ChatIcon } from '@mui/icons-material';
 import { FlashOn as FlashIcon } from '@mui/icons-material';
 import { ShowChart as ShowChartIcon } from '@mui/icons-material';
+import { Favorite as HeartIcon, FavoriteBorder as HeartBorderIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { useTranslation } from 'react-i18next';
-import { getLatestEmotionLog, getTextEmotionEmoji } from '../../services/emotion';
+import { getLatestEmotionLog, getTextEmotionEmoji, checkEmotionAlertState } from '../../services/emotion';
 import type { TextEmotion } from '../../services/emotion';
 import { PersonaSelector } from '../Persona/PersonaSelector';
 import { AgentPanel } from '../Agent/AgentPanel';
@@ -20,6 +21,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
   const { t } = useTranslation();
   const [currentEmotion, setCurrentEmotion] = useState<{ emotion: TextEmotion; emoji: string } | null>(null);
   const [showEmotionCurve, setShowEmotionCurve] = useState(!collapsed); // Show by default when expanded
+  const [showAlertBadge, setShowAlertBadge] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   // Load current emotion from storage
   useEffect(() => {
@@ -35,6 +38,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
     loadCurrentEmotion();
 
     const handleEmotionUpdate = () => loadCurrentEmotion();
+    window.addEventListener('emotion:logAdded', handleEmotionUpdate);
+    return () => window.removeEventListener('emotion:logAdded', handleEmotionUpdate);
+  }, []);
+
+  // Load alert state on mount and when emotion updates
+  useEffect(() => {
+    const checkAlert = () => {
+      const alert = checkEmotionAlertState();
+      setShowAlertBadge(alert.type !== 'none');
+      setAlertMessage(alert.suggestion || alert.message);
+    };
+    checkAlert();
+
+    const handleEmotionUpdate = () => checkAlert();
     window.addEventListener('emotion:logAdded', handleEmotionUpdate);
     return () => window.removeEventListener('emotion:logAdded', handleEmotionUpdate);
   }, []);
@@ -75,8 +92,43 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
         </Box>
       )}
       {collapsed && (
-        <Box sx={{ py: 2, textAlign: 'center' }}>
+        <Box sx={{ py: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
           {currentEmotion ? <Typography variant="caption" sx={{ fontSize: 14 }}>{currentEmotion.emoji}</Typography> : '🛡️'}
+          <Tooltip title={showAlertBadge ? (alertMessage || '情绪预警') : ''} placement="right">
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 28,
+              height: 28,
+              borderRadius: 1,
+              bgcolor: showAlertBadge ? 'rgba(244, 67, 54, 0.15)' : 'transparent',
+              position: 'relative',
+            }}>
+              {showAlertBadge ? (
+                <>
+                  <HeartIcon sx={{ fontSize: 18, color: '#F44336' }} />
+                  <Box sx={{
+                    position: 'absolute',
+                    top: -2,
+                    right: -2,
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    bgcolor: '#F44336',
+                    animation: 'pulse 2s infinite',
+                    '@keyframes pulse': {
+                      '0%': { transform: 'scale(1)', opacity: 1 },
+                      '50%': { transform: 'scale(1.2)', opacity: 0.7 },
+                      '100%': { transform: 'scale(1)', opacity: 1 },
+                    },
+                  }} />
+                </>
+              ) : (
+                <HeartBorderIcon sx={{ fontSize: 18, color: 'text.disabled' }} />
+              )}
+            </Box>
+          </Tooltip>
         </Box>
       )}
 
