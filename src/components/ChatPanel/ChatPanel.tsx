@@ -447,6 +447,14 @@ export const ChatPanel: React.FC = () => {
       return;
     }
 
+    // --- Clear commands (local, no AI) ---
+    const parsed = parsePersonaCommand(userMsg);
+    if (parsed && (parsed.type === 'clear' || parsed.type === 'new')) {
+      clearMessages();
+      addMessage({ role: 'system', content: '已开启新对话', personaId: activePersonaId });
+      return;
+    }
+
     // ---- NORMAL MODE ----
     setInput('');
 
