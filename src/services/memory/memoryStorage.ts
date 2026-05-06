@@ -8,13 +8,13 @@
  */
 
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { MemoryEntry, MemoryQuery, MemoryStats, MemorySummary } from './memoryTypes';
+import type { MemoryEntry, MemoryQuery, MemoryStats, MemorySummary, MemoryEmotion } from './memoryTypes';
 import { MAX_MEMORY_ENTRIES, COMPRESS_KEEP_PER_TYPE } from './memoryTypes';
 import { calculateInitialScore, recalculateImportance } from './memoryScoring';
 import { memoryEvents } from '../webhook/WebhookService';
 
 const DB_NAME = 'pixelpal-memory';
-const DB_VERSION = 1;
+const DB_VERSION = 2;  // V29: Bump version for emotion field
 
 interface PixelPalMemoryDB extends DBSchema {
   memories: {
@@ -37,7 +37,47 @@ let dbInstance: IDBPDatabase<PixelPalMemoryDB> | null = null;
 
 // Schema version tracking
 const SCHEMA_VERSION_KEY = 'schema_version';
-const CURRENT_SCHEMA_VERSION = 1;
+const CURRENT_SCHEMA_VERSION = 2;
+
+/**
+ * Generate a short summary from memory content (V29)
+ * If content is <= 80 chars, returns as-is
+ * Otherwise returns first 80 chars + "..."
+ */
+export function generateMemorySummary(content: string): string {
+  if (content.length <= 80) return content;
+  return content.slice(0, 80).trim() + '...';
+}
+
+/**
+ * Extract keywords from content using simple tokenization (V29)
+ * Returns meaningful tokens (2-6 chars) excluding stop words
+ */
+const MEMORY_STOP_WORDS = new Set([
+  '的', '了', '是', '在', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要', '去',
+  '你', '会', '着', '没有', '看', '好', '自己', '这', '那', '什么', '吗', '吧', '呢', '啊', '哦', '嗯', '噢',
+  '他', '她', '它', '们', '这个', '那个', '这样', '那样', '怎么', '为什么', '哪', '哪个', '多少', '几',
+  '可以', '可能', '应该', '需要', '想', '知道', '觉得', '感觉', '认为', '希望', '愿意', '能够',
+  '来', '去', '这里', '那里', '这边', '那边', '现在', '今天', '明天', '昨天', '时候', '时间',
+  '做', '作', '让', '使', '把', '被', '给', '跟', '对', '比', '还', '又', '再', '已', '已经', '正在',
+  '如果', '因为', '所以', '但是', '虽然', '然后', '接着', '或者', '还是', '而且', '并且',
+  'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+  'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should',
+]);
+
+export function extractMemoryKeywords(content: string, maxKeywords = 10): string[] {
+  const tokens = content.split(/[\s\n，。、！？,.!?]+/).filter(
+    t => t.length >= 2 && t.length <= 6 && !MEMORY_STOP_WORDS.has(t) && /[\u4e00-\u9fa5a-zA-Z]/.test(t)
+  );
+  const freq: Record<string, number> = {};
+  for (const t of tokens) {
+    freq[t] = (freq[t] || 0) + 1;
+  }
+  return Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, maxKeywords)
+    .map(([w]) => w);
+}
 
 /**
  * Initialize (or get) the IndexedDB database instance
@@ -164,6 +204,8 @@ export async function queryMemories(query: MemoryQuery = {}): Promise<MemoryEntr
   const {
     type,
     tags,
+    emotion,
+    emotions,
     minImportance,
     maxImportance,
     since,
@@ -180,6 +222,16 @@ export async function queryMemories(query: MemoryQuery = {}): Promise<MemoryEntr
   // Filter by type
   if (type) {
     results = results.filter((e) => e.type === type);
+  }
+
+  // Filter by emotion (V29)
+  if (emotion) {
+    results = results.filter((e) => e.emotion === emotion);
+  }
+
+  // Filter by multiple emotions (V29)
+  if (emotions && emotions.length > 0) {
+    results = results.filter((e) => e.emotion && emotions.includes(e.emotion));
   }
 
   // Filter by tags (all tags must match)
