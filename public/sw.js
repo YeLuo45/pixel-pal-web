@@ -1,12 +1,15 @@
 // Service Worker for PixelPal PWA - Cache-first strategy
-const CACHE_NAME = 'pixelpal-v1';
+const CACHE_NAME = 'pixelpal-v2';
 const BASE = '/pixel-pal-web/';
 const OFFLINE_URL = BASE;
 
-// Assets to cache on install
+// Assets to cache on install - all static resources
 const PRECACHE_ASSETS = [
   BASE,
   BASE + 'index.html',
+  BASE + 'manifest.json',
+  BASE + 'icon-192.png',
+  BASE + 'icon-512.png',
 ];
 
 // Install event - precache assets

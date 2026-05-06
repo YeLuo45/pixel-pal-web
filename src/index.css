@@ -26,6 +26,7 @@ body {
 /* Smooth animations */
 * {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Selection color */

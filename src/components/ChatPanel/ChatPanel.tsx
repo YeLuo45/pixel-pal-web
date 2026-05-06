@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Box, TextField, IconButton,
   Typography, Paper, Divider,
-  Tooltip, Chip, Avatar,
+  Tooltip, Chip, Avatar, Menu, MenuItem,
 } from '@mui/material';
 import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon, Stop as StopIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
@@ -58,11 +58,13 @@ interface CollabBubbleProps {
   content: string;
   color: string;
   isUser?: boolean;
+  onContextMenu?: (e: React.MouseEvent<HTMLElement>) => void;
 }
 
-const CollabBubble: React.FC<CollabBubbleProps> = ({ personaName, avatar, content, color, isUser }) => (
+const CollabBubble: React.FC<CollabBubbleProps> = ({ personaName, avatar, content, color, isUser, onContextMenu }) => (
   <Box sx={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
     <Paper
+      onContextMenu={onContextMenu}
       sx={{
         maxWidth: '80%',
         p: 1.5,
@@ -70,7 +72,7 @@ const CollabBubble: React.FC<CollabBubbleProps> = ({ personaName, avatar, conten
         bgcolor: isUser ? 'primary.main' : 'rgba(30, 20, 55, 0.95)',
         border: isUser ? 'none' : `1px solid ${color}40`,
         color: 'white',
-        fontSize: 13,
+        fontSize: { xs: 14, md: 13 },
         borderBottomRightRadius: isUser ? 4 : 16,
         borderBottomLeftRadius: isUser ? 16 : 4,
         boxShadow: isUser ? 'none' : '0 2px 8px rgba(0,0,0,0.3)',
@@ -87,7 +89,7 @@ const CollabBubble: React.FC<CollabBubbleProps> = ({ personaName, avatar, conten
           </Typography>
         </Box>
       )}
-      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.6 }}>
+      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: { xs: 14, md: 13 }, lineHeight: 1.6 }}>
         {content}
       </Typography>
     </Paper>
@@ -139,6 +141,45 @@ export const ChatPanel: React.FC = () => {
   const setChatInputMention = useStore((s) => s.setChatInputMention);
   const [memoOpen, setMemoOpen] = useState(false);
 
+  // Message context menu state
+  const [contextMenu, setContextMenu] = useState<{ open: boolean; anchorEl: HTMLElement | null; msg: Message | null }>({
+    open: false,
+    anchorEl: null,
+    msg: null,
+  });
+
+  const handleContextMenu = (event: React.MouseEvent<HTMLElement>, msg: Message) => {
+    event.preventDefault();
+    setContextMenu({ open: true, anchorEl: event.currentTarget, msg });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu({ open: false, anchorEl: null, msg: null });
+  };
+
+  const handleCopyMessage = () => {
+    if (contextMenu.msg) {
+      navigator.clipboard.writeText(contextMenu.msg.content).catch(() => {});
+    }
+    handleCloseContextMenu();
+  };
+
+  const handleDeleteMessage = () => {
+    if (contextMenu.msg) {
+      const msgs = useStore.getState().messages;
+      useStore.getState().setMessages(msgs.filter(m => m.id !== contextMenu.msg!.id));
+    }
+    handleCloseContextMenu();
+  };
+
+  // Collab message context menu handler
+  const handleCollabContextMenu = (event: React.MouseEvent<HTMLElement>, content: string, isUser: boolean) => {
+    event.preventDefault();
+    // Create a fake msg-like object for the menu
+    const fakeMsg = { id: '', role: isUser ? 'user' : 'assistant', content, personaId: '' } as Message;
+    setContextMenu({ open: true, anchorEl: event.currentTarget, msg: fakeMsg });
+  };
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceUnsubscribeRef = useRef<(() => void) | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -182,7 +223,9 @@ export const ChatPanel: React.FC = () => {
   const displayModel = defaultModel ? `${defaultModel.name} (${defaultModel.provider})` : `${aiConfig.model} · ${aiConfig.provider}`;
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Use auto behavior on mobile for better performance, smooth on desktop
+    const isMobile = window.innerWidth <= 768;
+    messagesEndRef.current?.scrollIntoView({ behavior: isMobile ? 'auto' : 'smooth' });
   };
 
   useEffect(() => {
@@ -1005,6 +1048,7 @@ export const ChatPanel: React.FC = () => {
                   content={msg.content}
                   color="#9B7FD4"
                   isUser
+                  onContextMenu={(e) => handleCollabContextMenu(e, msg.content, true)}
                 />
               );
             }
@@ -1025,6 +1069,7 @@ export const ChatPanel: React.FC = () => {
                 avatar={getPersonaAvatar(msg.personaId)}
                 content={msg.content}
                 color={getPersonaColor(msg.personaId)}
+                onContextMenu={(e) => handleCollabContextMenu(e, msg.content, false)}
               />
             );
           }
@@ -1036,9 +1081,11 @@ export const ChatPanel: React.FC = () => {
               sx={{
                 display: 'flex',
                 justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                gap: { xs: 1, md: 1.5 },
               }}
             >
               <Paper
+                onContextMenu={(e) => handleContextMenu(e, msg)}
                 sx={{
                   maxWidth: '80%',
                   p: 1.5,
@@ -1047,7 +1094,7 @@ export const ChatPanel: React.FC = () => {
                     ? 'primary.main'
                     : 'rgba(30, 20, 55, 0.95)',
                   color: 'white',
-                  fontSize: 13,
+                  fontSize: { xs: 14, md: 13 },
                   borderBottomRightRadius: msg.role === 'user' ? 4 : 16,
                   borderBottomLeftRadius: msg.role === 'assistant' ? 4 : 16,
                   boxShadow: msg.role === 'assistant'
@@ -1058,14 +1105,13 @@ export const ChatPanel: React.FC = () => {
                     : 'none',
                 }}
               >
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: { xs: 14, md: 13 }, lineHeight: 1.6 }}>
                   {msg.content}
                 </Typography>
               </Paper>
             </Box>
           );
         })}
-
         {isAIThinking && (
           <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: 0.5 }}>
             <Paper
@@ -1228,6 +1274,40 @@ export const ChatPanel: React.FC = () => {
           </Typography>
         </Box>
       )}
+
+      {/* Message context menu */}
+      <Menu
+        open={contextMenu.open}
+        onClose={handleCloseContextMenu}
+        anchorEl={contextMenu.anchorEl}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+        slotProps={{
+          paper: {
+            sx: {
+              bgcolor: 'rgba(20, 15, 35, 0.98)',
+              border: '1px solid rgba(155, 127, 212, 0.3)',
+              backgroundImage: 'none',
+              minWidth: 140,
+            },
+          },
+        }}
+      >
+        <MenuItem
+          onClick={handleCopyMessage}
+          sx={{ fontSize: 13, color: 'white', minHeight: 40 }}
+        >
+          复制内容
+        </MenuItem>
+        {contextMenu.msg?.role === 'user' && (
+          <MenuItem
+            onClick={handleDeleteMessage}
+            sx={{ fontSize: 13, color: 'error.main', minHeight: 40 }}
+          >
+            删除消息
+          </MenuItem>
+        )}
+      </Menu>
     </Box>
 
     <MemoPanel

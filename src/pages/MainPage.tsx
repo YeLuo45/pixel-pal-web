@@ -85,14 +85,16 @@ export const MainPage: React.FC = () => {
         <>
           <IconButton
             onClick={() => setMobileOpen(true)}
-            sx={{ position: 'fixed', top: 8, left: 8, zIndex: 1300, bgcolor: 'rgba(0,0,0,0.5)', color: 'white' }}
+            sx={{ position: 'fixed', top: 12, left: 8, zIndex: 1300, bgcolor: 'rgba(0,0,0,0.5)', color: 'white' }}
           >
             <MenuIcon />
           </IconButton>
           <Drawer
+            variant="temporary"
             open={mobileOpen}
             onClose={() => setMobileOpen(false)}
-            sx={{ '& .MuiDrawer-paper': { bgcolor: 'rgba(15, 10, 30, 0.98)', width: 200 } }}
+            disableEnforceFocus
+            sx={{ '& .MuiDrawer-paper': { bgcolor: 'rgba(15, 10, 30, 0.98)', width: 260, pt: 2, touchAction: 'none' } }}
           >
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </Drawer>
