@@ -3,7 +3,7 @@
  */
 
 export interface ParseResult {
-  type: 'switch' | 'help' | 'list' | 'unknown' | 'collab' | 'endcollab' | 'savecollab' | 'loadcollab' | 'listcollab';
+  type: 'switch' | 'help' | 'list' | 'unknown' | 'collab' | 'endcollab' | 'savecollab' | 'loadcollab' | 'listcollab' | 'clear' | 'new';
   personaId?: string;
   rawCommand?: string;
   collabNames?: string[];   // For /collab friend teacher
@@ -24,6 +24,9 @@ const PRESET_COMMANDS: Record<string, string> = {
   '/帮助': 'help',
   '/list': 'list',
   '/列表': 'list',
+  '/new': 'clear',
+  '/clear': 'clear',
+  '/reset': 'clear',
 };
 
 // Collab-specific commands (not in PRESET_COMMANDS to avoid conflicts)
