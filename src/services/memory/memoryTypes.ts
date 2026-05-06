@@ -5,6 +5,8 @@
  * Stores conversation summaries, user preferences, pet milestones, etc.
  */
 
+export type MemoryEmotion = 'happy' | 'excited' | 'calm' | 'anxious' | 'angry' | 'sad' | 'exhausted' | 'unknown';
+
 export interface MemoryEntry {
   id: string;
   type: MemoryType;
@@ -16,6 +18,7 @@ export interface MemoryEntry {
   lastAccessedAt: number;
   accessCount: number;
   tags: string[];
+  emotion?: MemoryEmotion;    // V29: Emotion tag for memory classification
   metadata?: Record<string, unknown>;
   personaId?: string;         // Persona that created this memory (optional for legacy)
 }
@@ -37,6 +40,8 @@ export type MemoryType =
 export interface MemoryQuery {
   type?: MemoryType;
   tags?: string[];
+  emotion?: MemoryEmotion;     // V29: Filter by emotion
+  emotions?: MemoryEmotion[];  // V29: Filter by multiple emotions
   minImportance?: number;
   maxImportance?: number;
   since?: number;            // Unix timestamp, filter by createdAt
