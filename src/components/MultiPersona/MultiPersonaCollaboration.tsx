@@ -99,7 +99,7 @@ import {
 import type { PersonaId } from '../../services/companion/personalityTypes';
 import { getPersona } from '../../services/companion/personalityTypes';
 import { runSequentialDiscussion, getPersonaInfo } from '../../services/discussionService';
-import { getEmotionLabel } from '../../services/voice/emotionDetector';
+import { getEmotionLabel, emotionToScore, getEmotionColor, emotionColors } from '../../services/voice/emotionDetector';
 import { getAllPersonas } from '../../services/persona/personaStorage';
 
 const roleIcons: Record<PersonaRole, React.ReactNode> = {
@@ -138,16 +138,37 @@ export const MultiPersonaCollaboration: React.FC = () => {
   const [typingPersona, setTypingPersona] = useState<string | null>(null);
   const [isDebateActive, setIsDebateActive] = useState(false);
 
+  // V28: Emotion history for chart (personaId -> scores[])
+  const [emotionHistory, setEmotionHistory] = useState<Record<string, number[]>>({});
+
   const companion = useStore((s) => s.companion);
   const setPersona = useStore((s) => s.setPersona);
 
-  // Sync with current discussion
+  // Sync with current discussion + V28 emotion history tracking
   useEffect(() => {
     const discussion = getCurrentDiscussion();
     if (discussion) {
       setLocalDiscussion({ ...discussion });
       // Update contribution tracking
       const contribs: { [key: string]: number } = {};
+      // V28: Update emotion history
+      setEmotionHistory(prev => {
+        const next = { ...prev };
+        for (const msg of discussion.messages) {
+          if (msg.type === 'contribution' && msg.emotion) {
+            const score = emotionToScore(msg.emotion);
+            if (!next[msg.personaId]) {
+              next[msg.personaId] = [];
+            }
+            // Only add if different from last or first message
+            const lastScore = next[msg.personaId][next[msg.personaId].length - 1];
+            if (next[msg.personaId].length === 0 || score !== lastScore) {
+              next[msg.personaId] = [...next[msg.personaId], score];
+            }
+          }
+        }
+        return next;
+      });
       for (const msg of discussion.messages) {
         if (msg.type === 'contribution') {
           contribs[msg.personaId] = (contribs[msg.personaId] || 0) + 1;
@@ -317,6 +338,107 @@ export const MultiPersonaCollaboration: React.FC = () => {
     if (!localDiscussion || localDiscussion.messages.length === 0) return 0;
     const count = contributions[personaId] || 0;
     return Math.round((count / localDiscussion.messages.filter(m => m.type === 'contribution').length) * 100);
+  };
+
+  // V28: Emotion history line chart renderer
+  const renderEmotionChart = () => {
+    const personaIds = Object.keys(emotionHistory);
+    if (personaIds.length === 0) return null;
+
+    const width = 100; // percent
+    const height = 60;
+    const padding = { top: 4, right: 4, bottom: 4, left: 4 };
+    const chartW = width - padding.left - padding.right;
+    const chartH = height - padding.top - padding.bottom;
+
+    // Find max length across all personas
+    const maxLen = Math.max(...personaIds.map(id => emotionHistory[id].length));
+    if (maxLen < 2) return null;
+
+    const getX = (idx: number) => padding.left + (idx / (maxLen - 1)) * chartW;
+    const getY = (score: number) => padding.top + (1 - score / 100) * chartH;
+
+    return (
+      <Box sx={{ mb: 1, px: 0.5 }}>
+        <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', display: 'block', mb: 0.25 }}>
+          情绪趋势
+        </Typography>
+        <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+          {/* Grid lines */}
+          {[0, 25, 50, 75, 100].map(v => (
+            <line
+              key={v}
+              x1={padding.left}
+              y1={getY(v)}
+              x2={padding.left + chartW}
+              y2={getY(v)}
+              stroke="rgba(255,255,255,0.08)"
+              strokeWidth="0.3"
+            />
+          ))}
+          {/* Lines per persona */}
+          {personaIds.map((pid, pIdx) => {
+            const scores = emotionHistory[pid];
+            if (scores.length < 2) return null;
+            const color = personaColors[pid as PersonaId] || roleColors[getPersonaInfo(pid)?.role || 'observer'] || '#9B7FD4';
+            const points = scores.map((s, i) => `${getX(i)},${getY(s)}`).join(' ');
+            return (
+              <polyline
+                key={pid}
+                points={points}
+                fill="none"
+                stroke={color}
+                strokeWidth="0.8"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            );
+          })}
+        </svg>
+      </Box>
+    );
+  };
+
+  // V28: Emotion summary card (shown when discussion is concluded)
+  const renderEmotionSummary = () => {
+    if (!localDiscussion || localDiscussion.status === 'active') return null;
+
+    const personaIds = Object.keys(emotionHistory);
+    if (personaIds.length === 0) return null;
+
+    return (
+      <Card sx={{ m: 1, p: 1.5, bgcolor: 'rgba(0,0,0,0.3)', borderRadius: 1.5 }}>
+        <Typography variant="subtitle2" sx={{ fontSize: 11, mb: 1, color: 'primary.light' }}>
+          情绪摘要
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          {personaIds.map(pid => {
+            const scores = emotionHistory[pid];
+            if (!scores || scores.length === 0) return null;
+            const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+            const emotion = scores[scores.length - 1] > 60 ? 'positive' : scores[scores.length - 1] < 40 ? 'negative' : 'neutral';
+            const avgColor = emotion === 'positive' ? '#4CAF50' : emotion === 'negative' ? '#F44336' : '#2196F3';
+            const info = getPersonaInfo(pid);
+            return (
+              <Box key={pid} sx={{ textAlign: 'center', minWidth: 60 }}>
+                <Avatar sx={{ width: 24, height: 24, bgcolor: personaColors[pid as PersonaId] || '#9B7FD4', fontSize: 10, mx: 'auto', mb: 0.25 }}>
+                  {info?.avatar || pid[0]}
+                </Avatar>
+                <Typography variant="caption" sx={{ fontSize: 9, display: 'block', color: 'text.secondary' }}>
+                  {info?.name || pid}
+                </Typography>
+                <Typography variant="h6" sx={{ fontSize: 14, fontWeight: 700, color: avgColor }}>
+                  {avgScore}
+                </Typography>
+                <Typography variant="caption" sx={{ fontSize: 8, color: avgColor }}>
+                  /100
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
+      </Card>
+    );
   };
 
   return (
@@ -719,6 +841,8 @@ export const MultiPersonaCollaboration: React.FC = () => {
                 <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
                   {localDiscussion.messages.length} messages · {activeMembers.length} active
                 </Typography>
+                {/* V28: Emotion Chart */}
+                {renderEmotionChart()}
               </Box>
             )}
 
@@ -731,12 +855,28 @@ export const MultiPersonaCollaboration: React.FC = () => {
               gap: 1,
               mb: 1.5,
             }}>
-              {localDiscussion?.messages.map(msg => {
+              {localDiscussion?.messages.map((msg, msgIdx) => {
                 const personaColor = personaColors[msg.personaId as PersonaId] || '#9B7FD4';
                 const isUser = msg.personaId === 'user' || msg.personaId === companion.personaId || String(msg.personaId) === 'user';
                 const isSystem = msg.personaId === 'system' || String(msg.personaId) === 'system';
                 const personaInfo = getPersonaInfo(msg.personaId);
-                
+
+                // V28: Emotion calculation
+                const msgEmotion = (msg as any).emotion as string | undefined;
+                const emotionScore = msgEmotion ? emotionToScore(msgEmotion) : 50;
+                const emotionColor = msgEmotion ? getEmotionColor(msgEmotion) : personaColor;
+
+                // V28: Emotion fluctuation detection (spike >30)
+                let hasEmotionSpike = false;
+                if (msgEmotion && msgIdx > 0) {
+                  const prevMsgs = localDiscussion.messages.slice(0, msgIdx).filter(m => m.personaId === msg.personaId && (m as any).emotion);
+                  if (prevMsgs.length > 0) {
+                    const prevEmotion = (prevMsgs[prevMsgs.length - 1] as any).emotion as string;
+                    const prevScore = emotionToScore(prevEmotion);
+                    hasEmotionSpike = Math.abs(emotionScore - prevScore) > 30;
+                  }
+                }
+
                 return (
                   <Box
                     key={msg.id}
@@ -755,17 +895,34 @@ export const MultiPersonaCollaboration: React.FC = () => {
                         <Typography sx={{ fontSize: 10, fontWeight: 600, color: personaColor }}>
                           {msg.personaName || personaInfo?.name || 'Unknown'}
                         </Typography>
-                        {(msg as any).emotion && (
-                          <Chip
-                            label={getEmotionLabel((msg as any).emotion)}
-                            size="small"
-                            sx={{
-                              height: 14,
-                              fontSize: 8,
-                              bgcolor: 'rgba(0,0,0,0.2)',
-                              '& .MuiChip-label': { px: 0.5 },
-                            }}
-                          />
+                        {/* V28: Emotion progress bar */}
+                        {msgEmotion && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <LinearProgress
+                              variant="determinate"
+                              value={emotionScore}
+                              sx={{
+                                width: 32,
+                                height: 3,
+                                borderRadius: 1,
+                                bgcolor: 'rgba(255,255,255,0.1)',
+                                '& .MuiLinearProgress-bar': {
+                                  bgcolor: emotionColor,
+                                  borderRadius: 1,
+                                },
+                              }}
+                            />
+                            <Chip
+                              label={getEmotionLabel(msgEmotion)}
+                              size="small"
+                              sx={{
+                                height: 14,
+                                fontSize: 8,
+                                bgcolor: 'rgba(0,0,0,0.2)',
+                                '& .MuiChip-label': { px: 0.5 },
+                              }}
+                            />
+                          </Box>
                         )}
                         <Chip
                           label={msg.type}
@@ -779,16 +936,27 @@ export const MultiPersonaCollaboration: React.FC = () => {
                         />
                       </Box>
                     )}
-                    {/* Message bubble */}
+                    {/* V28: Message bubble with emotion gradient */}
                     <Paper
                       sx={{
                         p: 1,
-                        bgcolor: isSystem 
-                          ? 'rgba(255, 215, 0, 0.1)' 
-                          : `${personaColor}22`,
+                        bgcolor: isSystem
+                          ? 'rgba(255, 215, 0, 0.1)'
+                          : msgEmotion
+                            ? `linear-gradient(135deg, ${emotionColor}22, ${emotionColor}11)`
+                            : `${personaColor}22`,
+                        background: isSystem
+                          ? 'rgba(255, 215, 0, 0.1)'
+                          : msgEmotion
+                            ? `linear-gradient(135deg, ${emotionColor}22, ${emotionColor}11)`
+                            : `${personaColor}22`,
                         maxWidth: '85%',
                         borderRadius: 1,
-                        borderLeft: isSystem ? '2px solid #FFD700' : `2px solid ${personaColor}`,
+                        borderLeft: isSystem ? '2px solid #FFD700' : `3px solid ${msgEmotion || personaColor}`,
+                        border: hasEmotionSpike
+                          ? '1px solid #FF9800'
+                          : isSystem ? '2px solid #FFD700' : `3px solid ${msgEmotion || personaColor}`,
+                        boxShadow: hasEmotionSpike ? '0 0 6px rgba(255, 152, 0, 0.4)' : 'none',
                       }}
                     >
                       <Typography sx={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
@@ -840,6 +1008,9 @@ export const MultiPersonaCollaboration: React.FC = () => {
               )}
               <div ref={messagesEndRef} />
             </Box>
+
+            {/* V28: Emotion Summary Card (shown when discussion concluded) */}
+            {renderEmotionSummary()}
 
             {/* V27: Real Debate Input */}
             {isDebateActive && (

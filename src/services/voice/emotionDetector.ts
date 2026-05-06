@@ -121,3 +121,62 @@ export function formatEmotionContext(emotion: EmotionState): string {
 export function clearEmotionHistory(): void {
   recentSegments = [];
 }
+
+// ============================================
+// V28: Emotion Engine Upgrade - Score & Colors
+// ============================================
+
+/**
+ * Emotion to color mapping for UI visualization
+ */
+export const emotionColors: Record<string, string> = {
+  // Positive emotions
+  happy: '#FFEB3B',
+  joyful: '#FFEB3B',
+  excited: '#FF9800',
+  // Neutral emotions
+  calm: '#2196F3',
+  neutral: '#9E9E9E',
+  // Negative emotions
+  angry: '#F44336',
+  sad: '#9C27B0',
+  anxious: '#FF5722',
+  fearful: '#673AB7',
+  tense: '#FF5722',
+  low_energy: '#607D8B',
+  // Debate-specific
+  concerned: '#FF5722',
+  agreeing: '#4CAF50',
+  disagreeing: '#F44336',
+};
+
+/**
+ * Convert emotion string to numeric score (0-100)
+ * Higher = more positive, Lower = more negative
+ */
+export function emotionToScore(emotion: string): number {
+  const scores: Record<string, number> = {
+    happy: 85,
+    joyful: 90,
+    excited: 80,
+    calm: 60,
+    neutral: 50,
+    concerned: 35,
+    anxious: 40,
+    tense: 30,
+    fearful: 20,
+    sad: 30,
+    angry: 15,
+    low_energy: 25,
+    agreeing: 70,
+    disagreeing: 45,
+  };
+  return scores[emotion.toLowerCase()] ?? 50;
+}
+
+/**
+ * Get emotion color with fallback
+ */
+export function getEmotionColor(emotion: string): string {
+  return emotionColors[emotion.toLowerCase()] ?? '#9E9E9E';
+}
