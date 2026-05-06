@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Tooltip, Divider, Collapse } from '@mui/material';
-import { Chat as ChatIcon } from '@mui/icons-material';
-import { FlashOn as FlashIcon } from '@mui/icons-material';
-import { ShowChart as ShowChartIcon } from '@mui/icons-material';
-import { Favorite as HeartIcon, FavoriteBorder as HeartBorderIcon } from '@mui/icons-material';
+import React from 'react';
+import { Box, Typography, Tooltip, Divider } from '@mui/material';
+import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon, Memory as MemoryIcon, BarChart as AnalyticsIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
+import { PluginService } from '../../services/plugin/PluginService';
 import { useTranslation } from 'react-i18next';
-import { getLatestEmotionLog, getTextEmotionEmoji, checkEmotionAlertState } from '../../services/emotion';
-import type { TextEmotion } from '../../services/emotion';
-import { PersonaSelector } from '../Persona/PersonaSelector';
-import { AgentPanel } from '../Agent/AgentPanel';
-import { EmotionCurve } from '../EmotionCurve/EmotionCurve';
+
+const NAV_ITEMS = [
+  { id: 'chat', labelKey: 'nav.chat', icon: ChatIcon },
+  { id: 'memory', labelKey: 'nav.memory', icon: MemoryIcon },
+  { id: 'calendar', labelKey: 'nav.calendar', icon: CalendarIcon },
+  { id: 'tasks', labelKey: 'nav.tasks', icon: TaskIcon },
+  { id: 'document', labelKey: 'nav.document', icon: DocIcon },
+  { id: 'knowledge', labelKey: 'nav.knowledge', icon: KnowledgeIcon },
+  { id: 'writing', labelKey: 'nav.writing', icon: WriteIcon },
+  { id: 'email', labelKey: 'nav.email', icon: EmailIcon },
+  { id: 'team', labelKey: 'nav.team', icon: GroupIcon },
+  { id: 'analytics', labelKey: 'nav.analytics', icon: AnalyticsIcon },
+  { id: 'settings', labelKey: 'nav.settings', icon: SettingsIcon },
+] as const;
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -19,42 +26,24 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate }) => {
   const { t } = useTranslation();
-  const [currentEmotion, setCurrentEmotion] = useState<{ emotion: TextEmotion; emoji: string } | null>(null);
-  const [showEmotionCurve, setShowEmotionCurve] = useState(!collapsed); // Show by default when expanded
-  const [showAlertBadge, setShowAlertBadge] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
+  const activePanel = useStore((s) => s.activePanel);
+  const setActivePanel = useStore((s) => s.setActivePanel);
+  const setActivePluginId = useStore((s) => s.setActivePluginId);
 
-  // Load current emotion from storage
-  useEffect(() => {
-    const loadCurrentEmotion = () => {
-      const latest = getLatestEmotionLog();
-      if (latest) {
-        setCurrentEmotion({
-          emotion: latest.emotion,
-          emoji: getTextEmotionEmoji(latest.emotion),
-        });
-      }
-    };
-    loadCurrentEmotion();
+  const handleNavClick = (panelId: typeof activePanel) => {
+    if (panelId === 'plugin') {
+      setActivePanel(panelId);
+      setActivePluginId(null);
+    } else {
+      setActivePanel(panelId);
+    }
+    onNavigate?.();
+  };
 
-    const handleEmotionUpdate = () => loadCurrentEmotion();
-    window.addEventListener('emotion:logAdded', handleEmotionUpdate);
-    return () => window.removeEventListener('emotion:logAdded', handleEmotionUpdate);
-  }, []);
-
-  // Load alert state on mount and when emotion updates
-  useEffect(() => {
-    const checkAlert = () => {
-      const alert = checkEmotionAlertState();
-      setShowAlertBadge(alert.type !== 'none');
-      setAlertMessage(alert.suggestion || alert.message);
-    };
-    checkAlert();
-
-    const handleEmotionUpdate = () => checkAlert();
-    window.addEventListener('emotion:logAdded', handleEmotionUpdate);
-    return () => window.removeEventListener('emotion:logAdded', handleEmotionUpdate);
-  }, []);
+  // Get registered plugin nav items with badges
+  const pluginNavItems = PluginService.listPlugins()
+    .filter((p) => p.capabilities.some((c) => c.type === 'panel'))
+    .map((p) => ({ id: p.id, label: p.name, icon: p.icon }));
 
   return (
     <Box
@@ -79,102 +68,110 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
           <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
             AI Companion
           </Typography>
-          {currentEmotion && (
-            <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Typography variant="caption" sx={{ fontSize: 12 }}>
-                {currentEmotion.emoji}
-              </Typography>
-              <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled' }}>
-                {t('emotion.' + currentEmotion.emotion)}
-              </Typography>
-            </Box>
-          )}
         </Box>
       )}
       {collapsed && (
-        <Box sx={{ py: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
-          {currentEmotion ? <Typography variant="caption" sx={{ fontSize: 14 }}>{currentEmotion.emoji}</Typography> : '🛡️'}
-          <Tooltip title={showAlertBadge ? (alertMessage || '情绪预警') : ''} placement="right">
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 28,
-              height: 28,
-              borderRadius: 1,
-              bgcolor: showAlertBadge ? 'rgba(244, 67, 54, 0.15)' : 'transparent',
-              position: 'relative',
-            }}>
-              {showAlertBadge ? (
-                <>
-                  <HeartIcon sx={{ fontSize: 18, color: '#F44336' }} />
-                  <Box sx={{
-                    position: 'absolute',
-                    top: -2,
-                    right: -2,
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: '#F44336',
-                    animation: 'pulse 2s infinite',
-                    '@keyframes pulse': {
-                      '0%': { transform: 'scale(1)', opacity: 1 },
-                      '50%': { transform: 'scale(1.2)', opacity: 0.7 },
-                      '100%': { transform: 'scale(1)', opacity: 1 },
-                    },
-                  }} />
-                </>
-              ) : (
-                <HeartBorderIcon sx={{ fontSize: 18, color: 'text.disabled' }} />
-              )}
-            </Box>
-          </Tooltip>
+        <Box sx={{ py: 2, textAlign: 'center' }}>
+          <Typography variant="caption" sx={{ fontSize: 14 }}>🛡️</Typography>
         </Box>
       )}
 
       <Divider sx={{ opacity: 0.15, mx: 1, mb: 1 }} />
 
-      {/* Chat nav */}
-      <Box sx={{ px: 1 }}>
-        <Tooltip title={collapsed ? t('nav.chat') : ''} placement="right">
-          <Box
-            component="button"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-              px: 1.5,
-              py: 1,
-              minHeight: 44,
-              borderRadius: 1.5,
-              border: 'none',
-              cursor: 'pointer',
-              bgcolor: 'rgba(255,255,255,0.12)',
-              color: 'primary.main',
-              transition: 'all 0.15s ease',
-              width: '100%',
-              textAlign: 'left',
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.15)',
-                transform: 'scale(1.05)',
-              },
-            }}
-          >
-            <ChatIcon sx={{ fontSize: 18, flexShrink: 0 }} />
-            {!collapsed && (
-              <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 600 }}>
-                {t('nav.chat')}
-              </Typography>
-            )}
-          </Box>
-        </Tooltip>
+      {/* Navigation items */}
+      <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 0.5, px: 1 }}>
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = activePanel === item.id;
+          return (
+            <Tooltip key={item.id} title={collapsed ? t(item.labelKey) : ''} placement="right">
+              <Box
+                component="button"
+                onClick={() => handleNavClick(item.id)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  px: 1.5,
+                  py: 1,
+                  minHeight: 44,
+                  borderRadius: 1.5,
+                  border: 'none',
+                  cursor: 'pointer',
+                  bgcolor: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  color: isActive ? 'primary.main' : 'rgba(255,255,255,0.7)',
+                  transition: 'all 0.15s ease',
+                  width: '100%',
+                  textAlign: 'left',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.08)',
+                    transform: 'scale(1.05)',
+                  },
+                }}
+              >
+                <Icon sx={{ fontSize: 18, flexShrink: 0 }} />
+                {!collapsed && (
+                  <Typography variant="body2" sx={{ fontSize: 12, fontWeight: isActive ? 600 : 400 }}>
+                    {t(item.labelKey)}
+                  </Typography>
+                )}
+              </Box>
+            </Tooltip>
+          );
+        })}
+
+        {/* Plugin nav items */}
+        {pluginNavItems.map((plugin) => {
+          const Icon = plugin.icon;
+          const isActive = activePanel === 'plugin';
+          return (
+            <Tooltip key={plugin.id} title={collapsed ? plugin.label : ''} placement="right">
+              <Box
+                component="button"
+                onClick={() => {
+                  setActivePanel('plugin');
+                  setActivePluginId(plugin.id);
+                  onNavigate?.();
+                }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  px: 1.5,
+                  py: 1,
+                  minHeight: 44,
+                  borderRadius: 1.5,
+                  border: 'none',
+                  cursor: 'pointer',
+                  bgcolor: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  color: isActive ? 'primary.main' : 'rgba(255,255,255,0.7)',
+                  transition: 'all 0.15s ease',
+                  width: '100%',
+                  textAlign: 'left',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.08)',
+                    transform: 'scale(1.05)',
+                  },
+                }}
+              >
+                <Icon sx={{ fontSize: 18, flexShrink: 0 }} />
+                {!collapsed && (
+                  <Typography variant="body2" sx={{ fontSize: 12, fontWeight: isActive ? 600 : 400 }}>
+                    {plugin.label}
+                  </Typography>
+                )}
+              </Box>
+            </Tooltip>
+          );
+        })}
       </Box>
 
-      {/* Agent / 任务中心 nav */}
-      <Box sx={{ px: 1 }}>
-        <Tooltip title={collapsed ? '任务中心' : ''} placement="right">
+      {/* Settings at bottom */}
+      <Box sx={{ px: 1, mt: 'auto' }}>
+        <Tooltip title={collapsed ? t('nav.settings') : ''} placement="right">
           <Box
             component="button"
+            onClick={() => handleNavClick('settings')}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -185,8 +182,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
               borderRadius: 1.5,
               border: 'none',
               cursor: 'pointer',
-              bgcolor: 'transparent',
-              color: 'primary.main',
+              bgcolor: activePanel === 'settings' ? 'rgba(255,255,255,0.12)' : 'transparent',
+              color: activePanel === 'settings' ? 'primary.main' : 'rgba(255,255,255,0.7)',
               transition: 'all 0.15s ease',
               width: '100%',
               textAlign: 'left',
@@ -196,70 +193,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
               },
             }}
           >
-            <FlashIcon sx={{ fontSize: 18, flexShrink: 0 }} />
+            <SettingsIcon sx={{ fontSize: 18, flexShrink: 0 }} />
             {!collapsed && (
-              <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 600 }}>
-                任务中心
+              <Typography variant="body2" sx={{ fontSize: 12, fontWeight: activePanel === 'settings' ? 600 : 400 }}>
+                {t('nav.settings')}
               </Typography>
             )}
           </Box>
         </Tooltip>
       </Box>
-
-      {/* Agent Panel (shown inline in sidebar when active) */}
-      {!collapsed && (
-        <Box sx={{ flex: 1, overflow: 'hidden' }}>
-          <AgentPanel />
-        </Box>
-      )}
-
-      {/* Emotion Curve Toggle + Chart (only when expanded) */}
-      {!collapsed && (
-        <>
-          <Divider sx={{ opacity: 0.15, mx: 1, mt: 1, mb: 0.5 }} />
-          <Box sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Tooltip title="心情曲线" placement="right">
-              <Box
-                component="button"
-                onClick={() => setShowEmotionCurve(v => !v)}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 1.5,
-                  py: 0.75,
-                  minHeight: 36,
-                  borderRadius: 1.5,
-                  border: 'none',
-                  cursor: 'pointer',
-                  bgcolor: showEmotionCurve ? 'rgba(139,92,246,0.15)' : 'transparent',
-                  color: showEmotionCurve ? '#8b5cf6' : 'text.secondary',
-                  transition: 'all 0.15s ease',
-                  width: '100%',
-                  textAlign: 'left',
-                  '&:hover': {
-                    bgcolor: 'rgba(139,92,246,0.1)',
-                    color: '#8b5cf6',
-                  },
-                }}
-              >
-                <ShowChartIcon sx={{ fontSize: 16, flexShrink: 0 }} />
-                <Typography variant="body2" sx={{ fontSize: 11, fontWeight: 600 }}>
-                  心情曲线
-                </Typography>
-              </Box>
-            </Tooltip>
-          </Box>
-          <Collapse in={showEmotionCurve}>
-            <Box sx={{ mx: 1, mb: 1 }}>
-              <EmotionCurve compact compactHeight={100} />
-            </Box>
-          </Collapse>
-        </>
-      )}
-
-      {/* Persona Selector */}
-      <PersonaSelector collapsed={collapsed} />
     </Box>
   );
 };

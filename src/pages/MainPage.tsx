@@ -3,10 +3,77 @@ import { Box, Drawer, useMediaQuery, IconButton } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import { Sidebar } from '../components/Layout/Sidebar';
 import { ChatPanel } from '../components/ChatPanel/ChatPanel';
+import { Calendar } from '../components/Calendar/Calendar';
+import { Tasks } from '../components/Tasks/Tasks';
+import { DocumentUpload } from '../components/Document/DocumentUpload';
+import { Writing } from '../components/Writing/Writing';
+import { Email } from '../components/Email/Email';
+import { Settings } from '../components/Settings/Settings';
+import { KnowledgePanel } from '../components/Knowledge/Knowledge';
+import { MultiPersonaCollaboration } from '../components/MultiPersona/MultiPersonaCollaboration';
+import { PluginPanel } from '../components/Plugin/PluginPanel';
+import { PluginHub } from '../components/Plugin/PluginHub';
+import { MemoryPanel } from '../components/Memory/MemoryPanel';
+import { AnalyticsPanel } from '../components/Analytics/AnalyticsPanel';
+import { registerBuiltinPlugins, registerOptionalPlugins } from '../plugins';
+import { useStore } from '../store';
+import { useEffect } from 'react';
+
+const PANEL_COMPONENTS = {
+  chat: ChatPanel,
+  calendar: Calendar,
+  tasks: Tasks,
+  document: DocumentUpload,
+  knowledge: KnowledgePanel,
+  writing: Writing,
+  email: Email,
+  team: MultiPersonaCollaboration,
+  settings: Settings,
+  plugin: PluginPanel,
+  memory: MemoryPanel,
+  analytics: AnalyticsPanel,
+} as const;
 
 export const MainPage: React.FC = () => {
+  const activePanel = useStore((s) => s.activePanel);
+  const activePluginId = useStore((s) => s.activePluginId);
+  const setActivePluginId = useStore((s) => s.setActivePluginId);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // Register built-in and optional plugins once on mount
+  useEffect(() => {
+    registerBuiltinPlugins();
+    registerOptionalPlugins();
+  }, []);
+
+  // Resolve the active component
+  const resolvePanelComponent = () => {
+    if (activePanel === 'plugin') {
+      if (activePluginId) {
+        return () => (
+          <PluginPanel
+            pluginId={activePluginId}
+            onBack={() => {
+              setActivePluginId(null);
+            }}
+          />
+        );
+      }
+      return PluginHub;
+    }
+    if (activePanel === 'scenes') {
+      // scenes maps to ChatPanel for now (scene system is chat-based)
+      return ChatPanel;
+    }
+    if (activePanel === 'mall') {
+      // mall not in PANEL_COMPONENTS, fall back to chat
+      return ChatPanel;
+    }
+    return PANEL_COMPONENTS[activePanel as keyof typeof PANEL_COMPONENTS] || ChatPanel;
+  };
+
+  const ActivePanelComponent = resolvePanelComponent();
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: 'rgba(10, 5, 20, 1)' }}>
@@ -43,6 +110,7 @@ export const MainPage: React.FC = () => {
           ml: isMobile ? 0 : '0 !important',
         }}
       >
+        {/* Panel */}
         <Box
           sx={{
             flex: 1,
@@ -60,7 +128,7 @@ export const MainPage: React.FC = () => {
         >
           {/* Top divider line */}
           <Box sx={{ height: 1, bgcolor: 'rgba(155, 127, 212, 0.15)' }} />
-          <ChatPanel />
+          <ActivePanelComponent />
         </Box>
       </Box>
     </Box>
