@@ -154,7 +154,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onNavigate 
                   },
                 }}
               >
-                <Icon sx={{ fontSize: 18, flexShrink: 0 }} />
+                {typeof Icon === 'string' ? (
+                  <Typography sx={{ fontSize: 18, flexShrink: 0 }}>{Icon}</Typography>
+                ) : (
+                  <Icon sx={{ fontSize: 18, flexShrink: 0 }} />
+                )}
                 {!collapsed && (
                   <Typography variant="body2" sx={{ fontSize: 12, fontWeight: isActive ? 600 : 400 }}>
                     {plugin.label}
