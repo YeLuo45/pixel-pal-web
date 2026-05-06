@@ -94,7 +94,15 @@ export const MainPage: React.FC = () => {
             open={mobileOpen}
             onClose={() => setMobileOpen(false)}
             disableEnforceFocus
-            sx={{ '& .MuiDrawer-paper': { bgcolor: 'rgba(15, 10, 30, 0.98)', width: 260, pt: 2, touchAction: 'none' } }}
+            hideBackdrop
+            sx={{
+              '& .MuiDrawer-paper': {
+                bgcolor: 'rgba(15, 10, 30, 0.98)',
+                width: 260,
+                pt: 2,
+                touchAction: 'none',
+              },
+            }}
           >
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </Drawer>
