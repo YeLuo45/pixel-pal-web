@@ -1011,6 +1011,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
               )}
               <div ref={messagesEndRef} />
             </Box>
+            )}
 
             {/* V28: Emotion Summary Card (shown when discussion concluded) */}
             {activeTab === 1 && renderEmotionSummary()}
