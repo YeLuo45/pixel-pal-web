@@ -16,6 +16,8 @@ import {
   Tooltip,
   Badge,
   LinearProgress,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -62,6 +64,8 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({ collapsed }) =
   const setActivePersonaId = useStore((s) => s.setActivePersonaId);
   const personaIntimacy = useStore((s) => s.personaIntimacy);
   const getUnreadMemosCount = useStore((s) => s.getUnreadMemosCount);
+  const collaborationMode = useStore((s) => s.collaborationMode);
+  const setCollaborationMode = useStore((s) => s.setCollaborationMode);
 
   useEffect(() => {
     setPersonas(getAllPersonas());
@@ -235,6 +239,28 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({ collapsed }) =
           />
           <Typography sx={{ fontSize: 9, color: 'text.secondary' }}>{activeIntimacy}</Typography>
         </Box>
+      </Box>
+
+      {/* V40: Collaboration mode toggle */}
+      <Box sx={{ px: 1.5, pt: 0.5 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={collaborationMode}
+              onChange={(e) => setCollaborationMode(e.target.checked)}
+              sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#863bff' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#863bff' } }}
+            />
+          }
+          label={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography sx={{ fontSize: 10, color: collaborationMode ? '#863bff' : 'text.secondary' }}>
+                {collaborationMode ? '🤖 协作模式' : '协作模式'}
+              </Typography>
+            </Box>
+          }
+          sx={{ m: 0, justifyContent: 'flex-start' }}
+        />
       </Box>
 
       {/* Dropdown menu */}

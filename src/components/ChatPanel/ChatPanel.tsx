@@ -7,6 +7,7 @@ import {
 import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon, Stop as StopIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { MemoPanel } from '../Memo/MemoPanel';
+import { CollaborationStatus } from '../Collaboration/CollaborationStatus';
 import { chatCompletion, chatCompletionWithTools, initModelRegistry, getDefaultModel } from '../../services/ai/model-registry-adapter';
 import { injectCompanionContext, autoSummarizeChat, adjustMoodForInteraction } from '../../services/companion';
 import { queryKnowledgeBase, buildRAGContext, isDocumentIndexed, reindexAllDocuments } from '../../services/rag';
@@ -102,6 +103,7 @@ export const ChatPanel: React.FC = () => {
   const [showThinkingContent, setShowThinkingContent] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [ttsSupported, setTtsSupported] = useState(false);
+  const [showCollabSuggestion, setShowCollabSuggestion] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentEmotion, setCurrentEmotionLocal] = useState<EmotionState>('unknown');
@@ -130,6 +132,7 @@ export const ChatPanel: React.FC = () => {
   const collabSession = useStore((s) => s.collabSession);
   const collabMessages = useStore((s) => s.collabMessages);
   const collabPresets = useStore((s) => s.collabPresets);
+  const collabModeActive = useStore((s) => s.collaborationMode);
   const startCollab = useStore((s) => s.startCollab);
   const endCollab = useStore((s) => s.endCollab);
   const addCollabMessage = useStore((s) => s.addCollabMessage);
@@ -1001,6 +1004,46 @@ export const ChatPanel: React.FC = () => {
             ))}
           </Box>
         )}
+
+        {/* V40: Collaboration status — multi-agent progress (UI layer) */}
+        {collabModeActive && (
+          <Box sx={{ mt: 1 }}>
+            <CollaborationStatus />
+          </Box>
+        )}
+
+        {/* V40: Complex query suggestion */}
+        {showCollabSuggestion && !collabModeActive && !collabSession.active && (
+          <Box sx={{
+            mx: 2, mt: 1, p: 1, borderRadius: 1.5,
+            bgcolor: 'rgba(134,59,255,0.12)',
+            border: '1px solid rgba(134,59,255,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 1,
+          }}>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', flex: 1 }}>
+              💡 检测到复杂查询，建议开启 <strong style={{ color: '#863bff' }}>协作模式</strong> 多智能体分析
+            </Typography>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => {
+                setCollaborationMode(true);
+                setShowCollabSuggestion(false);
+              }}
+              sx={{ fontSize: 11, py: 0.25, minWidth: 'auto', bgcolor: '#863bff', '&:hover': { bgcolor: '#6b2fe0' } }}
+            >
+              开启
+            </Button>
+            <Button
+              size="small"
+              onClick={() => setShowCollabSuggestion(false)}
+              sx={{ fontSize: 11, py: 0.25, minWidth: 'auto', color: 'text.secondary' }}
+            >
+              忽略
+            </Button>
+          </Box>
+        )}
       </Box>
 
       {/* Memo Notification Banner */}
@@ -1167,7 +1210,21 @@ export const ChatPanel: React.FC = () => {
           size="small"
           placeholder={collabSession.active ? '输入消息参与讨论...' : t('chat.placeholder')}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            setInput(val);
+            // V40: Show collaboration suggestion for complex queries
+            if (!collabModeActive && !collabSession.active && val.length > 30) {
+              const hasMultipleTopics = /而且|还有|另外|同时|但是|不过/.test(val);
+              const hasMultiplePronouns = (val.match(/我|你|他|她|它/g) || []).length >= 3;
+              const hasAnalysisRequest = /分析|比较|规划|建议|思考|看看|研究/.test(val);
+              if (hasMultipleTopics || hasMultiplePronouns || hasAnalysisRequest) {
+                setShowCollabSuggestion(true);
+              }
+            } else if (val.length < 20) {
+              setShowCollabSuggestion(false);
+            }
+          }}
           onKeyDown={handleKeyDown}
           disabled={isAIThinking}
           sx={{

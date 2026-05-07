@@ -195,6 +195,22 @@ interface AppState {
   // V37: Voice personality differentiation
   getActivePersonaVoice: () => PersonaVoice | null;
   testVoice: (voice: PersonaVoice, personaName?: string) => void;
+
+  // V40: Collaboration Mode UI
+  collaborationMode: boolean;
+  setCollaborationMode: (v: boolean) => void;
+  collaborationProgress: CollaborationProgress[];
+  setCollaborationProgress: (progress: CollaborationProgress[]) => void;
+  updateCollaborationProgress: (role: string, status: 'pending' | 'running' | 'done', output?: string) => void;
+}
+
+// V40: Collaboration progress tracking
+export interface CollaborationProgress {
+  role: string;
+  roleLabel: string;
+  emoji: string;
+  status: 'pending' | 'running' | 'done';
+  output?: string;
 }
 
 // Default model templates
@@ -707,6 +723,28 @@ export const useStore = create<AppState>()(
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utterance);
       },
+      // V40: Collaboration Mode UI
+      collaborationMode: false,
+      setCollaborationMode: (v) => set({ collaborationMode: v }),
+      collaborationProgress: [],
+      setCollaborationProgress: (progress) => set({ collaborationProgress: progress }),
+      updateCollaborationProgress: (role, status, output) =>
+        set((state) => {
+          const existing = state.collaborationProgress.find(p => p.role === role);
+          if (existing) {
+            return {
+              collaborationProgress: state.collaborationProgress.map(p =>
+                p.role === role ? { ...p, status, ...(output !== undefined ? { output } : {}) } : p
+              ),
+            };
+          }
+          return {
+            collaborationProgress: [
+              ...state.collaborationProgress,
+              { role, roleLabel: role, emoji: '🤖', status, ...(output !== undefined ? { output } : {}) },
+            ],
+          };
+        }),
     }),
     {
       name: 'pixelpal-storage',
