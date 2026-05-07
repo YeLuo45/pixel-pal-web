@@ -4,12 +4,13 @@
  */
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { Box, Typography, Paper, Grid, Chip, Skeleton, Tooltip as MuiTooltip } from '@mui/material';
+import { Box, Typography, Paper, Grid, Chip, Skeleton, Tooltip as MuiTooltip, ToggleButton, ToggleButtonGroup, Button } from '@mui/material';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
 import { getAllMemories, getMemoryStats } from '../../services/memory/memoryStorage';
 import type { MemoryEntry, MemoryStats } from '../../services/memory/memoryTypes';
+import { FileDownload as DownloadIcon, TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon, TrendingFlat as TrendingFlatIcon } from '@mui/icons-material';
 
 // Memory type colors
 const MEMORY_TYPE_COLORS: Record<string, string> = {
@@ -294,7 +295,7 @@ const HabitChart: React.FC<{ data: HabitDataPoint[] }> = ({ data }) => {
 export const AnalyticsPanel: React.FC = () => {
   const { t } = useTranslation();
   const messages = useStore((s) => s.messages);
-
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('7d');
   const [loading, setLoading] = useState(true);
   const [memories, setMemories] = useState<MemoryEntry[]>([]);
   const [memoryStats, setMemoryStats] = useState<MemoryStats | null>(null);
@@ -331,22 +332,20 @@ export const AnalyticsPanel: React.FC = () => {
     });
   }, [messages, memories]);
 
-  // Mood trend data (last 7 days, simulated from message count patterns)
+  // Mood trend data (dynamic from timeRange, simulated from message count patterns)
   const moodData = useMemo<MoodDataPoint[]>(() => {
-    const last7Days = getLastNDays(7);
+    const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+    const lastNDays = getLastNDays(days);
     const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    return last7Days.map((date) => {
+    return lastNDays.map((date) => {
       const dayMessages = messages.filter(m => {
         const msgDate = new Date(m.timestamp).toISOString().split('T')[0];
         return msgDate === date;
       });
 
-      // Simulate mood based on interaction patterns
-      // In a real app, this would come from actual moodHistory in companionStore
       let mood: number | null = null;
       if (dayMessages.length > 0) {
-        // Generate a pseudo-mood based on message count and time patterns
         const count = dayMessages.length;
         const hasEvening = dayMessages.some(m => {
           const h = new Date(m.timestamp).getHours();
@@ -370,7 +369,29 @@ export const AnalyticsPanel: React.FC = () => {
         label: weekdayLabels[dayOfWeek],
       };
     });
-  }, [messages]);
+  }, [messages, timeRange]);
+
+  // Trend analysis
+  const trendStats = useMemo(() => {
+    const validMoodData = moodData.filter(d => d.mood !== null);
+    if (validMoodData.length < 2) return null;
+
+    const avgMood = validMoodData.reduce((sum, d) => sum + (d.mood ?? 0), 0) / validMoodData.length;
+    const best = validMoodData.reduce((a, b) => ((b.mood ?? 0) > (a.mood ?? 0) ? b : a));
+    const worst = validMoodData.reduce((a, b) => ((b.mood ?? 0) < (a.mood ?? 0) ? b : a));
+
+    // Weekly change: compare last 7 days avg to previous 7 days
+    const last7 = validMoodData.slice(-7);
+    const prev7 = validMoodData.slice(-14, -7);
+    let weeklyChange: number | null = null;
+    if (last7.length > 0 && prev7.length > 0) {
+      const last7Avg = last7.reduce((s, d) => s + (d.mood ?? 0), 0) / last7.length;
+      const prev7Avg = prev7.reduce((s, d) => s + (d.mood ?? 0), 0) / prev7.length;
+      weeklyChange = ((last7Avg - prev7Avg) / prev7Avg) * 100;
+    }
+
+    return { avgMood, best, worst, weeklyChange };
+  }, [moodData]);
 
   // Memory type distribution data
   const memoryTypeData = useMemo<MemoryTypeData[]>(() => {
@@ -451,13 +472,40 @@ export const AnalyticsPanel: React.FC = () => {
   return (
     <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
       {/* Header */}
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h6" sx={{ fontSize: 16, fontWeight: 600, mb: 0.5 }}>
-          {t('analytics.title')}
-        </Typography>
-        <Typography variant="body2" sx={{ fontSize: 12, color: 'text.secondary' }}>
-          {t('analytics.subtitle')}
-        </Typography>
+      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box>
+          <Typography variant="h6" sx={{ fontSize: 16, fontWeight: 600, mb: 0.5 }}>
+            {t('analytics.title')}
+          </Typography>
+          <Typography variant="body2" sx={{ fontSize: 12, color: 'text.secondary' }}>
+            {t('analytics.subtitle')}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <ToggleButtonGroup
+            value={timeRange}
+            exclusive
+            onChange={(_, v) => v && setTimeRange(v)}
+            size="small"
+            sx={{
+              '& .MuiToggleButton-root': { px: 1, py: 0.5, fontSize: 10, border: '1px solid rgba(255,255,255,0.15)', color: 'text.secondary' },
+              '& .Mui-selected': { bgcolor: 'rgba(134,59,255,0.2)', color: 'primary.main' },
+            }}
+          >
+            <ToggleButton value="7d">{t('analytics.moodTrend.weekly')}</ToggleButton>
+            <ToggleButton value="30d">{t('analytics.moodTrend.monthly')}</ToggleButton>
+            <ToggleButton value="90d">{t('analytics.moodTrend.allTime')}</ToggleButton>
+          </ToggleButtonGroup>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<DownloadIcon sx={{ fontSize: 12 }} />}
+            onClick={() => window.print()}
+            sx={{ fontSize: 10, py: 0.5, px: 1, borderColor: 'rgba(255,255,255,0.2)', color: 'text.secondary' }}
+          >
+            {t('analytics.exportReport')}
+          </Button>
+        </Box>
       </Box>
 
       {/* Quick Stats */}
@@ -486,6 +534,41 @@ export const AnalyticsPanel: React.FC = () => {
             </Paper>
           </Grid>
         ))}
+        {/* Trend stats */}
+        {trendStats && (
+          <>
+            <Grid item xs={6} md={3}>
+              <Paper sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 2 }}>
+                <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', display: 'block' }}>
+                  {t('analytics.avgMood')}
+                </Typography>
+                <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 700, color: '#8b5cf6' }}>
+                  {trendStats.avgMood.toFixed(1)} {['😢', '', '😐', '', '😄', '🤩'][Math.round(trendStats.avgMood)] ?? ''}
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={6} md={3}>
+              <Paper sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 2 }}>
+                <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', display: 'block' }}>
+                  {t('analytics.weeklyChange')}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {trendStats.weeklyChange !== null && (
+                    <>
+                      {trendStats.weeklyChange > 0 ? <TrendingUpIcon sx={{ fontSize: 16, color: '#4caf50' }} /> : trendStats.weeklyChange < 0 ? <TrendingDownIcon sx={{ fontSize: 16, color: '#f44336' }} /> : <TrendingFlatIcon sx={{ fontSize: 16, color: '#9e9e9e' }} />}
+                      <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 700, color: trendStats.weeklyChange > 0 ? '#4caf50' : trendStats.weeklyChange < 0 ? '#f44336' : '#9e9e9e' }}>
+                        {trendStats.weeklyChange > 0 ? '+' : ''}{trendStats.weeklyChange.toFixed(0)}%
+                      </Typography>
+                    </>
+                  )}
+                  {trendStats.weeklyChange === null && (
+                    <Typography variant="body2" sx={{ fontSize: 11, color: 'text.disabled' }}>—</Typography>
+                  )}
+                </Box>
+              </Paper>
+            </Grid>
+          </>
+        )}
       </Grid>
 
       {/* Interaction Heatmap */}

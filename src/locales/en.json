@@ -516,20 +516,35 @@
     "title": "Analytics Dashboard",
     "subtitle": "Your interaction insights and habits",
     "interactionHeatmap": "Interaction Activity",
-    "moodTrend": "Mood Trend (7 days)",
+    "moodTrend": {
+      "weekly": "Last 7 days",
+      "monthly": "Last 30 days",
+      "allTime": "All time"
+    },
     "memoryActivity": "Memory Distribution",
     "habitAnalysis": "Usage by Hour",
     "featureUsage": "Feature Usage",
     "totalInteractions": "Total Interactions",
     "activeDays": "Active Days",
-    "currentStreak": "Current Streak",
+    "currentStreak": "Current streak",
     "totalMemories": "Total Memories",
     "days": "days",
     "noMoodData": "No mood data yet",
     "noMemoryData": "No memory data yet",
     "entries": "entries",
     "interactions": "interactions",
-    "mostActiveHour": "Peak: {{hour}}:00"
+    "mostActiveHour": "Peak: {{hour}}:00",
+    "trend": {
+      "trendingUp": "Trending up",
+      "trendingDown": "Trending down",
+      "stable": "Stable",
+      "vsLastWeek": "vs last week",
+      "bestDay": "Best day",
+      "worstDay": "Worst day"
+    },
+    "exportReport": "Export Report",
+    "avgMood": "Avg mood",
+    "weeklyChange": "Weekly change"
   },
   "emotionCalm": "Calm",
   "emotionExcited": "Excited",
