@@ -8,7 +8,7 @@
 
 import type { Persona } from './personaStorage';
 
-const VOICE_INSTRUCTIONS: Record<Persona['voice'], string> = {
+const VOICE_INSTRUCTIONS: Record<string, string> = {
   warm: '多用鼓励性语言，适当使用 emoji，保持温暖友好的氛围',
   rational: '结构化输出，逻辑清晰，避免无关情绪化表达',
   humorous: '轻松幽默的语气，可以适当调侃，但不失专业',

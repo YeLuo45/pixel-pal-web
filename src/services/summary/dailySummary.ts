@@ -156,14 +156,14 @@ function filterMessagesByDateRange(
   personaId: string,
   startDate: string,
   days: number
-): Array<{ content: string; role: string }> {
+): Array<{ content: string; role: string; timestamp?: number }> {
   const start = new Date(startDate);
   const end = new Date(start);
   end.setDate(end.getDate() + days);
-  
+
   const startMs = start.setHours(0, 0, 0, 0);
   const endMs = end.setHours(23, 59, 59, 999);
-  
+
   const allMessages = useStore.getState().messages;
   return allMessages
     .filter(m =>
@@ -171,7 +171,7 @@ function filterMessagesByDateRange(
       m.timestamp >= startMs &&
       m.timestamp <= endMs
     )
-    .map(m => ({ content: m.content, role: m.role }));
+    .map(m => ({ content: m.content, role: m.role, timestamp: m.timestamp }));
 }
 
 /**

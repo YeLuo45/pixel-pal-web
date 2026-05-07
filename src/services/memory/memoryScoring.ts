@@ -20,6 +20,10 @@ export const TYPE_BASE_WEIGHTS: Record<MemoryType, number> = {
   preference: 55,
   routine: 45,
   custom: 30,
+  daily_summary: 50,
+  weekly_summary: 50,
+  monthly_summary: 50,
+  important_event: 80,
 };
 
 // Scoring constants
@@ -113,6 +117,10 @@ export function getTypeWeights(): Array<{ type: MemoryType; weight: number; labe
     preference: 'Preference',
     routine: 'Routine',
     custom: 'Custom',
+    daily_summary: 'Daily Summary',
+    weekly_summary: 'Weekly Summary',
+    monthly_summary: 'Monthly Summary',
+    important_event: 'Important Event',
   };
 
   return Object.entries(TYPE_BASE_WEIGHTS).map(([type, weight]) => ({

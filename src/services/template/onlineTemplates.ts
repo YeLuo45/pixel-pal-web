@@ -10,7 +10,7 @@ export interface OnlineTemplate {
   name: string;
   avatar: string;
   bio: string;
-  voice: Persona['voice'];
+  voice: 'warm' | 'rational' | 'humorous' | 'serious';
   theme: {
     primaryColor: string;
     secondaryColor: string;
