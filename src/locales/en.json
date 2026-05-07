@@ -837,7 +837,11 @@
       "view": "Division View",
       "progress": "completed",
       "depRelation": "Dependencies",
-      "empty": "No task breakdown"
+      "empty": "No task breakdown",
+      "viewLevel": "By level",
+      "viewDivision": "By role",
+      "roleProgress": "Role progress",
+      "estRemaining": "Est. remaining"
     },
     "chat": {
       "thinking": "Thinking...",

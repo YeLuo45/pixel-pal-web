@@ -9,6 +9,7 @@ import { Box, Typography, Collapse, IconButton, CircularProgress } from '@mui/ma
 import { ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import type { CollaborationProgress } from '../../store';
+import type { PersonaRole } from '../../services/collaboration/types';
 
 const ROLE_EMOJI: Record<string, string> = {
   MemoryExpert: '🧠',
@@ -39,8 +40,16 @@ interface RoleCardProps {
 const RoleCard: React.FC<RoleCardProps> = ({ progress }) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  const emoji = ROLE_EMOJI[progress.role] || '🤖';
-  const label = ROLE_LABELS[progress.role] || progress.roleLabel;
+  const interactionSettings = useStore((s) => s.interactionSettings);
+  const defaultEmojis: Record<string, string> = {
+    MemoryExpert: '🧠',
+    EmotionAnalyst: '💜',
+    Advisor: '🎯',
+    Researcher: '🔍',
+    Coder: '💻',
+  };
+  const emoji = interactionSettings.collabRoleIcons?.[progress.role as PersonaRole] ?? defaultEmojis[progress.role] ?? '🤖';
+  const label = t('collab.role.' + ROLE_LABELS[progress.role]);
 
   return (
     <Box

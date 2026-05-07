@@ -822,7 +822,11 @@
       "view": "分工视图",
       "progress": "完成",
       "depRelation": "依赖关系",
-      "empty": "暂无任务分解"
+      "empty": "暂无任务分解",
+      "viewLevel": "分层",
+      "viewDivision": "分工",
+      "roleProgress": "角色进度",
+      "estRemaining": "预计剩余"
     },
     "chat": {
       "thinking": "思考中...",

@@ -94,6 +94,7 @@ export interface InteractionSettings {
   greetingFrequency: GreetingFrequency;
   sleepTimeStart: string; // "HH:mm" format, e.g. "23:00"
   sleepTimeEnd: string;   // "HH:mm" format, e.g. "07:00"
+  collabRoleIcons?: Record<PersonaRole, string>; // Custom emoji icons per role
 }
 
 export interface InteractionCooldowns {
