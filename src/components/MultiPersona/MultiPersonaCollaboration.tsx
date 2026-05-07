@@ -69,6 +69,7 @@ import {
   Insights as InsightsIcon,
 } from '@mui/icons-material';
 import { useStore } from '../../store';
+import { CollaborationStatus } from '../Collaboration/CollaborationStatus';
 import {
   type PersonaMember,
   type TeamDiscussion,
@@ -789,7 +790,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
           <Collapse in={chatExpanded}>
             <Divider sx={{ my: 1.5 }} />
 
-            {/* Tabs for different views */}
+            {/* Tabs: 分工视图 / 实时对话 / 结果汇总 */}
             <Tabs
               value={activeTab}
               onChange={(_, v) => setActiveTab(v)}
@@ -799,8 +800,9 @@ export const MultiPersonaCollaboration: React.FC = () => {
                 '& .MuiTab-root': { minHeight: 32, py: 0.5, fontSize: 11 },
               }}
             >
-              <Tab icon={<ChatIcon sx={{ fontSize: 14 }} />} iconPosition="start" label="Chat" />
-              <Tab icon={<InsightsIcon sx={{ fontSize: 14 }} />} iconPosition="start" label="Analysis" />
+              <Tab icon={<GroupIcon sx={{ fontSize: 14 }} />} iconPosition="start" label="分工视图" />
+              <Tab icon={<ChatIcon sx={{ fontSize: 14 }} />} iconPosition="start" label="实时对话" />
+              <Tab icon={<SummarizeIcon sx={{ fontSize: 14 }} />} iconPosition="start" label="结果汇总" />
             </Tabs>
 
             {/* Discussion Topic Input */}
@@ -846,7 +848,8 @@ export const MultiPersonaCollaboration: React.FC = () => {
               </Box>
             )}
 
-            {/* Chat Messages */}
+            {/* Chat Messages — only on 实时对话 tab */}
+            {activeTab === 1 && (
             <Box sx={{
               maxHeight: 300,
               overflowY: 'auto',
@@ -1010,10 +1013,10 @@ export const MultiPersonaCollaboration: React.FC = () => {
             </Box>
 
             {/* V28: Emotion Summary Card (shown when discussion concluded) */}
-            {renderEmotionSummary()}
+            {activeTab === 1 && renderEmotionSummary()}
 
             {/* V27: Real Debate Input */}
-            {isDebateActive && (
+            {activeTab === 1 && isDebateActive && (
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
                 <TextField
                   fullWidth
@@ -1041,7 +1044,7 @@ export const MultiPersonaCollaboration: React.FC = () => {
             )}
 
             {/* Regular Team Chat Input (non-debate) */}
-            {!isDebateActive && localDiscussion && localDiscussion.status === 'active' && (
+            {activeTab === 1 && !isDebateActive && localDiscussion && localDiscussion.status === 'active' && (
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <TextField
                   fullWidth
@@ -1066,8 +1069,31 @@ export const MultiPersonaCollaboration: React.FC = () => {
               </Box>
             )}
 
-            {/* Analysis Tab Content */}
-            {activeTab === 1 && localDiscussion && (
+            {/* 分工视图 Tab — team contribution distribution */}
+            {activeTab === 0 && localDiscussion && activeMembers.length > 0 && (
+              <Box sx={{ mb: 1.5 }}>
+                <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600, display: 'block', mb: 1 }}>
+                  {t('team.contribution', '分工贡献分布')}
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                  {activeMembers.map(member => (
+                    <Box key={member.personaId} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: member.color }} />
+                      <Typography sx={{ fontSize: 11, flex: 1 }}>{member.name}</Typography>
+                      <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                        {contributions[member.personaId] || 0} 条
+                      </Typography>
+                      <Typography sx={{ fontSize: 11, fontWeight: 600, color: member.color, minWidth: 36, textAlign: 'right' }}>
+                        {getContributionPercentage(member.personaId)}%
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {/* 实时对话 Tab — chat messages */}
+            {activeTab === 1 && (
               <Box sx={{ mb: 1.5 }}>
                 <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600 }}>
                   {t('team.analysis') || 'Discussion Analysis'}
@@ -1113,6 +1139,33 @@ export const MultiPersonaCollaboration: React.FC = () => {
                     </Box>
                   );
                 })()}
+              </Box>
+            )}
+
+            {/* 结果汇总 Tab — synthesis + CollaborationStatus */}
+            {activeTab === 2 && (
+              <Box sx={{ mb: 1.5 }}>
+                <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600, display: 'block', mb: 1 }}>
+                  {t('team.summary', '协作结果汇总')}
+                </Typography>
+                <CollaborationStatus />
+                {localDiscussion && localDiscussion.status === 'summarized' && localDiscussion.summary && (
+                  <Box sx={{ mt: 1.5, p: 1.5, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 1, border: '1px solid rgba(134,59,255,0.2)' }}>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                      {t('team.synthesis', '团队综合结论')}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
+                      {localDiscussion.summary}
+                    </Typography>
+                  </Box>
+                )}
+                {(!localDiscussion || localDiscussion.status !== 'summarized') && (
+                  <Box sx={{ mt: 1, p: 2, textAlign: 'center', opacity: 0.5 }}>
+                    <Typography sx={{ fontSize: 11 }}>
+                      {t('team.noSummary', '暂无汇总结果，请先发起讨论并结束')}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             )}
           </Collapse>
