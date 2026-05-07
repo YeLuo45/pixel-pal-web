@@ -1047,7 +1047,7 @@ export const ChatPanel: React.FC = () => {
       </Box>
 
       {/* Memo Notification Banner */}
-      {memoNotification && (
+      {memoNotification && memoNotification.trim() && (
         <Box
           sx={{
             mx: 2, mt: 1, p: 1, borderRadius: 1,
