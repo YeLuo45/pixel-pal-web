@@ -469,6 +469,74 @@ export const Settings: React.FC = () => {
 
         <Divider sx={{ opacity: 0.1 }} />
 
+        {/* V48: Collaboration Role Icons */}
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+            {t('settings.collabRoleIcons', '🤝 协作角色图标')}
+          </Typography>
+          <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', mb: 2, display: 'block' }}>
+            {t('settings.collabRoleIconsHint', '自定义协作面板中各角色的图标')}
+          </Typography>
+
+          {(['MemoryExpert', 'EmotionAnalyst', 'Advisor', 'Researcher', 'Coder'] as const).map((role) => {
+            const emojiOptions = ['🧠', '💜', '🎯', '🔍', '💻', '🤖', '⚡', '🎨', '📝', '🔮', '🌟', '💡', '🛡️', '⚙️', '🌐', '🔥', '💫', '🎮', '📊', '🎭'];
+            const currentIcon = interactionSettings.collabRoleIcons?.[role] ?? '';
+            return (
+              <Box key={role} sx={{ mb: 1.5 }}>
+                <Typography variant="body2" sx={{ fontSize: 11, mb: 0.5, color: 'text.secondary' }}>
+                  {role === 'MemoryExpert' ? '🧠 ' + t('collab.role.memoryExpert', '记忆专家')
+                    : role === 'EmotionAnalyst' ? '📊 ' + t('collab.role.emotionAnalyst', '情感分析师')
+                    : role === 'Advisor' ? '💡 ' + t('collab.role.advisor', '策略顾问')
+                    : role === 'Researcher' ? '🔍 ' + t('collab.role.researcher', '研究员')
+                    : '💻 ' + t('collab.role.coder', '程序员')}
+                  {currentIcon && ` → ${currentIcon}`}
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {/* Clear option */}
+                  <Box
+                    onClick={() => {
+                      const updated = { ...(interactionSettings.collabRoleIcons || {}) };
+                      delete updated[role];
+                      setInteractionSettings({ collabRoleIcons: updated });
+                    }}
+                    sx={{
+                      width: 28, height: 28, borderRadius: 1, border: '1px solid rgba(255,255,255,0.2)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', fontSize: 12,
+                      bgcolor: !currentIcon ? 'rgba(134,59,255,0.3)' : 'transparent',
+                      '&:hover': { borderColor: '#863bff', bgcolor: 'rgba(134,59,255,0.2)' },
+                    }}
+                  >
+                    —
+                  </Box>
+                  {emojiOptions.map((emoji) => (
+                    <Box
+                      key={emoji}
+                      onClick={() => {
+                        setInteractionSettings({
+                          collabRoleIcons: { ...(interactionSettings.collabRoleIcons || {}), [role]: emoji },
+                        });
+                      }}
+                      sx={{
+                        width: 28, height: 28, borderRadius: 1, border: '1px solid rgba(255,255,255,0.15)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', fontSize: 14,
+                        bgcolor: currentIcon === emoji ? 'rgba(134,59,255,0.3)' : 'transparent',
+                        transition: 'all 0.15s ease',
+                        '&:hover': { borderColor: '#863bff', bgcolor: 'rgba(134,59,255,0.15)', transform: 'scale(1.15)' },
+                      }}
+                    >
+                      {emoji}
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            );
+          })}
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
+
         {/* V33: App Theme Settings */}
         <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
           <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
