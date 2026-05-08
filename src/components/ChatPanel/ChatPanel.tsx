@@ -874,88 +874,89 @@ export const ChatPanel: React.FC = () => {
         }
       } else {
 
-      const result = await chatCompletionWithTools(currentMessages, openAITools.length > 0 ? openAITools : undefined);
+        const result = await chatCompletionWithTools(currentMessages, openAITools.length > 0 ? openAITools : undefined);
 
-      if (!result.success) {
-        throw new Error(result.error || 'AI request failed');
-      }
+        if (!result.success) {
+          throw new Error(result.error || 'AI request failed');
+        }
 
-      aiContent = result.content;
-      toolCalls = result.toolCalls;
+        aiContent = result.content;
+        toolCalls = result.toolCalls;
 
-      while (toolCalls && toolCalls.length > 0) {
-        addMessage({ role: 'assistant', content: `🧩 正在调用 ${toolCalls.length} 个工具...`, personaId: activePersonaId });
+        while (toolCalls && toolCalls.length > 0) {
+          addMessage({ role: 'assistant', content: `🧩 正在调用 ${toolCalls.length} 个工具...`, personaId: activePersonaId });
 
-        for (const tc of toolCalls) {
-          try {
-            const [pluginId, toolName] = tc.name.split(':');
-            const args = JSON.parse(tc.arguments);
-            const toolResult = await PluginService.callTool(pluginId, toolName, args);
+          for (const tc of toolCalls) {
+            try {
+              const [pluginId, toolName] = tc.name.split(':');
+              const args = JSON.parse(tc.arguments);
+              const toolResult = await PluginService.callTool(pluginId, toolName, args);
 
-            currentMessages.push({
-              id: crypto.randomUUID(),
-              role: 'tool',
-              content: JSON.stringify(toolResult),
-              timestamp: Date.now(),
-              toolCallId: tc.id,
-            });
-          } catch (toolErr) {
-            currentMessages.push({
-              id: crypto.randomUUID(),
-              role: 'tool',
-              content: JSON.stringify({ error: toolErr instanceof Error ? toolErr.message : 'Tool execution failed' }),
-              timestamp: Date.now(),
-              toolCallId: tc.id,
-            });
+              currentMessages.push({
+                id: crypto.randomUUID(),
+                role: 'tool',
+                content: JSON.stringify(toolResult),
+                timestamp: Date.now(),
+                toolCallId: tc.id,
+              });
+            } catch (toolErr) {
+              currentMessages.push({
+                id: crypto.randomUUID(),
+                role: 'tool',
+                content: JSON.stringify({ error: toolErr instanceof Error ? toolErr.message : 'Tool execution failed' }),
+                timestamp: Date.now(),
+                toolCallId: tc.id,
+              });
+            }
+          }
+
+          const followUpResult = await chatCompletionWithTools(currentMessages, openAITools.length > 0 ? openAITools : undefined);
+
+          if (!followUpResult.success) {
+            throw new Error(followUpResult.error || 'AI follow-up request failed');
+          }
+
+          finalContent = followUpResult.content;
+          toolCalls = followUpResult.toolCalls;
+
+          if (!toolCalls || toolCalls.length === 0) {
+            aiContent = finalContent;
           }
         }
 
-        const followUpResult = await chatCompletionWithTools(currentMessages, openAITools.length > 0 ? openAITools : undefined);
-
-        if (!followUpResult.success) {
-          throw new Error(followUpResult.error || 'AI follow-up request failed');
-        }
-
-        finalContent = followUpResult.content;
-        toolCalls = followUpResult.toolCalls;
-
-        if (!toolCalls || toolCalls.length === 0) {
+        if (!aiContent) {
           aiContent = finalContent;
         }
-      }
 
-      if (!aiContent) {
-        aiContent = finalContent;
-      }
+        const thinkingMatch = aiContent.match(/<(?:think(?:ing)?|thought)>([\s\S]*?)<\/(?:think(?:ing)?|thought)>/i)
+          || aiContent.match(/【思考】([\s\S]*?)【\/思考】/)
+          || aiContent.match(/\[(?:思考|thinking|reasoning)\]([\s\S]*?)\[\/(?:思考|thinking|reasoning)\]/i);
 
-      const thinkingMatch = aiContent.match(/<(?:think(?:ing)?|thought)>([\s\S]*?)<\/(?:think(?:ing)?|thought)>/i)
-        || aiContent.match(/【思考】([\s\S]*?)【\/思考】/)
-        || aiContent.match(/\[(?:思考|thinking|reasoning)\]([\s\S]*?)\[\/(?:思考|thinking|reasoning)\]/i);
+        if (thinkingMatch) {
+          thinkingContent = thinkingMatch[1].trim();
+          aiContent = aiContent.replace(thinkingMatch[0], '').trim();
+          setAIThinkingContent(thinkingContent);
+        } else {
+          setAIThinkingContent(null);
+        }
 
-      if (thinkingMatch) {
-        thinkingContent = thinkingMatch[1].trim();
-        aiContent = aiContent.replace(thinkingMatch[0], '').trim();
-        setAIThinkingContent(thinkingContent);
-      } else {
-        setAIThinkingContent(null);
-      }
+        addMessage({ role: 'assistant', content: aiContent, personaId: activePersonaId });
 
-      addMessage({ role: 'assistant', content: aiContent, personaId: activePersonaId });
-
-      if (ttsEnabled && ttsSupported && aiContent) {
-        const sentences = aiContent.match(/[^.!?。！？]+[.!?。！？]*/g) || [aiContent];
-        for (const sentence of sentences) {
-          if (abortSignal.aborted) break;
-          const trimmed = sentence.trim();
-          if (trimmed) {
-            speakChunkImmediate(trimmed);
+        if (ttsEnabled && ttsSupported && aiContent) {
+          const sentences = aiContent.match(/[^.!?。！？]+[.!?。！？]*/g) || [aiContent];
+          for (const sentence of sentences) {
+            if (abortSignal.aborted) break;
+            const trimmed = sentence.trim();
+            if (trimmed) {
+              speakChunkImmediate(trimmed);
+            }
           }
         }
-      }
 
-      const companionState = useStore.getState().companion;
-      if (companionState.autoSummarize && messagesWithContext.length > 10) {
-        autoSummarizeChat(messagesWithContext).catch(() => {});
+        const companionState = useStore.getState().companion;
+        if (companionState.autoSummarize && messagesWithContext.length > 10) {
+          autoSummarizeChat(messagesWithContext).catch(() => {});
+        }
       }
     } catch (err) {
       errorOccurred = true;
