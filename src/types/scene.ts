@@ -159,17 +159,14 @@ export function matchKeyword(message: string, pattern: string): boolean {
 }
 
 // V61: Condition types for condition chains
+// Workaround: use type alias to help Rolldown resolve the circular structure
 export type ConditionType = 'daysInactive' | 'messagesCount' | 'timeOfDay' | 'emotionThreshold';
 
 export interface Condition {
   id: string;
   type: ConditionType;
-  // daysInactive: params.days
-  // messagesCount: params.count
-  // timeOfDay: params.hour (0-23)
-  // emotionThreshold: params.emotion ('happy'|'sad'|'angry'|'fear'), params.direction ('above'|'below'), params.threshold (0-1)
-  params: Record<string, any>;
-  threshold: number; // numeric threshold for comparison
+  params: Record<string, unknown>;
+  threshold: number;
 }
 
 export type ConditionLogic = 'AND' | 'OR';
@@ -180,8 +177,8 @@ export interface TriggerRule {
   conditions: Condition[];
   logic: ConditionLogic;
   action: 'evolve' | 'remind' | 'changeMood' | 'custom';
-  actionParams: Record<string, any>;
+  actionParams: Record<string, unknown>;
   enabled: boolean;
   cooldownMinutes: number;
-  lastTriggered?: number; // timestamp ms
+  lastTriggered?: number;
 }
