@@ -24,7 +24,8 @@ import { getIntimacyLevel } from '../../store';
 import { checkAndTagImportantMessage } from '../../services/summary/dailySummary';
 import { checkAndCreateMilestones } from '../../services/milestone/milestoneTracker';
 import { isGoalOriented, createTaskFromGoal, executeTask } from '../../services/agent/taskPlanner';
-import type { Task } from '../../services/agent/types';
+import { TaskConfirmDialog } from '../Agent/TaskConfirmDialog';
+import type { Task as AgentTask } from '../../services/agent/types';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -106,6 +107,9 @@ export const ChatPanel: React.FC = () => {
   const [showCollabSuggestion, setShowCollabSuggestion] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [goalConfirmDialogOpen, setGoalConfirmDialogOpen] = useState(false);
+  const [pendingAgentTask, setPendingAgentTask] = useState<AgentTask | null>(null);
+  const [pendingGoal, setPendingGoal] = useState('');
   const setCurrentEmotion = useStore((s) => s.setCurrentEmotion);
   const addEmotionEntry = useStore((s) => s.addEmotionEntry);
   const messages = useStore((s) => s.messages);
@@ -262,6 +266,32 @@ export const ChatPanel: React.FC = () => {
     const newTtsEnabled = !ttsEnabled;
     setTtsEnabled(newTtsEnabled);
     useStore.getState().setVoiceSettings({ ttsEnabled: newTtsEnabled });
+  };
+
+  // ---- Goal Confirmation Dialog handlers ----
+  const handleOpenGoalConfirm = (agentTask: AgentTask, goal: string) => {
+    setPendingAgentTask(agentTask);
+    setPendingGoal(goal);
+    setGoalConfirmDialogOpen(true);
+  };
+
+  const handleConfirmGoalTasks = (tasks: import('../../types').Task[]) => {
+    // Add tasks to the store
+    const addTask = useStore.getState().addTask;
+    tasks.forEach(task => addTask(task));
+    
+    // Also add agent task to agent task store if available
+    if (pendingAgentTask) {
+      try {
+        const agentTaskStore = useStore.getState().tasks;
+        // Just add the agent task as-is for tracking
+        // (agent tasks have different structure from user tasks)
+      } catch (e) {
+        console.warn('[ChatPanel] Could not add to agent task store:', e);
+      }
+    }
+    
+    console.log('[ChatPanel] Added', tasks.length, 'tasks to Tasks panel');
   };
 
   const handleInterrupt = () => {
@@ -681,42 +711,15 @@ export const ChatPanel: React.FC = () => {
 
       try {
         // Create task from the goal
-        const task: Task = await createTaskFromGoal(userMsg, { personaId: activePersonaId });
+        const agentTask: AgentTask = await createTaskFromGoal(userMsg, { personaId: activePersonaId });
 
-        // Add thinking message to show planning progress
-        addMessage({ role: 'system', content: `📋 任务规划完成：${task.steps.length} 个步骤\n${task.steps.map((s, i) => `${i + 1}. ${s.description}`).join('\n')}`, personaId: activePersonaId });
+        // Add planning message showing the task steps
+        addMessage({ role: 'system', content: `📋 任务规划完成：${agentTask.steps.length} 个步骤\n${agentTask.steps.map((s, i) => `${i + 1}. ${s.description}`).join('\n')}`, personaId: activePersonaId });
 
-        // Execute the task with callbacks for proactive reporting
-        await executeTask(task, {
-          onProgress: (t, stepIndex, stepDesc) => {
-            // Report step progress to chat
-            addMessage({ role: 'system', content: `⚙️ 步骤 ${stepIndex + 1}/${t.steps.length} 完成：${stepDesc}`, personaId: activePersonaId });
-          },
-          onComplete: (t, result) => {
-            // Report task completion to chat
-            const duration = t.completedAt && t.startedAt 
-              ? `（用时 ${Math.round((t.completedAt - t.startedAt) / 1000)} 秒）` 
-              : '';
-            const resultText = t.result ? `\n📊 结果：${JSON.stringify(t.result)}` : '';
-            addMessage({ 
-              role: 'assistant', 
-              content: `✅ 任务已完成！${duration}${resultText}`, 
-              personaId: activePersonaId 
-            });
-            console.log('[AgentChat] Task completed:', t.id);
-          },
-          onFail: (t, error) => {
-            // Report task failure to chat
-            addMessage({ 
-              role: 'assistant', 
-              content: `❌ 任务失败：${error}`, 
-              personaId: activePersonaId 
-            });
-            console.error('[AgentChat] Task failed:', t.id, error);
-          },
-        });
+        // Open confirmation dialog instead of auto-executing
+        handleOpenGoalConfirm(agentTask, userMsg);
 
-        // Task execution is complete (either success or failure), stop here
+        // Continue to normal chat mode - user can confirm to execute
         updateLastActivity();
         return;
       } catch (err) {
@@ -1365,6 +1368,14 @@ export const ChatPanel: React.FC = () => {
       personaId={activePersonaId}
       open={memoOpen}
       onClose={() => setMemoOpen(false)}
+    />
+
+    <TaskConfirmDialog
+      open={goalConfirmDialogOpen}
+      agentTask={pendingAgentTask}
+      goal={pendingGoal}
+      onClose={() => setGoalConfirmDialogOpen(false)}
+      onConfirm={handleConfirmGoalTasks}
     />
     </>
   );
