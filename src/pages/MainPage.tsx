@@ -15,6 +15,7 @@ import { PluginPanel } from '../components/Plugin/PluginPanel';
 import { PluginHub } from '../components/Plugin/PluginHub';
 import { MemoryPanel } from '../components/Memory/MemoryPanel';
 import { AnalyticsPanel } from '../components/Analytics/AnalyticsPanel';
+import { PluginStore } from '../components/PluginStore/PluginStore';
 import { registerBuiltinPlugins, registerOptionalPlugins } from '../plugins';
 import { useStore } from '../store';
 import { RelationGraph } from '../components/Graph/RelationGraph';
@@ -32,6 +33,7 @@ const PANEL_COMPONENTS = {
   plugin: PluginPanel,
   memory: MemoryPanel,
   analytics: AnalyticsPanel,
+  pluginStore: PluginStore,
   graph: () => null, // RelationGraph is rendered as a dialog at root level
 } as const;
 

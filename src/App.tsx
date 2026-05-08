@@ -9,6 +9,7 @@ import { applyPersonaTheme, resetPersonaTheme } from './utils/personaTheme';
 import { getAllPersonas } from './services/persona/personaStorage';
 import { generateYesterdaySummaryIfNeeded } from './services/summary/dailySummary';
 import { checkAndCreateMilestones } from './services/milestone/milestoneTracker';
+import { pluginRegistry } from './services/plugins/pluginRegistry';
 import { applyAppTheme, getPresetById, getSystemTheme, resetToDefault, applyCustomTheme } from './utils/appTheme';
 import { useHotkeys } from './hooks/useHotkeys';
 import './services/i18n';
@@ -1048,6 +1049,9 @@ function App() {
       for (const p of personas) {
         checkAndCreateMilestones(p.id).catch(() => {});
       }
+
+      // V59: Load plugin system
+      pluginRegistry.loadPlugins().catch(() => {});
 
       // Apply initial persona theme if enabled
       if (personaFollowTheme) {
