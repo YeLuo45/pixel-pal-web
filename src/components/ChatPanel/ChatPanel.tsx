@@ -19,6 +19,8 @@ import type { Message } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { useSceneStore } from '../../stores/sceneStore';
 import { checkKeywordTrigger, executeScene, initSceneScheduler } from '../../utils/sceneScheduler';
+import { getRules, updateRule } from '../../services/storage/sceneStorage';
+import { evaluateRule } from '../../services/scene/ruleEngine';
 import { parsePersonaCommand, fuzzyMatchPersona, fuzzyMatchPersonas } from '../../utils/personaCommands';
 import { getAllPersonas, getPersonaSystemPrompt } from '../../services/persona';
 import { getIntimacyLevel } from '../../store';
@@ -713,9 +715,10 @@ export const ChatPanel: React.FC = () => {
 
     // Text-based emotion detection
     let detectedEmotion: string = 'unknown';
+    let emotionEntry: { emotion: string; intensity: number } | null = null;
     try {
       const { createEmotionLogEntry, addEmotionLog, emotionResponseEngine } = await import('../../services/emotion');
-      const emotionEntry = createEmotionLogEntry(userMsg);
+      emotionEntry = createEmotionLogEntry(userMsg);
       addEmotionLog(emotionEntry);
       detectedEmotion = emotionEntry.emotion;
       console.log('[Emotion] Text emotion detected:', emotionEntry.emotion, 'intensity:', emotionEntry.intensity);
@@ -956,6 +959,34 @@ export const ChatPanel: React.FC = () => {
         const companionState = useStore.getState().companion;
         if (companionState.autoSummarize && messagesWithContext.length > 10) {
           autoSummarizeChat(messagesWithContext).catch(() => {});
+        }
+
+        // V61: Evaluate trigger rules after message exchange
+        try {
+          const rules = await getRules();
+          const emotionState = useStore.getState().currentEmotion;
+          const context = {
+            lastActiveDays: 0, // TODO: calculate from persona.lastActive
+            messageCount: messagesWithContext.length,
+            currentHour: new Date().getHours(),
+            currentEmotion: emotionContext,
+            emotionIntensity: emotionEntry?.intensity,
+          };
+
+          for (const rule of rules) {
+            if (evaluateRule(rule, context)) {
+              // Execute action
+              if (rule.action === 'evolve') {
+                triggerEvolution?.(rule.actionParams.targetLevel);
+              } else if (rule.action === 'remind') {
+                addMessage({ role: 'system', content: rule.actionParams.message, personaId: activePersonaId });
+              }
+              // Update lastTriggered
+              await updateRule(rule.id, { lastTriggered: Date.now() });
+            }
+          }
+        } catch (e) {
+          console.warn('[V61] Rule evaluation failed:', e);
         }
       }
     } catch (err) {
