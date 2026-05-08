@@ -13,6 +13,7 @@ import { injectCompanionContext, autoSummarizeChat, adjustMoodForInteraction } f
 import { queryKnowledgeBase, buildRAGContext, isDocumentIndexed, reindexAllDocuments } from '../../services/rag';
 import { voiceService } from '../../services/voice/voiceService';
 import { detectEmotion, type EmotionState } from '../../services/voice/emotionDetector';
+import { addVoiceEmotionLog } from '../../services/emotion/emotionStorage';
 import { PluginService } from '../../plugins';
 import { pluginRegistry } from '../../services/plugins/pluginRegistry';
 import type { Message } from '../../types';
@@ -27,10 +28,14 @@ import { getIntimacyLevel } from '../../store';
 import { checkAndTagImportantMessage } from '../../services/summary/dailySummary';
 import { checkAndCreateMilestones } from '../../services/milestone/milestoneTracker';
 import { isGoalOriented, createTaskFromGoal, executeTask } from '../../services/agent/taskPlanner';
+import { shouldUsePlanningMode, estimateStepCount } from '../../services/agent/planningUtils';
 import { TaskConfirmDialog } from '../Agent/TaskConfirmDialog';
 import type { Task as AgentTask } from '../../services/agent/types';
 import { SpeechButton } from '../ChatInput/SpeechButton';
 import useSpeechSynthesis from '../../hooks/useSpeechSynthesis';
+import { PlanView } from '../Plan/PlanView';
+import { usePlanStore } from '../../stores/planStore';
+import { usePlanExecution } from '../../hooks/usePlanExecution';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -154,6 +159,34 @@ export const ChatPanel: React.FC = () => {
   const chatInputMention = useStore((s) => s.chatInputMention);
   const setChatInputMention = useStore((s) => s.setChatInputMention);
   const [memoOpen, setMemoOpen] = useState(false);
+
+  // Plan mode state
+  const {
+    currentPlan,
+    planStatus,
+    isExecuting,
+    currentStepIndex,
+    setCurrentPlan,
+    setPlanStatus,
+    createPlanFromTask,
+    confirmPlan,
+    updateStepStatus,
+    setCurrentStepIndex,
+    clearPlan,
+  } = usePlanStore();
+  const { executePlan, startExecution, abortExecution } = usePlanExecution({
+    onStepComplete: (index, step, result) => {
+      // Step completed callback
+    },
+    onPlanComplete: (plan) => {
+      addMessage({ role: 'system', content: `✅ 任务执行完成！\n\n最终结果：\n${plan.steps.map((s, i) => `${i + 1}. ${s.description}: ${s.result || '完成'}`).join('\n')}`, personaId: activePersonaId });
+      clearPlan();
+    },
+    onPlanFailed: (plan, error) => {
+      addMessage({ role: 'system', content: `❌ 任务执行失败：${error}`, personaId: activePersonaId });
+      clearPlan();
+    },
+  });
 
   // Message context menu state
   const [contextMenu, setContextMenu] = useState<{ open: boolean; anchorEl: HTMLElement | null; msg: Message | null }>({
@@ -749,22 +782,53 @@ export const ChatPanel: React.FC = () => {
     if (isGoalOriented(userMsg)) {
       console.log('[AgentChat] Goal-oriented intent detected:', userMsg);
       
-      // Add a system message showing agent is activated
-      addMessage({ role: 'system', content: `🎯 检测到任务目标，正在规划...`, personaId: activePersonaId });
-
+      // Estimate steps first
+      const estimatedSteps = estimateStepCount(userMsg);
+      
+      // Determine if planning mode should be used
+      const planningDecision = shouldUsePlanningMode(userMsg, estimatedSteps);
+      
       try {
         // Create task from the goal
         const agentTask: AgentTask = await createTaskFromGoal(userMsg, { personaId: activePersonaId });
+        
+        // Check if this is a long task that should use planning mode
+        if (planningDecision.usePlanningMode || agentTask.steps.length > 3) {
+          console.log('[AgentChat] Using planning mode for task with', agentTask.steps.length, 'steps');
+          
+          // Add a system message showing agent is activated
+          addMessage({ role: 'system', content: `🎯 检测到复杂任务，正在生成执行方案...`, personaId: activePersonaId });
+          
+          // Create plan from task steps
+          const planSteps = agentTask.steps.map((step, index) => ({
+            description: step.description,
+            toolName: step.toolName,
+            arguments: step.toolArgs || {},
+            riskLevel: 'low' as const,
+            order: index,
+          }));
+          
+          // Create plan in planStore
+          const plan = createPlanFromTask(userMsg, planSteps, ['任务复杂度较高，请仔细确认每个步骤']);
+          setCurrentPlan(plan);
+          setPlanStatus('awaiting_confirmation');
+          
+          // Continue to normal chat mode - PlanView will be shown
+          updateLastActivity();
+          return;
+        } else {
+          // Short task - show simple confirmation and execute directly
+          addMessage({ role: 'system', content: `🎯 检测到任务目标，正在规划...`, personaId: activePersonaId });
+          
+          // Add planning message showing the task steps
+          addMessage({ role: 'system', content: `📋 任务规划完成：${agentTask.steps.length} 个步骤\n${agentTask.steps.map((s, i) => `${i + 1}. ${s.description}`).join('\n')}`, personaId: activePersonaId });
 
-        // Add planning message showing the task steps
-        addMessage({ role: 'system', content: `📋 任务规划完成：${agentTask.steps.length} 个步骤\n${agentTask.steps.map((s, i) => `${i + 1}. ${s.description}`).join('\n')}`, personaId: activePersonaId });
+          // Open confirmation dialog
+          handleOpenGoalConfirm(agentTask, userMsg);
 
-        // Open confirmation dialog instead of auto-executing
-        handleOpenGoalConfirm(agentTask, userMsg);
-
-        // Continue to normal chat mode - user can confirm to execute
-        updateLastActivity();
-        return;
+          updateLastActivity();
+          return;
+        }
       } catch (err) {
         // Fallback to normal chat if task creation fails
         console.warn('[AgentChat] Task creation failed, falling back to normal chat:', err);
@@ -1370,6 +1434,8 @@ export const ChatPanel: React.FC = () => {
             // V63: Update emotion state when speech is detected
             setCurrentEmotion(result.emotion);
             addEmotionEntry(result.emotion, result.confidence);
+            // V65: Also write voice emotion to EmotionCurve localStorage
+            addVoiceEmotionLog(result.emotion, result.confidence * 100, `语音:${result.transcript.slice(0, 30)}`);
           }}
           disabled={!voiceSettings.sttEnabled || isAIThinking}
           size="small"
@@ -1497,6 +1563,20 @@ export const ChatPanel: React.FC = () => {
       onClose={() => setGoalConfirmDialogOpen(false)}
       onConfirm={handleConfirmGoalTasks}
     />
+
+    {/* Plan View - shows when there's an active plan */}
+    {currentPlan && planStatus !== 'idle' && (
+      <PlanView
+        onExecute={async (plan) => {
+          // When user confirms execution from PlanView
+          await startExecution();
+        }}
+        onCancel={() => {
+          abortExecution();
+          clearPlan();
+        }}
+      />
+    )}
     </>
   );
 };
