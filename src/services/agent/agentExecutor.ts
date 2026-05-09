@@ -13,6 +13,8 @@ import { taskQueue } from './taskQueue';
 import { chatCompletionWithTools } from '../ai/model-registry-adapter';
 import { pluginRegistry } from '../plugins/pluginRegistry';
 import { memoryManager } from './memory/memoryManager';
+import { emotionContextInjector } from './emotionContextInjector';
+import { getCurrentPlatformAdapter } from '../../platform/agentPlatformHook';
 
 // ============================================================================
 // Types
@@ -99,6 +101,9 @@ class AgentExecutorImpl {
         void memoryManager.extractFromMessages();
         
         this.onTaskComplete?.(task, summary);
+
+        // Send emotional response if recommended and not yet triggered
+        void this.sendEmotionResponse();
       }
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
@@ -121,10 +126,13 @@ class AgentExecutorImpl {
     const memoryContext = memoryManager.getMemoryContextForPrompt(goal, 5);
     const memorySection = memoryContext ? `\n${memoryContext}\n` : '';
 
+    // Get emotion context for the prompt
+    const emotionContext = emotionContextInjector.formatForPrompt();
+
     const messages = [
       {
         role: 'user' as const,
-        content: `分解以下目标为具体执行步骤。返回JSON数组，每步包含 description 和 toolName（如需要）:${memorySection}\n\n目标: ${goal}\n上下文: ${JSON.stringify(context)}`,
+        content: `分解以下目标为具体执行步骤。返回JSON数组，每步包含 description 和 toolName（如需要）:${memorySection}${emotionContext}\n\n目标: ${goal}\n上下文: ${JSON.stringify(context)}`,
       },
     ];
 
@@ -206,6 +214,24 @@ class AgentExecutorImpl {
   private summarizeTask(task: Task): string {
     const completed = task.steps.filter((s) => s.status === 'completed').length;
     return `任务完成。${completed}/${task.steps.length} 步骤执行成功。`;
+  }
+
+  /**
+   * Send emotional response if recommended action exists and hasn't been triggered
+   */
+  private async sendEmotionResponse(): Promise<void> {
+    const emotionCtx = emotionContextInjector.getContext();
+    if (emotionCtx.recommendedAction && !emotionCtx.triggered && emotionCtx.recommendedAction.type !== 'none') {
+      const adapter = getCurrentPlatformAdapter();
+      if (adapter) {
+        try {
+          await adapter.sendMessage(emotionCtx.recommendedAction.message);
+          emotionContextInjector.markTriggered();
+        } catch (e) {
+          console.warn('[AgentExecutor] 情感响应发送失败:', e);
+        }
+      }
+    }
   }
 
   /** Pause current task */

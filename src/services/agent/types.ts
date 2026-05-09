@@ -223,3 +223,18 @@ export interface ProactiveReport {
   data?: unknown;
   timestamp: number;
 }
+
+// ============================================================================
+// Emotion Context Types (for EmotionBehaviorEngine integration)
+// ============================================================================
+
+export interface EmotionContext {
+  detected: boolean
+  emotion: string | null
+  confidence: number
+  recommendedAction: {
+    type: 'comfort' | 'encourage' | 'calm' | 'activate' | 'focus_suggest' | 'none'
+    message: string
+  } | null
+  triggered: boolean
+}
