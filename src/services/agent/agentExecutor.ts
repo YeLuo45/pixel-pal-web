@@ -14,6 +14,7 @@ import { chatCompletionWithTools } from '../ai/model-registry-adapter';
 import { pluginRegistry } from '../plugins/pluginRegistry';
 import { memoryManager } from './memory/memoryManager';
 import { emotionContextInjector } from './emotionContextInjector';
+import { sceneContextInjector } from './sceneContextInjector';
 import { getCurrentPlatformAdapter } from '../../platform/agentPlatformHook';
 
 // ============================================================================
@@ -102,8 +103,11 @@ class AgentExecutorImpl {
         
         this.onTaskComplete?.(task, summary);
 
-        // Send emotional response if recommended and not yet triggered
+        // Send emotional response if recommended action exists and hasn't been triggered
         void this.sendEmotionResponse();
+
+        // Send scene response if recommended and not yet triggered
+        void this.sendSceneResponse();
       }
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
@@ -129,10 +133,13 @@ class AgentExecutorImpl {
     // Get emotion context for the prompt
     const emotionContext = emotionContextInjector.formatForPrompt();
 
+    // Get scene context for the prompt
+    const sceneContext = sceneContextInjector.formatForPrompt();
+
     const messages = [
       {
         role: 'user' as const,
-        content: `分解以下目标为具体执行步骤。返回JSON数组，每步包含 description 和 toolName（如需要）:${memorySection}${emotionContext}\n\n目标: ${goal}\n上下文: ${JSON.stringify(context)}`,
+        content: `分解以下目标为具体执行步骤。返回JSON数组，每步包含 description 和 toolName（如需要）:${memorySection}${emotionContext}${sceneContext}\n\n目标: ${goal}\n上下文: ${JSON.stringify(context)}`,
       },
     ];
 
@@ -229,6 +236,24 @@ class AgentExecutorImpl {
           emotionContextInjector.markTriggered();
         } catch (e) {
           console.warn('[AgentExecutor] 情感响应发送失败:', e);
+        }
+      }
+    }
+  }
+
+  /**
+   * Send scene response if recommended and not yet triggered
+   */
+  private async sendSceneResponse(): Promise<void> {
+    const sceneCtx = sceneContextInjector.getContext();
+    if (sceneCtx.sceneResponse && !sceneCtx.triggered && sceneCtx.sceneResponse.type !== 'none') {
+      const adapter = getCurrentPlatformAdapter();
+      if (adapter) {
+        try {
+          await adapter.sendMessage(sceneCtx.sceneResponse.message);
+          sceneContextInjector.markTriggered();
+        } catch (e) {
+          console.warn('[AgentExecutor] 场景响应发送失败:', e);
         }
       }
     }

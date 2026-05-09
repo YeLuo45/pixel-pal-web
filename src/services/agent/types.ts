@@ -238,3 +238,20 @@ export interface EmotionContext {
   } | null
   triggered: boolean
 }
+
+// ============================================================================
+// Scene Context Types (for SceneAwarenessEngine integration)
+// ============================================================================
+
+export interface SceneContext {
+  detected: boolean
+  timeScene: string | null
+  isWeekend: boolean
+  userState: string | null
+  sceneResponse: {
+    type: 'suggest' | 'offer_help' | 'remind' | 'adapt' | 'none'
+    message: string
+    suggestedAction?: string
+  } | null
+  triggered: boolean
+}
