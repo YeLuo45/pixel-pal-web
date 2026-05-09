@@ -16,6 +16,7 @@ export interface EmotionResult {
   speechRate: number;         // chars per second
   label: string;              // e.g. "😊 兴奋"
   context: string;             // for system prompt injection
+  transcript: string;          // original transcript text (V65)
 }
 
 // Internal tracking
@@ -83,6 +84,7 @@ export function detectEmotion(text: string, durationMs: number): EmotionResult {
     speechRate: Math.round(speechRate * 10) / 10,
     label: getEmotionLabel(emotion),
     context: formatEmotionContext(emotion),
+    transcript: text,
   };
 }
 
@@ -120,6 +122,35 @@ export function formatEmotionContext(emotion: EmotionState): string {
  */
 export function clearEmotionHistory(): void {
   recentSegments = [];
+}
+
+// ============================================
+// V65: Emotion Curve integration
+// ============================================
+
+import type { TextEmotion } from '../emotion/emotionService';
+
+/**
+ * V65: Map EmotionState (from voice detection) to TextEmotion (for EmotionCurve)
+ * EmotionState: 'excited' | 'calm' | 'tense' | 'low_energy' | 'unknown'
+ * TextEmotion:  'happy' | 'calm' | 'anxious' | 'angry' | 'sad' | 'excited' | 'exhausted' | 'unknown'
+ * 
+ * Mapping:
+ * - excited     -> 'excited'
+ * - calm        -> 'calm'
+ * - tense       -> 'anxious'
+ * - low_energy  -> 'exhausted'
+ * - unknown     -> 'unknown'
+ */
+export function mapEmotionStateToTextEmotion(state: EmotionState): TextEmotion {
+  const map: Record<EmotionState, TextEmotion> = {
+    excited: 'excited',
+    calm: 'calm',
+    tense: 'anxious',
+    low_energy: 'exhausted',
+    unknown: 'unknown',
+  };
+  return map[state];
 }
 
 // ============================================
