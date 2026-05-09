@@ -459,7 +459,7 @@ class ApprovalNotificationServiceImpl {
     requesterId: string;
     approverId: string;
     approverRole: PersonaRole;
-    priority?: ApprovalPriority;
+    priority?: NotificationPriority;
   }): Promise<ApprovalNotification> {
     return this.createNotification({
       type: 'approval_request',
@@ -696,9 +696,6 @@ class ApprovalNotificationServiceImpl {
     }
   }
 }
-
-// Import for type reference
-type ApprovalPriority = 'low' | 'normal' | 'high' | 'critical';
 
 // Singleton instance
 export const approvalNotificationService = new ApprovalNotificationServiceImpl();

@@ -38,6 +38,9 @@ import { usePlanStore } from '../../stores/planStore';
 import { usePlanExecution } from '../../hooks/usePlanExecution';
 import { useSceneAwareness } from '../../hooks/useSceneAwareness';
 import { useMultiAgentTrigger } from '../../hooks/useMultiAgentTrigger';
+import { RecommendationPanel } from '../Recommendation/RecommendationPanel';
+import { preferenceEngine } from '../../services/recommendation/preferenceEngine';
+import { recommendationEngine } from '../../services/recommendation/recommendationEngine';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -161,6 +164,7 @@ export const ChatPanel: React.FC = () => {
   const chatInputMention = useStore((s) => s.chatInputMention);
   const setChatInputMention = useStore((s) => s.setChatInputMention);
   const [memoOpen, setMemoOpen] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
 
   // Plan mode state
   const {
@@ -300,6 +304,12 @@ export const ChatPanel: React.FC = () => {
       setMemoNotification(null);
     }
   }, [activePersonaId]);
+
+  // Recommendation panel - refresh when messages change
+  useEffect(() => {
+    const recs = recommendationEngine.getActiveRecommendations(3);
+    setRecommendations(recs);
+  }, [messages]);
 
   const handleVoiceToggle = () => {
     if (isListening) {
@@ -548,6 +558,14 @@ export const ChatPanel: React.FC = () => {
 
   const handleSend = async () => {
     if (!input.trim() || isAIThinking) return;
+
+    // Extract user preference before sending
+    preferenceEngine.extractFromInteraction({
+      id: Date.now().toString(),
+      type: 'message',
+      content: input,
+      timestamp: Date.now(),
+    });
 
     // Multi-agent command parsing
     const { mode, message: processedMsg } = parseCommand(input);
@@ -1373,6 +1391,22 @@ export const ChatPanel: React.FC = () => {
         )}
         <div ref={messagesEndRef} />
       </Box>
+
+      {/* Recommendation Panel */}
+      {recommendations.length > 0 && (
+        <RecommendationPanel onExecute={(action: string) => {
+          if (action.startsWith('/multi')) {
+            // Trigger multi-agent
+            triggerMultiAgent(action.replace('/multi ', ''));
+          } else if (action === 'enable_memory') {
+            // Enable memory
+            console.log('[ChatPanel] Memory enabled');
+          } else {
+            // Other action sent as message
+            handleSend(action);
+          }
+        }} />
+      )}
 
       <Divider />
 

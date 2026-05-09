@@ -61,7 +61,7 @@ export interface ChainResult {
   rejectedSteps: number;
   skippedSteps: number;
   duration: number;
-  finalDecisions: Map<string, 'approved' | 'rejected' | 'skipped'>;
+  finalDecisions: Map<string, NodeStatus>;
 }
 
 // ============================================================================

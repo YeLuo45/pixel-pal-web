@@ -400,10 +400,11 @@ class DelegationServiceImpl {
     const proxies = Array.from(this.proxies.values());
 
     const byRole: Record<PersonaRole, number> = {
-      Companion: 0,
+      MemoryExpert: 0,
+      EmotionAnalyst: 0,
       Advisor: 0,
-      Curator: 0,
-      Guardian: 0,
+      Researcher: 0,
+      Coder: 0,
     };
 
     for (const delegation of active) {
