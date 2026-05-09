@@ -10,7 +10,7 @@
 
 import type { Task, TaskStep } from './types';
 import { taskQueue } from './taskQueue';
-import { chatCompletionWithTools } from '../chat/chatCompletion';
+import { chatCompletionWithTools } from '../ai/model-registry-adapter';
 import { pluginRegistry } from '../plugins/pluginRegistry';
 
 // ============================================================================

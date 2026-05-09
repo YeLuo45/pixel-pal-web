@@ -19,6 +19,7 @@ import { PluginStore } from '../components/PluginStore/PluginStore';
 import { registerBuiltinPlugins, registerOptionalPlugins } from '../plugins';
 import { useStore } from '../store';
 import { RelationGraph } from '../components/Graph/RelationGraph';
+import { AgentPanel } from '../components/Agent/AgentPanel';
 
 const PANEL_COMPONENTS = {
   chat: ChatPanel,
@@ -34,6 +35,7 @@ const PANEL_COMPONENTS = {
   memory: MemoryPanel,
   analytics: AnalyticsPanel,
   pluginStore: PluginStore,
+  agent: AgentPanel,
   graph: () => null, // RelationGraph is rendered as a dialog at root level
 } as const;
 
