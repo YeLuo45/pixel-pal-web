@@ -6,9 +6,34 @@
  */
 
 import type { EmotionLogEntry, TextEmotion } from './emotionService';
+import type { EmotionState } from '../voice/emotionDetector';
+import { mapEmotionStateToTextEmotion } from '../voice/emotionDetector';
 
 const STORAGE_KEY = 'pixelpal_emotion_logs';
 const MAX_LOGS = 1000; // Keep last 1000 entries
+
+// ============================================
+// V65: Voice emotion log integration
+// ============================================
+
+/**
+ * V65: Add a voice-sourced emotion log entry to localStorage.
+ * Convenience wrapper that maps EmotionState -> TextEmotion before writing.
+ * @param emotionState - EmotionState from voice detection (excited/calm/tense/low_energy/unknown)
+ * @param intensity - 0-100 intensity value (use confidence * 100 from voice detection)
+ * @param context - Context string (e.g. transcript snippet prefixed with "语音:")
+ */
+export function addVoiceEmotionLog(emotionState: EmotionState, intensity: number, context: string): void {
+  const entry: EmotionLogEntry = {
+    id: crypto.randomUUID(),
+    timestamp: Date.now(),
+    emotion: mapEmotionStateToTextEmotion(emotionState),
+    intensity,
+    context,
+    source: 'voice',
+  };
+  addEmotionLog(entry);
+}
 
 /**
  * Get all emotion logs from localStorage
