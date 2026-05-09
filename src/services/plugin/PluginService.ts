@@ -1,3 +1,6 @@
+/**
+ * @deprecated V68后请使用 unifiedPluginService
+ */
 // PluginService — singleton registry + event bus + tool invocation
 import type { Plugin, PluginRegistration } from './types';
 import { createPluginStorage } from './pluginStorage';

@@ -1,4 +1,6 @@
 /**
+ * @deprecated V68后请使用 unifiedPluginService
+ * 
  * PluginRegistry — singleton that manages all plugins (preset + user-installed)
  *
  * Load order:
