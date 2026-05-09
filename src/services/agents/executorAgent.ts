@@ -1,6 +1,7 @@
 import { agentBus, agentRegistry } from './agentRegistry'
 import type { AgentMessage, Task } from './types'
 import { AgentType } from './types'
+import { agentExecutor } from '../agent/agentExecutor'
 
 export class ExecutorAgent {
   private id = 'executor'
@@ -50,15 +51,17 @@ export class ExecutorAgent {
   }
 
   private async simulateExecution(task: Task): Promise<unknown> {
-    await new Promise(r => setTimeout(r, 300))
-
-    switch (task.type) {
-      case 'code_generation':
-        return { code: `// Generated: ${task.description}`, language: 'javascript' }
-      case 'code_review':
-        return { issues: [], passed: true, score: 90 }
-      default:
-        return { output: `Executed: ${task.description}`, success: true }
+    try {
+      // 调用V64的真实agentExecutor
+      const result = await agentExecutor.executeTask({
+        goal: task.description,
+        type: task.type,
+        inputs: task.inputs,
+      } as any)
+      return result
+    } catch (error) {
+      console.warn('[ExecutorAgent] agentExecutor error:', error)
+      throw error
     }
   }
 }
