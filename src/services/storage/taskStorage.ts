@@ -49,3 +49,47 @@ export async function clearTasks(): Promise<void> {
   const db = await getDB();
   await db.clear('tasks');
 }
+
+// ============================================================================
+// Agent Task Queue Persistence
+// ============================================================================
+
+import type { Task as AgentTask } from '../agent/types';
+
+/** Queue metadata for persistence */
+export interface QueuePersistData {
+  tasks: AgentTask[];
+  runningTaskId: string | null;
+  savedAt: number;
+}
+
+/**
+ * Save the full agent task queue to IndexedDB
+ */
+export async function saveTaskQueue(tasks: AgentTask[], runningTaskId: string | null): Promise<void> {
+  const db = await getDB();
+  const data = {
+    id: 'queue',
+    tasks,
+    runningTaskId,
+    savedAt: Date.now(),
+  };
+  await db.put('agentQueue', data);
+}
+
+/**
+ * Load the agent task queue from IndexedDB
+ */
+export async function loadTaskQueue(): Promise<QueuePersistData | null> {
+  const db = await getDB();
+  const data = await db.get('agentQueue', 'queue');
+  return data as QueuePersistData | null;
+}
+
+/**
+ * Clear the agent task queue from IndexedDB
+ */
+export async function clearTaskQueue(): Promise<void> {
+  const db = await getDB();
+  await db.delete('agentQueue', 'queue');
+}

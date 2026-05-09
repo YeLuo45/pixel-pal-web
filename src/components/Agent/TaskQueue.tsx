@@ -8,6 +8,8 @@ import { Box, Typography, Chip, Tabs, Tab, IconButton, Tooltip } from '@mui/mate
 import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { TaskCard } from './TaskCard';
 import { taskQueue } from '../../services/agent/taskQueue';
+import { agentExecutor } from '../../services/agent/agentExecutor';
+import { loadTaskQueue, saveTaskQueue } from '../../services/storage/taskStorage';
 import type { Task, TaskStatus } from '../../services/agent/types';
 
 type FilterTab = 'all' | 'running' | 'pending' | 'completed' | 'failed';
@@ -26,13 +28,38 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ onTaskSelect }) => {
   };
 
   useEffect(() => {
+    // Restore persisted queue from IndexedDB
+    loadTaskQueue().then((persisted) => {
+      if (persisted && persisted.tasks.length > 0) {
+        console.log('[TaskQueue] Restoring persisted queue with', persisted.tasks.length, 'tasks');
+        // Re-hydrate taskQueue from persisted data
+        // For now: restore pending/completed tasks, resume running task
+        const runningTask = persisted.tasks.find((t) => t.id === persisted.runningTaskId);
+        if (runningTask && runningTask.status === 'running') {
+          console.log('[TaskQueue] Resuming running task:', runningTask.id);
+          void agentExecutor.executeTask(runningTask.id);
+        }
+      }
+    }).catch((err) => {
+      console.warn('[TaskQueue] Failed to restore queue:', err);
+    });
+
     refreshTasks();
 
     // Listen for task events
     const onStart = (task: Task) => { refreshTasks(); };
-    const onComplete = (task: Task) => { refreshTasks(); };
-    const onFail = (task: Task) => { refreshTasks(); };
-    const onProgress = (task: Task) => { refreshTasks(); };
+    const onComplete = (task: Task) => {
+      refreshTasks();
+      void saveTaskQueue(taskQueue.getAllTasks(), null);
+    };
+    const onFail = (task: Task) => {
+      refreshTasks();
+      void saveTaskQueue(taskQueue.getAllTasks(), null);
+    };
+    const onProgress = (task: Task) => {
+      refreshTasks();
+      void saveTaskQueue(taskQueue.getAllTasks(), taskQueue.getRunningTaskId());
+    };
 
     taskQueue.onTaskStart = onStart;
     taskQueue.onTaskComplete = onComplete;

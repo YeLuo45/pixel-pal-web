@@ -49,6 +49,14 @@ export interface PixelPalDB {
       'by-personaId': string;
     };
   };
+  agentQueue: {
+    key: string;
+    value: {
+      tasks: unknown[];
+      runningTaskId: string | null;
+      savedAt: number;
+    };
+  };
 }
 
 let dbInstance: IDBPDatabase<PixelPalDB> | null = null;
@@ -84,6 +92,11 @@ export async function getDB(): Promise<IDBPDatabase<PixelPalDB>> {
         memoriesStore.createIndex('by-createdAt', 'createdAt');
         memoriesStore.createIndex('by-type', 'type');
         memoriesStore.createIndex('by-personaId', 'personaId');
+      }
+
+      // Agent queue store
+      if (!db.objectStoreNames.contains('agentQueue')) {
+        db.createObjectStore('agentQueue', { keyPath: 'id' });
       }
     },
   });

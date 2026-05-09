@@ -16,6 +16,8 @@ import {
 } from '@mui/icons-material';
 import { TaskQueue } from './TaskQueue';
 import { taskQueue } from '../../services/agent/taskQueue';
+import { agentExecutor } from '../../services/agent/agentExecutor';
+import { saveTaskQueue } from '../../services/storage/taskStorage';
 import type { Task, TaskPriority } from '../../services/agent/types';
 
 export const AgentPanel: React.FC = () => {
@@ -47,7 +49,18 @@ export const AgentPanel: React.FC = () => {
   const handleStartNext = () => {
     const task = taskQueue.startNext();
     if (task) {
-      console.log(`[AgentPanel] Started task: ${task.goal}`);
+      console.log(`[AgentPanel] Starting task via executor: ${task.goal}`);
+      // Wire up executor callbacks for persistence
+      agentExecutor.onTaskProgress = async () => {
+        await saveTaskQueue(taskQueue.getAllTasks(), taskQueue.getRunningTaskId());
+      };
+      agentExecutor.onTaskComplete = async () => {
+        await saveTaskQueue(taskQueue.getAllTasks(), null);
+      };
+      agentExecutor.onTaskFail = async () => {
+        await saveTaskQueue(taskQueue.getAllTasks(), null);
+      };
+      void agentExecutor.executeTask(task.id);
     }
   };
 
