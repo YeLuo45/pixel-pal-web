@@ -36,6 +36,7 @@ import useSpeechSynthesis from '../../hooks/useSpeechSynthesis';
 import { PlanView } from '../Plan/PlanView';
 import { usePlanStore } from '../../stores/planStore';
 import { usePlanExecution } from '../../hooks/usePlanExecution';
+import { useSceneAwareness } from '../../hooks/useSceneAwareness';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -174,7 +175,7 @@ export const ChatPanel: React.FC = () => {
     setCurrentStepIndex,
     clearPlan,
   } = usePlanStore();
-  const { executePlan, startExecution, abortExecution } = usePlanExecution({
+  const { executePlan, startExecution, abortExecution  } = usePlanExecution({
     onStepComplete: (index, step, result) => {
       // Step completed callback
     },
@@ -187,6 +188,9 @@ export const ChatPanel: React.FC = () => {
       clearPlan();
     },
   });
+
+  // Scene awareness tracking
+  const { recordAction, recordError } = useSceneAwareness();
 
   // Message context menu state
   const [contextMenu, setContextMenu] = useState<{ open: boolean; anchorEl: HTMLElement | null; msg: Message | null }>({
@@ -541,6 +545,7 @@ export const ChatPanel: React.FC = () => {
   const handleSend = async () => {
     if (!input.trim() || isAIThinking) return;
 
+    recordAction('send_message');
     const userMsg = input.trim();
 
     // ---- COLLAP MODE ----
@@ -1052,6 +1057,7 @@ export const ChatPanel: React.FC = () => {
       }
     } catch (err) {
       errorOccurred = true;
+      recordError();
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
       addMessage({ role: 'assistant', content: `${t('chat.errorPrefix')}: ${errorMsg}`, personaId: activePersonaId });
     } finally {

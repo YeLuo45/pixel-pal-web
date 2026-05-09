@@ -21,6 +21,7 @@ import { agentExecutor } from '../../services/agent/agentExecutor';
 import { memoryManager } from '../../services/agent/memory/memoryManager';
 import { saveTaskQueue } from '../../services/storage/taskStorage';
 import type { Task, TaskPriority } from '../../services/agent/types';
+import { useSceneAwareness } from '../../hooks/useSceneAwareness';
 
 export const AgentPanel: React.FC = () => {
   const { t } = useTranslation();
@@ -28,6 +29,9 @@ export const AgentPanel: React.FC = () => {
   const [newGoal, setNewGoal] = useState('');
   const [newPriority, setNewPriority] = useState<TaskPriority>('normal');
   const [memoryStats, setMemoryStats] = useState({ count: 0, preview: null as string | null });
+
+  // Scene awareness tracking
+  const { recordAction, recordError } = useSceneAwareness();
 
   const handleCreateTask = () => {
     if (!newGoal.trim()) return;
@@ -52,15 +56,18 @@ export const AgentPanel: React.FC = () => {
   const handleStartNext = () => {
     const task = taskQueue.startNext();
     if (task) {
+      recordAction('task_start');
       console.log(`[AgentPanel] Starting task via executor: ${task.goal}`);
       // Wire up executor callbacks for persistence
       agentExecutor.onTaskProgress = async () => {
         await saveTaskQueue(taskQueue.getAllTasks(), taskQueue.getRunningTaskId());
       };
       agentExecutor.onTaskComplete = async () => {
+        recordAction('task_complete');
         await saveTaskQueue(taskQueue.getAllTasks(), null);
       };
       agentExecutor.onTaskFail = async () => {
+        recordError();
         await saveTaskQueue(taskQueue.getAllTasks(), null);
       };
       void agentExecutor.executeTask(task.id);
