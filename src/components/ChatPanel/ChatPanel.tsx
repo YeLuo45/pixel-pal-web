@@ -37,6 +37,7 @@ import { PlanView } from '../Plan/PlanView';
 import { usePlanStore } from '../../stores/planStore';
 import { usePlanExecution } from '../../hooks/usePlanExecution';
 import { useSceneAwareness } from '../../hooks/useSceneAwareness';
+import { useMultiAgentTrigger } from '../../hooks/useMultiAgentTrigger';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -191,6 +192,9 @@ export const ChatPanel: React.FC = () => {
 
   // Scene awareness tracking
   const { recordAction, recordError } = useSceneAwareness();
+
+  // Multi-agent trigger hook
+  const { triggerMultiAgent, parseCommand } = useMultiAgentTrigger();
 
   // Message context menu state
   const [contextMenu, setContextMenu] = useState<{ open: boolean; anchorEl: HTMLElement | null; msg: Message | null }>({
@@ -545,10 +549,19 @@ export const ChatPanel: React.FC = () => {
   const handleSend = async () => {
     if (!input.trim() || isAIThinking) return;
 
-    recordAction('send_message');
-    const userMsg = input.trim();
+    // Multi-agent command parsing
+    const { mode, message: processedMsg } = parseCommand(input);
 
-    // ---- COLLAP MODE ----
+    if (mode === 'multi') {
+      triggerMultiAgent(processedMsg);
+      console.log('[ChatPanel] Multi-agent triggered for:', processedMsg);
+      return;
+    }
+
+    recordAction('send_message');
+    const userMsg = processedMsg;
+
+    // ---- COLLAB MODE ----
     if (collabSession.active) {
       await handleCollabSend();
       return;
