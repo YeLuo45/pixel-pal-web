@@ -919,5 +919,27 @@
     "summary": {
       "title": "Collaboration Summary"
     }
+  },
+  "skill": {
+    "title": "Skills",
+    "searchPlaceholder": "Search skills...",
+    "run": "Run",
+    "examples": "Example Prompts",
+    "chatKeywords": "Chat Keywords",
+    "noSkills": "No skills found",
+    "available": "skills available",
+    "categories": {
+      "productivity": "Productivity",
+      "creative": "Creative",
+      "analysis": "Analysis",
+      "lifestyle": "Lifestyle",
+      "developer": "Developer",
+      "entertainment": "Entertainment",
+      "custom": "Custom"
+    },
+    "running": "Running...",
+    "success": "Skill completed",
+    "error": "Skill failed",
+    "steps": "Steps"
   }
 }

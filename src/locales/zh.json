@@ -904,5 +904,27 @@
     "summary": {
       "title": "协作总结"
     }
+  },
+  "skill": {
+    "title": "技能中心",
+    "searchPlaceholder": "搜索技能...",
+    "run": "运行",
+    "examples": "示例提示",
+    "chatKeywords": "聊天关键词",
+    "noSkills": "未找到技能",
+    "available": "个技能可用",
+    "categories": {
+      "productivity": "效率工具",
+      "creative": "创意",
+      "analysis": "分析",
+      "lifestyle": "生活",
+      "developer": "开发者",
+      "entertainment": "娱乐",
+      "custom": "自定义"
+    },
+    "running": "运行中...",
+    "success": "技能执行完成",
+    "error": "技能执行失败",
+    "steps": "执行步骤"
   }
 }

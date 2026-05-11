@@ -4,7 +4,7 @@ import {
   Typography, Paper, Divider,
   Tooltip, Chip, Avatar, Menu, MenuItem, Button,
 } from '@mui/material';
-import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon, Stop as StopIcon, Close as CloseIcon, Pause as PauseIcon } from '@mui/icons-material';
+import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon, Stop as StopIcon, Close as CloseIcon, Pause as PauseIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { MemoPanel } from '../Memo/MemoPanel';
 import { CollaborationStatus } from '../Collaboration/CollaborationStatus';
@@ -41,6 +41,9 @@ import { useMultiAgentTrigger } from '../../hooks/useMultiAgentTrigger';
 import { RecommendationPanel } from '../Recommendation/RecommendationPanel';
 import { preferenceEngine } from '../../services/recommendation/preferenceEngine';
 import { recommendationEngine } from '../../services/recommendation/recommendationEngine';
+import { SkillPanel } from '../Skill/SkillPanel';
+import { skillRunner } from '../../services/skills/skillRunner';
+import type { SkillExecutionResult } from '../../services/skills/types';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -164,6 +167,7 @@ export const ChatPanel: React.FC = () => {
   const chatInputMention = useStore((s) => s.chatInputMention);
   const setChatInputMention = useStore((s) => s.setChatInputMention);
   const [memoOpen, setMemoOpen] = useState(false);
+  const [skillPanelOpen, setSkillPanelOpen] = useState(false);
   const [recommendations, setRecommendations] = useState<any[]>([]);
 
   // Plan mode state
@@ -814,6 +818,50 @@ export const ChatPanel: React.FC = () => {
       executeScene(scene);
     }
 
+    // ---- SKILL CHAT TRIGGER ----
+    const matchedSkill = skillRunner.matchChatSkill(userMsg);
+    if (matchedSkill) {
+      console.log('[SkillChat] Skill triggered:', matchedSkill.name);
+      addMessage({ role: 'system', content: `🔮 技能 "${matchedSkill.name}" 已被触发...`, personaId: activePersonaId });
+
+      const result = await skillRunner.runSkillFromChat(
+        matchedSkill.id,
+        userMsg,
+        messages,
+        activePersonaId,
+        undefined
+      );
+
+      if (result.success) {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: result.response,
+          timestamp: Date.now(),
+          personaId: activePersonaId,
+        });
+        if (result.steps && result.steps.length > 0) {
+          const stepsText = result.steps.map((s, i) => `Step ${i + 1}: ${s.description}\n→ ${s.result}`).join('\n\n');
+          addMessage({
+            id: crypto.randomUUID(),
+            role: 'system',
+            content: `[${matchedSkill.name} Steps]\n${stepsText}`,
+            timestamp: Date.now(),
+            personaId: activePersonaId,
+          });
+        }
+      } else {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: 'system',
+          content: `⚠️ 技能执行失败: ${result.error || result.response}`,
+          timestamp: Date.now(),
+          personaId: activePersonaId,
+        });
+      }
+      return;
+    }
+
     // ---- AGENT MODE: Goal-oriented task detection ----
     if (isGoalOriented(userMsg)) {
       console.log('[AgentChat] Goal-oriented intent detected:', userMsg);
@@ -1135,9 +1183,20 @@ export const ChatPanel: React.FC = () => {
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {!collabSession.active && (
+              <>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
                 {displayModel}
               </Typography>
+              <Tooltip title={t('skill.title') || 'Skills'}>
+                <IconButton
+                  size="small"
+                  onClick={() => setSkillPanelOpen(true)}
+                  sx={{ color: 'rgba(94,106,210,0.8)', '&:hover': { color: 'rgba(94,106,210,1)' } }}
+                >
+                  <AutoAwesomeIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+              </>
             )}
             {collabSession.active && (
               <Tooltip title="结束协作">
@@ -1604,6 +1663,41 @@ export const ChatPanel: React.FC = () => {
       personaId={activePersonaId}
       open={memoOpen}
       onClose={() => setMemoOpen(false)}
+    />
+
+    <SkillPanel
+      visible={skillPanelOpen}
+      onClose={() => setSkillPanelOpen(false)}
+      messages={messages}
+      onResult={(result: SkillExecutionResult) => {
+        if (result.success) {
+          addMessage({
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: result.response,
+            timestamp: Date.now(),
+            personaId: activePersonaId,
+          });
+          if (result.steps && result.steps.length > 0) {
+            const stepsText = result.steps.map((s, i) => `Step ${i + 1}: ${s.description}\n→ ${s.result}`).join('\n\n');
+            addMessage({
+              id: crypto.randomUUID(),
+              role: 'system',
+              content: `[Skill Steps]\n${stepsText}`,
+              timestamp: Date.now(),
+              personaId: activePersonaId,
+            });
+          }
+        } else {
+          addMessage({
+            id: crypto.randomUUID(),
+            role: 'system',
+            content: `⚠️ Skill failed: ${result.error || result.response}`,
+            timestamp: Date.now(),
+            personaId: activePersonaId,
+          });
+        }
+      }}
     />
 
     <TaskConfirmDialog
