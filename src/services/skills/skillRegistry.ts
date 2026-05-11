@@ -15,7 +15,12 @@ import type {
   SkillStepResult,
   SkillEvents,
 } from './types';
-import { skillStorage } from './skillStorage';
+import {
+  getCustomSkills,
+  setEnabled,
+  saveCustomSkill,
+  deleteCustomSkill,
+} from './skillStorage';
 import { chatCompletionWithTools } from '../ai/model-registry-adapter';
 import { presetSkills } from './presetSkills';
 
@@ -40,7 +45,7 @@ class SkillRegistryImpl {
 
     // 2. Load custom skills from storage
     try {
-      const customSkills = await skillStorage.getCustomSkills();
+      const customSkills = await getCustomSkills();
       for (const skill of customSkills) {
         if (this.skills.has(skill.id)) {
           // Merge: custom data overrides preset
@@ -93,7 +98,7 @@ class SkillRegistryImpl {
     if (!skill) return;
     skill.enabled = true;
     if (!presetSkills.find((p) => p.id === id)) {
-      await skillStorage.setEnabled(id, true);
+      await setEnabled(id, true);
     }
   }
 
@@ -102,19 +107,19 @@ class SkillRegistryImpl {
     if (!skill) return;
     skill.enabled = false;
     if (!presetSkills.find((p) => p.id === id)) {
-      await skillStorage.setEnabled(id, false);
+      await setEnabled(id, false);
     }
   }
 
   async saveCustomSkill(skill: SkillDefinition): Promise<void> {
     this.skills.set(skill.id, skill);
-    await skillStorage.saveCustomSkill(skill);
+    await saveCustomSkill(skill);
   }
 
   async deleteCustomSkill(id: string): Promise<void> {
     if (presetSkills.find((p) => p.id === id)) return; // Cannot delete preset
     this.skills.delete(id);
-    await skillStorage.deleteCustomSkill(id);
+    await deleteCustomSkill(id);
   }
 
   // ---------------------------------------------------------------------------
