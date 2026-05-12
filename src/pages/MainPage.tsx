@@ -20,6 +20,9 @@ import { registerBuiltinPlugins, registerOptionalPlugins } from '../plugins';
 import { useStore } from '../store';
 import { RelationGraph } from '../components/Graph/RelationGraph';
 import { AgentPanel } from '../components/Agent/AgentPanel';
+import { BottomTabNav } from '../components/Layout/BottomTabNav';
+import { MobileDrawer } from '../components/Layout/MobileDrawer';
+import { useMobile } from '../hooks/useMobile';
 
 const PANEL_COMPONENTS = {
   chat: ChatPanel,
@@ -45,9 +48,12 @@ export const MainPage: React.FC = () => {
   const setActivePluginId = useStore((s) => s.setActivePluginId);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const toggleSidebar = () => setSidebarCollapsed(v => !v);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [relationGraphOpen, setRelationGraphOpen] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // Use mobile hook for responsive breakpoints
+  // Mobile: < 640px, Tablet: 640-1024px, Desktop: > 1024px
+  const isMobile = useMobile();
 
   // Listen for relation graph open event from Sidebar
   useEffect(() => {
@@ -128,34 +134,31 @@ export const MainPage: React.FC = () => {
         </Box>
       )}
 
-      {/* Mobile drawer */}
+      {/* Mobile Drawer - Left side swipe accessible */}
+      <MobileDrawer
+        open={mobileDrawerOpen}
+        onClose={() => setMobileDrawerOpen(false)}
+        onOpen={() => setMobileDrawerOpen(true)}
+      />
+
+      {/* Mobile menu button (top left) */}
       {isMobile && (
-        <>
-          <IconButton
-            onClick={() => setMobileOpen(true)}
-            sx={{ position: 'fixed', top: 12, left: 8, zIndex: 1300, bgcolor: 'rgba(0,0,0,0.5)', color: 'white' }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Drawer
-            variant="temporary"
-            open={mobileOpen}
-            onClose={() => setMobileOpen(false)}
-            disableEnforceFocus
-            hideBackdrop
-            sx={{
-              '& .MuiDrawer-paper': {
-                bgcolor: '#0f1011',
-                border: '1px solid rgba(255,255,255,0.05)',
-                width: 260,
-                pt: 2,
-                touchAction: 'none',
-              },
-            }}
-          >
-            <Sidebar onNavigate={() => setMobileOpen(false)} />
-          </Drawer>
-        </>
+        <IconButton
+          onClick={() => setMobileDrawerOpen(true)}
+          sx={{
+            position: 'fixed',
+            top: 12,
+            left: 8,
+            zIndex: 1300,
+            bgcolor: 'rgba(0,0,0,0.5)',
+            color: 'white',
+            '&:hover': {
+              bgcolor: 'rgba(0,0,0,0.7)',
+            },
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
       )}
 
       {/* Main content */}
@@ -178,6 +181,7 @@ export const MainPage: React.FC = () => {
             flexDirection: 'column',
             width: '100%',
             bgcolor: '#08090a',
+            pb: isMobile ? '64px' : 0, // Space for bottom tab nav on mobile
           }}
         >
           {/* Top divider line */}
@@ -185,6 +189,9 @@ export const MainPage: React.FC = () => {
           <ActivePanelComponent />
         </Box>
       </Box>
+
+      {/* Bottom Tab Navigation for Mobile */}
+      {isMobile && <BottomTabNav />}
 
       {/* Relation Graph Dialog — rendered at root level */}
       <RelationGraph open={relationGraphOpen} onClose={() => setRelationGraphOpen(false)} />
