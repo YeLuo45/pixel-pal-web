@@ -228,6 +228,12 @@ interface AppState {
   hotkeySettings: Record<string, boolean>; // hotkeyId -> enabled
   setHotkeyEnabled: (hotkeyId: string, enabled: boolean) => void;
   toggleHotkey: (hotkeyId: string) => void;
+
+  // V93: Collab Room State
+  collabRoomId: string | null;
+  setCollabRoomId: (id: string | null) => void;
+  collabRoomPanelOpen: boolean;
+  setCollabRoomPanelOpen: (open: boolean) => void;
 }
 
 // V40: Collaboration progress tracking
@@ -848,6 +854,12 @@ export const useStore = create<AppState>()(
         set((state) => ({
           hotkeySettings: { ...state.hotkeySettings, [hotkeyId]: !state.hotkeySettings[hotkeyId] },
         })),
+
+      // V93: Collab Room State
+      collabRoomId: null,
+      setCollabRoomId: (id) => set({ collabRoomId: id }),
+      collabRoomPanelOpen: false,
+      setCollabRoomPanelOpen: (open) => set({ collabRoomPanelOpen: open }),
     }),
     {
       name: 'pixelpal-storage',
