@@ -1,7 +1,9 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, Notification, globalShortcut, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
-import { createTray, restoreWindow, showNotification, setAlwaysOnTopState, destroyTray } from './tray';
+import { createTray, restoreWindow, showNotification, setAlwaysOnTopState, destroyTray, setOnlineStatus } from './tray';
+import { initUpdater, destroyUpdater } from './updater';
+import { initFileHandlers, destroyFileHandlers, handleFileAssociation } from './fileHandler';
 
 // Development mode check
 const isDev = !app.isPackaged;
@@ -16,6 +18,9 @@ let windowBounds: Electron.Rectangle = { x: undefined, y: undefined, width: 1024
 let isAlwaysOnTop = false;
 // Login item settings
 let loginItemSettings = { openAtLogin: false };
+
+// Minimize to tray preference
+let minimizeToTray = true;
 
 // Paths
 const preloadPath = path.join(__dirname, 'preload.js');
@@ -33,6 +38,17 @@ function createWindow(): void {
       windowBounds = { ...windowBounds, ...saved };
     } catch (e) {
       console.error('Failed to restore window bounds:', e);
+    }
+  }
+
+  // Load minimize to tray preference
+  const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      minimizeToTray = settings.minimizeToTray ?? true;
+    } catch (e) {
+      // Use default
     }
   }
 
@@ -69,7 +85,7 @@ function createWindow(): void {
 
   // Handle close to tray (minimize instead of close)
   mainWindow.on('close', (event) => {
-    if (!app.isQuitting) {
+    if (!app.isQuitting && minimizeToTray) {
       event.preventDefault();
       mainWindow?.hide();
     }
@@ -89,6 +105,26 @@ function createWindow(): void {
 
   // Create system tray
   tray = createTray(mainWindow);
+
+  // Initialize updater
+  initUpdater(mainWindow);
+
+  // Initialize file handlers
+  initFileHandlers(mainWindow);
+
+  // Handle file association (opened with file)
+  const fileToOpen = handleFileAssociation();
+  if (fileToOpen) {
+    mainWindow.webContents.once('did-finish-load', () => {
+      mainWindow?.webContents.send('file:opened', fileToOpen);
+    });
+  }
+
+  // Handle new window request (e.g., from shell.openExternal)
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
 }
 
 function saveBounds(): void {
@@ -144,9 +180,20 @@ function setupIpcHandlers(): void {
   });
   ipcMain.handle('window:getAlwaysOnTop', () => isAlwaysOnTop);
 
+  // Minimize to tray setting
+  ipcMain.handle('window:setMinimizeToTray', (_, value: boolean) => {
+    minimizeToTray = value;
+    saveSettings();
+    return value;
+  });
+  ipcMain.handle('window:getMinimizeToTray', () => minimizeToTray);
+
   // Tray
   ipcMain.handle('tray:showNotification', (_, title: string, body: string) => {
     showNotification(title, body);
+  });
+  ipcMain.handle('tray:setOnlineStatus', (_, online: boolean) => {
+    setOnlineStatus(online);
   });
 
   // Login item
@@ -167,6 +214,46 @@ function setupIpcHandlers(): void {
   ipcMain.handle('shell:openExternal', (_, url: string) => {
     shell.openExternal(url);
   });
+
+  // Settings persistence
+  ipcMain.handle('settings:save', (_, settings: Record<string, unknown>) => {
+    const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+    try {
+      const current = fs.existsSync(settingsPath) 
+        ? JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) 
+        : {};
+      fs.writeFileSync(settingsPath, JSON.stringify({ ...current, ...settings }, null, 2));
+      return true;
+    } catch (e) {
+      console.error('Failed to save settings:', e);
+      return false;
+    }
+  });
+
+  ipcMain.handle('settings:load', () => {
+    const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+    try {
+      if (fs.existsSync(settingsPath)) {
+        return JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      }
+    } catch (e) {
+      console.error('Failed to load settings:', e);
+    }
+    return {};
+  });
+}
+
+function saveSettings(): void {
+  const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+  try {
+    const settings = {
+      minimizeToTray,
+      openAtLogin: loginItemSettings.openAtLogin,
+    };
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  } catch (e) {
+    console.error('Failed to save settings:', e);
+  }
 }
 
 // ============ App Lifecycle ============
@@ -216,4 +303,28 @@ app.on('before-quit', () => {
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
   destroyTray();
+  destroyUpdater();
+  destroyFileHandlers();
 });
+
+// Handle second instance (single instance lock)
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (_event, commandLine) => {
+    // Someone tried to run a second instance, focus our window
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+
+    // Handle file association on second instance
+    const fileToOpen = handleFileAssociation();
+    if (fileToOpen && mainWindow) {
+      mainWindow.webContents.send('file:opened', fileToOpen);
+    }
+  });
+}

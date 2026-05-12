@@ -98,7 +98,21 @@ export const Settings: React.FC = () => {
     openAtLogin: false,
     alwaysOnTop: false,
     notificationsEnabled: true,
+    minimizeToTray: true,
+    autoUpdate: true,
+    dataDirectory: '',
   });
+
+  // V94: Desktop settings tab
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'desktop'>('general');
+
+  // V94: Update status state
+  const [updateStatus, setUpdateStatus] = useState<{
+    status: 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
+    progress?: number;
+    version?: string;
+    error?: string;
+  }>({ status: 'idle' });
 
   // Template Management state (V31)
   const [activeTemplateTab, setActiveTemplateTab] = useState<'local' | 'online' | 'install'>('local');
@@ -143,10 +157,14 @@ export const Settings: React.FC = () => {
       try {
         const loginSettings = await (window as any).electronAPI.getLoginItemSettings();
         const alwaysOnTop = await (window as any).electronAPI.getAlwaysOnTop();
+        const minimizeToTray = await (window as any).electronAPI.getMinimizeToTray();
+        const dataDirectory = await (window as any).electronAPI.getDataDirectory();
         setDesktopSettings(prev => ({
           ...prev,
           openAtLogin: loginSettings?.openAtLogin ?? false,
           alwaysOnTop: alwaysOnTop ?? false,
+          minimizeToTray: minimizeToTray ?? true,
+          dataDirectory: dataDirectory ?? '',
         }));
       } catch (e) {
         console.error('Failed to load desktop settings:', e);
@@ -155,16 +173,23 @@ export const Settings: React.FC = () => {
     loadDesktopSettings();
 
     // Listen for always-on-top changes from main process
-    const unsubscribe = (window as any).electronAPI?.onAlwaysOnTopChanged((value: boolean) => {
+    const unsubscribeAlwaysOnTop = (window as any).electronAPI?.onAlwaysOnTopChanged((value: boolean) => {
       setDesktopSettings(prev => ({ ...prev, alwaysOnTop: value }));
     });
+
+    // V94: Listen for update status changes
+    const unsubscribeUpdate = (window as any).electronAPI?.onUpdateStatusChanged((status: typeof updateStatus) => {
+      setUpdateStatus(status);
+    });
+
     return () => {
-      if (unsubscribe) unsubscribe();
+      if (unsubscribeAlwaysOnTop) unsubscribeAlwaysOnTop();
+      if (unsubscribeUpdate) unsubscribeUpdate();
     };
   }, [isElectron]);
 
   // Handle desktop setting changes
-  const handleDesktopSettingChange = (key: 'openAtLogin' | 'alwaysOnTop' | 'notificationsEnabled') => async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDesktopSettingChange = (key: 'openAtLogin' | 'alwaysOnTop' | 'notificationsEnabled' | 'minimizeToTray' | 'autoUpdate') => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.checked;
     setDesktopSettings(prev => ({ ...prev, [key]: value }));
 
@@ -174,10 +199,45 @@ export const Settings: React.FC = () => {
         await (window as any).electronAPI.setLoginItemSettings(value);
       } else if (key === 'alwaysOnTop') {
         await (window as any).electronAPI.setAlwaysOnTop(value);
+      } else if (key === 'minimizeToTray') {
+        await (window as any).electronAPI.setMinimizeToTray(value);
       }
     } catch (err) {
       console.error('Failed to update desktop setting:', err);
     }
+  };
+
+  // V94: Check for updates
+  const handleCheckForUpdates = async () => {
+    if (!isElectron) return;
+    setUpdateStatus({ status: 'checking' });
+    try {
+      await (window as any).electronAPI.checkForUpdates();
+    } catch (err) {
+      setUpdateStatus({ status: 'error', error: String(err) });
+    }
+  };
+
+  // V94: Download update
+  const handleDownloadUpdate = async () => {
+    if (!isElectron) return;
+    try {
+      await (window as any).electronAPI.downloadUpdate();
+    } catch (err) {
+      setUpdateStatus({ status: 'error', error: String(err) });
+    }
+  };
+
+  // V94: Install update
+  const handleInstallUpdate = () => {
+    if (!isElectron) return;
+    (window as any).electronAPI.installUpdate();
+  };
+
+  // V94: Open data directory
+  const handleOpenDataDirectory = () => {
+    if (!isElectron) return;
+    (window as any).electronAPI.openDataDirectory();
   };
 
   // Template management handlers (V31)
@@ -417,8 +477,242 @@ export const Settings: React.FC = () => {
         </Typography>
       </Box>
 
+      {/* V94: Settings Tab Navigation (Desktop only) */}
+      {isElectron && (
+        <Box sx={{ px: 2, pt: 2, pb: 1, display: 'flex', gap: 1 }}>
+          <Button
+            size="small"
+            variant={activeSettingsTab === 'general' ? 'contained' : 'outlined'}
+            onClick={() => setActiveSettingsTab('general')}
+            sx={{ fontSize: 12, textTransform: 'none' }}
+          >
+            General
+          </Button>
+          <Button
+            size="small"
+            variant={activeSettingsTab === 'desktop' ? 'contained' : 'outlined'}
+            onClick={() => setActiveSettingsTab('desktop')}
+            sx={{ fontSize: 12, textTransform: 'none' }}
+          >
+            Desktop
+          </Button>
+        </Box>
+      )}
+
       <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
 
+        {/* V94: Desktop Settings Tab */}
+        {isElectron && activeSettingsTab === 'desktop' && (
+          <>
+            {/* V94: System Integration */}
+            <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+                🖥️ System Integration
+              </Typography>
+              <Stack gap={2}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
+                      Start at Login
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                      Launch PixelPal when your computer starts
+                    </Typography>
+                  </Box>
+                  <Switch
+                    size="small"
+                    checked={desktopSettings.openAtLogin}
+                    onChange={handleDesktopSettingChange('openAtLogin')}
+                  />
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
+                      Minimize to Tray
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                      Keep running in system tray when closed
+                    </Typography>
+                  </Box>
+                  <Switch
+                    size="small"
+                    checked={desktopSettings.minimizeToTray}
+                    onChange={handleDesktopSettingChange('minimizeToTray')}
+                  />
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
+                      Always on Top
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                      Keep window above other applications
+                    </Typography>
+                  </Box>
+                  <Switch
+                    size="small"
+                    checked={desktopSettings.alwaysOnTop}
+                    onChange={handleDesktopSettingChange('alwaysOnTop')}
+                  />
+                </Box>
+              </Stack>
+            </Paper>
+
+            {/* V94: Notifications */}
+            <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+                🔔 Notifications
+              </Typography>
+              <Stack gap={2}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
+                      Enable Notifications
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                      Show desktop notifications for messages
+                    </Typography>
+                  </Box>
+                  <Switch
+                    size="small"
+                    checked={desktopSettings.notificationsEnabled}
+                    onChange={handleDesktopSettingChange('notificationsEnabled')}
+                  />
+                </Box>
+
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={testNotification}
+                  sx={{ fontSize: 11, alignSelf: 'flex-start' }}
+                >
+                  Test Notification
+                </Button>
+              </Stack>
+            </Paper>
+
+            {/* V94: Auto Update */}
+            <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+                🔄 Auto Update
+              </Typography>
+              <Stack gap={2}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
+                      Check for Updates Automatically
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary' }}>
+                      Automatically download and notify about updates
+                    </Typography>
+                  </Box>
+                  <Switch
+                    size="small"
+                    checked={desktopSettings.autoUpdate}
+                    onChange={handleDesktopSettingChange('autoUpdate')}
+                  />
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={handleCheckForUpdates}
+                    disabled={updateStatus.status === 'checking' || updateStatus.status === 'downloading'}
+                    sx={{ fontSize: 11 }}
+                  >
+                    {updateStatus.status === 'checking' ? 'Checking...' : 'Check for Updates'}
+                  </Button>
+
+                  {updateStatus.status === 'available' && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={handleDownloadUpdate}
+                      sx={{ fontSize: 11 }}
+                    >
+                      Download {updateStatus.version}
+                    </Button>
+                  )}
+
+                  {updateStatus.status === 'downloaded' && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      onClick={handleInstallUpdate}
+                      sx={{ fontSize: 11 }}
+                    >
+                      Install & Restart
+                    </Button>
+                  )}
+                </Box>
+
+                {updateStatus.status === 'downloading' && updateStatus.progress !== undefined && (
+                  <Box sx={{ width: '100%' }}>
+                    <Typography variant="caption" sx={{ fontSize: 10 }}>
+                      Downloading: {updateStatus.progress.toFixed(1)}%
+                    </Typography>
+                    <Box sx={{ height: 4, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 1, mt: 0.5 }}>
+                      <Box sx={{ height: 4, width: `${updateStatus.progress}%`, bgcolor: 'primary.main', borderRadius: 1, transition: 'width 0.3s' }} />
+                    </Box>
+                  </Box>
+                )}
+
+                {updateStatus.status === 'error' && (
+                  <Alert severity="error" sx={{ fontSize: 11 }}>
+                    {updateStatus.error}
+                  </Alert>
+                )}
+
+                {updateStatus.status === 'downloaded' && (
+                  <Alert severity="success" sx={{ fontSize: 11 }}>
+                    Update {updateStatus.version} is ready to install
+                  </Alert>
+                )}
+              </Stack>
+            </Paper>
+
+            {/* V94: Data Directory */}
+            <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+                📁 Data Directory
+              </Typography>
+              <Stack gap={2}>
+                <Box>
+                  <Typography variant="body2" sx={{ fontSize: 12, color: 'text.secondary', wordBreak: 'break-all' }}>
+                    {desktopSettings.dataDirectory || 'Loading...'}
+                  </Typography>
+                </Box>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleOpenDataDirectory}
+                  startIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+                  sx={{ fontSize: 11, alignSelf: 'flex-start' }}
+                >
+                  Open Data Directory
+                </Button>
+              </Stack>
+            </Paper>
+
+            {/* V94: Keyboard Shortcuts Info */}
+            <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
+                ⌨️ Global Shortcuts
+              </Typography>
+              <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary' }}>
+                Press <Chip label="Ctrl+Shift+P" size="small" sx={{ height: 18, fontSize: 10, mx: 0.5 }} /> to show PixelPal from anywhere
+              </Typography>
+            </Paper>
+          </>
+        )}
+
+        {/* Only show general settings when not on desktop tab */}
+        {(!isElectron || activeSettingsTab === 'general') && (
+          <>
         {/* V81: AI Providers Card */}
         <Paper
           sx={{
@@ -1868,6 +2162,8 @@ export const Settings: React.FC = () => {
         >
           Save Legacy Settings
         </Button>
+          </>
+        )}
       </Box>
 
       {/* Add/Edit Model Dialog */}
