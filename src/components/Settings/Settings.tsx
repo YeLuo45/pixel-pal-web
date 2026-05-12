@@ -13,7 +13,9 @@ import {
   DragIndicator as DragIcon, ExpandMore as ExpandIcon, ExpandLess as CollapseIcon,
   Download as DownloadIcon, Upload as UploadIcon,
   Share as ShareIcon, Keyboard as KeyboardIcon,
+  OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { HOTKEY_DEFINITIONS } from '../../hooks/useHotkeys';
 import { testModel } from '../../services/ai/model-registry-adapter';
@@ -45,6 +47,7 @@ const PROVIDER_LABELS: Record<string, string> = {
 
 export const Settings: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const aiConfig = useStore((s) => s.aiConfig);
   const setAIConfig = useStore((s) => s.setAIConfig);
   const models = useStore((s) => s.models);
@@ -415,6 +418,36 @@ export const Settings: React.FC = () => {
       </Box>
 
       <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+        {/* V81: AI Providers Card */}
+        <Paper
+          sx={{
+            p: 2,
+            bgcolor: 'rgba(94, 106, 210, 0.1)',
+            borderRadius: 2,
+            border: '1px solid rgba(94, 106, 210, 0.3)',
+            cursor: 'pointer',
+            '&:hover': { bgcolor: 'rgba(94, 106, 210, 0.15)' },
+          }}
+          onClick={() => navigate('/settings/providers')}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" alignItems="center" gap={2}>
+              <Typography variant="h6" sx={{ fontSize: 24 }}>🤖</Typography>
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  AI Providers
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
+                  Configure OpenAI, Anthropic, Gemini, Ollama, and more
+                </Typography>
+              </Box>
+            </Stack>
+            <OpenInNewIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+          </Stack>
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
 
         {/* Pet Interaction Settings */}
         <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
