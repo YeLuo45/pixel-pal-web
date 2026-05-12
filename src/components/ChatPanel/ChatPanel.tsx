@@ -44,6 +44,8 @@ import { recommendationEngine } from '../../services/recommendation/recommendati
 import { SkillPanel } from '../Skill/SkillPanel';
 import { skillRunner } from '../../services/skills/skillRunner';
 import type { SkillExecutionResult } from '../../services/skills/types';
+import { matchChainTrigger, executeChain } from '../../services/chains/chainEngine';
+import { getAllChains } from '../../services/chains/chainStorage';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -816,6 +818,51 @@ export const ChatPanel: React.FC = () => {
     const matchedScenes = checkKeywordTrigger(userMsg);
     for (const scene of matchedScenes) {
       executeScene(scene);
+    }
+
+    // ---- CHAIN TRIGGER ----
+    const allChains = await getAllChains();
+    const matchedChain = matchChainTrigger(userMsg, allChains.filter(c => c.enabled));
+    if (matchedChain) {
+      console.log('[ChainChat] Chain triggered:', matchedChain.name);
+      addMessage({ role: 'system', content: `🔗 Chain "${matchedChain.name}" 已被触发...`, personaId: activePersonaId });
+
+      const chainResult = await executeChain(matchedChain, {
+        triggerMessage: userMsg,
+        recentMessages: messages,
+        personaId: activePersonaId,
+        metadata: {},
+        parsedParams: {},
+      });
+
+      if (chainResult.success) {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: chainResult.response,
+          timestamp: Date.now(),
+          personaId: activePersonaId,
+        });
+        if (chainResult.steps && chainResult.steps.length > 0) {
+          const stepsText = chainResult.steps.map((s, i) => `Step ${i + 1}: ${s.description}\n→ ${s.result}`).join('\n\n');
+          addMessage({
+            id: crypto.randomUUID(),
+            role: 'system',
+            content: `[${matchedChain.name} Steps]\n${stepsText}`,
+            timestamp: Date.now(),
+            personaId: activePersonaId,
+          });
+        }
+      } else {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: 'system',
+          content: `⚠️ Chain 执行失败: ${chainResult.error || chainResult.response}`,
+          timestamp: Date.now(),
+          personaId: activePersonaId,
+        });
+      }
+      return;
     }
 
     // ---- SKILL CHAT TRIGGER ----
