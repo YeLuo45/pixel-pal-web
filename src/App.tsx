@@ -18,6 +18,7 @@ import { pluginRegistry } from './services/plugins/pluginRegistry';
 import { applyAppTheme, getPresetById, getSystemTheme, resetToDefault, applyCustomTheme } from './utils/appTheme';
 import { useHotkeys } from './hooks/useHotkeys';
 import './services/i18n';
+import './styles/mobile.css';
 
 const linearDarkTheme = createTheme({
   palette: {
