@@ -1,4 +1,5 @@
 // V83 MultiAgentPanel Component
+// V89 Updated: Added Agent-Skill collaboration chain display
 // 侧边栏Agent列表
 
 import React, { useState, useEffect } from 'react';
@@ -19,6 +20,9 @@ import {
   Collapse,
   Paper,
   Button,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   ExpandLess,
@@ -28,12 +32,15 @@ import {
   PlayArrow as PlayIcon,
   Psychology as AgentIcon,
   Dashboard as DashboardIcon,
+  FlashOn as SkillIcon,
+  ArrowForward as ArrowIcon,
 } from '@mui/icons-material';
 import { eventBus } from '../../services/agents/EventBus';
 import { agentManager } from '../../services/agents/AgentManager';
 import { TaskBoardModal } from './TaskBoardModal';
 import { OrchestratorPanel } from './OrchestratorPanel';
 import type { Agent, AgentEvent } from '../../types/agent';
+import type { SkillExecution } from '../../services/agent-skill/types';
 
 const STATUS_COLORS: Record<Agent['status'], string> = {
   idle: '#9ca3af',
@@ -47,6 +54,129 @@ const STATUS_LABELS: Record<Agent['status'], string> = {
   running: '运行中',
   thinking: '思考中',
   waiting: '等待中',
+};
+
+// ===========================================================================
+// V89: Agent-Skill Chain Panel Component
+// ===========================================================================
+
+interface AgentSkillChainPanelProps {
+  agents: Agent[];
+}
+
+const AgentSkillChainPanel: React.FC<AgentSkillChainPanelProps> = ({ agents }) => {
+  const [skillExecutions, setSkillExecutions] = useState<SkillExecution[]>([]);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    // Subscribe to skill execution events
+    const unsubStart = eventBus.on('agent-skill:skill:execution_start', handleSkillEvent);
+    const unsubComplete = eventBus.on('agent-skill:skill:execution_complete', handleSkillEvent);
+    const unsubFailed = eventBus.on('agent-skill:skill:execution_failed', handleSkillEvent);
+
+    return () => {
+      unsubStart();
+      unsubComplete();
+      unsubFailed();
+    };
+  }, []);
+
+  const handleSkillEvent = () => {
+    // Refresh executions for active agents
+    const allExecutions: SkillExecution[] = [];
+    agents.forEach(agent => {
+      const execs = agentManager.getSkillExecutionHistory(agent.id);
+      allExecutions.push(...execs);
+    });
+    setSkillExecutions(allExecutions.slice(-10)); // Last 10
+  };
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'completed': return '#10b981';
+      case 'failed': return '#ef4444';
+      case 'running': return '#f59e0b';
+      default: return '#9ca3af';
+    }
+  };
+
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case 'completed': return '✅';
+      case 'failed': return '❌';
+      case 'running': return '⏳';
+      default: return '⏸️';
+    }
+  };
+
+  if (skillExecutions.length === 0) {
+    return (
+      <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+        暂无技能协作记录
+      </Typography>
+    );
+  }
+
+  return (
+    <Box>
+      <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)} sx={{ bgcolor: 'transparent', boxShadow: 'none' }}>
+        <AccordionSummary sx={{ minHeight: 32, '& .MuiAccordionSummary-content': { my: 0 } }}>
+          <Typography variant="caption" sx={{ color: 'primary.main' }}>
+            {expanded ? '收起' : '查看'} {skillExecutions.length} 条协作记录
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {skillExecutions.map((exec, index) => {
+              const agent = agents.find(a => a.id === exec.agentId);
+              return (
+                <Box
+                  key={exec.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    p: 0.5,
+                    borderRadius: 0.5,
+                    bgcolor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary' }}>
+                    {getStatusIcon(exec.status)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600 }}>
+                    {agent?.icon || '🤖'}{agent?.name || exec.agentId}
+                  </Typography>
+                  <ArrowIcon sx={{ fontSize: 10, color: 'text.disabled' }} />
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'primary.main' }}>
+                    {exec.skillId}
+                  </Typography>
+                  <Box sx={{ flex: 1 }} />
+                  <Chip
+                    label={exec.status}
+                    size="small"
+                    sx={{
+                      height: 14,
+                      fontSize: 8,
+                      bgcolor: `${getStatusColor(exec.status)}20`,
+                      color: getStatusColor(exec.status),
+                    }}
+                  />
+                  {exec.confidence !== undefined && (
+                    <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary' }}>
+                      {Math.round(exec.confidence * 100)}%
+                    </Typography>
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+    </Box>
+  );
 };
 
 export const MultiAgentPanel: React.FC = () => {
@@ -289,6 +419,15 @@ export const MultiAgentPanel: React.FC = () => {
               </Box>
             ))}
           </List>
+        </Box>
+
+        {/* V89: Agent-Skill Collaboration Chain Section */}
+        <Divider sx={{ my: 1 }} />
+        <Box sx={{ px: 2, py: 1 }}>
+          <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', mb: 1 }}>
+            🔗 Agent×Skill 协作链路
+          </Typography>
+          <AgentSkillChainPanel agents={agents} />
         </Box>
 
         {/* Footer */}
