@@ -66,13 +66,34 @@ export const TelegramPluginPanel: React.FC<{ pluginId: string }> = ({ pluginId: 
   const [webhookUrlInput, setWebhookUrlInput] = useState(config.webhookUrl);
   const [allowedChatsInput, setAllowedChatsInput] = useState(config.allowedChatIds.join(', '));
 
+  const testConnection = useCallback(async (token: string) => {
+    if (!token.trim()) return;
+    
+    setLoading(true);
+    setError(null);
+    setTestResult(null);
+
+    const result = await testTelegramConnection(token);
+    setTestResult(result);
+    
+    if (result.success && result.botInfo) {
+      setBotInfo(result.botInfo);
+      setConnected(true);
+    } else {
+      setError(result.message);
+      setConnected(false);
+    }
+
+    setLoading(false);
+  }, []);
+
   // Load config and test connection on mount
   useEffect(() => {
     const cfg = getTelegramConfig();
     if (cfg?.botToken) {
       testConnection(cfg.botToken);
     }
-  }, []);
+  }, [testConnection]);
 
   // Connect to Telegram when enabled
   useEffect(() => {
@@ -92,27 +113,6 @@ export const TelegramPluginPanel: React.FC<{ pluginId: string }> = ({ pluginId: 
 
     return cleanup;
   }, [config.enabled, config.botToken]);
-
-  const testConnection = async (token: string) => {
-    if (!token.trim()) return;
-    
-    setLoading(true);
-    setError(null);
-    setTestResult(null);
-
-    const result = await testTelegramConnection(token);
-    setTestResult(result);
-    
-    if (result.success && result.botInfo) {
-      setBotInfo(result.botInfo);
-      setConnected(true);
-    } else {
-      setError(result.message);
-      setConnected(false);
-    }
-
-    setLoading(false);
-  };
 
   const handleSaveConfig = async () => {
     const newConfig: TelegramPluginConfig = {

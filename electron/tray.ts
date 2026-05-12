@@ -11,6 +11,7 @@ let isOnline = true;
 let mainWindowRef: Electron.BrowserWindow | null = null;
 
 // Status icons for online/offline
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ICON_PATHS = {
   online: 'icon.png',
   offline: 'icon.png', // Could use different icon for offline
