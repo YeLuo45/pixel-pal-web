@@ -1,10 +1,14 @@
 // V83 AgentManager Service
+// V89 Updated: Agent×Skill Integration
 // 管理Agent生命周期，协调多Agent
 
 import type { Agent, AgentRole, Task, AgentMessage } from '../../types/agent';
 import { agentRegistry } from './AgentRegistry';
 import { eventBus } from './EventBus';
 import { taskScheduler } from './TaskScheduler';
+import { skillExecutor } from '../agent-skill/SkillExecutor';
+import { skillResultParser } from '../agent-skill/SkillResultParser';
+import type { SkillMatch, SkillResult, AgentSkillEvent } from '../agent-skill/types';
 
 class AgentManagerService {
   private initialized = false;
@@ -226,6 +230,72 @@ class AgentManagerService {
     if (agent) {
       agent.messages = [];
     }
+  }
+
+  // ===========================================================================
+  // V89: Agent×Skill Integration
+  // ===========================================================================
+
+  /**
+   * Match available Skills for an Agent based on task description
+   */
+  matchSkillsForTask(taskDescription: string, agentId: string): SkillMatch[] {
+    const agent = agentRegistry.get(agentId);
+    const capabilities = agent?.capabilities || [];
+    return skillExecutor.matchSkillsForTask(taskDescription, capabilities);
+  }
+
+  /**
+   * Execute a Skill from an Agent's context
+   */
+  async executeSkillFromAgent(
+    skillId: string,
+    agentId: string,
+    taskId: string,
+    input: unknown
+  ): Promise<SkillResult> {
+    const result = await skillExecutor.executeSkill(skillId, agentId, taskId, input);
+    
+    // Add agent message with skill result
+    agentRegistry.addMessage(agentId, {
+      agentId,
+      type: 'result',
+      content: `技能执行完成: ${result.summary.substring(0, 100)}`,
+    });
+
+    return result;
+  }
+
+  /**
+   * Parse and enhance Skill result for Agent context
+   */
+  async parseSkillResult(result: SkillResult, context?: { taskDescription?: string }): Promise<ReturnType<typeof skillResultParser.parse>> {
+    return skillResultParser.parse(result, context);
+  }
+
+  /**
+   * Get formatted Skill result for Agent context injection
+   */
+  formatSkillResultForAgent(result: SkillResult): string {
+    const parsed = skillResultParser.quickParse(result);
+    return skillResultParser.formatForAgentContext(parsed);
+  }
+
+  /**
+   * Subscribe to Agent-Skill collaboration events
+   */
+  onAgentSkillEvent(
+    type: AgentSkillEvent['type'],
+    callback: (event: AgentSkillEvent) => void
+  ): () => void {
+    return skillExecutor.onEvent(type, callback);
+  }
+
+  /**
+   * Get recent Skill execution history for an agent
+   */
+  getSkillExecutionHistory(agentId: string) {
+    return skillExecutor.getExecutionsForAgent(agentId);
   }
 
   /**

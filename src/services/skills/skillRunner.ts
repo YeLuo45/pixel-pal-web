@@ -22,6 +22,8 @@ export interface SkillRunnerConfig {
   onComplete?: (result: SkillExecutionResult) => void;
   /** Callback on skill error */
   onError?: (skillId: string, error: string) => void;
+  /** V89: Callback when skill execution is done - for Agent integration */
+  onExecutionComplete?: (skillId: string, result: SkillExecutionResult, executionId?: string) => void;
 }
 
 class SkillRunnerImpl {

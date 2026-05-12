@@ -1,8 +1,10 @@
 // V84 TaskScheduler Service
+// V89 Updated: Enhanced with Skill task support
 // Enhanced with dynamic task support and dependency tracking
 
 import type { Task, ScheduleMode, DecomposedTask } from '../../types/agent';
 import { eventBus } from './EventBus';
+import type { SkillExecution } from '../agent-skill/types';
 
 interface ScheduledTask extends Task {
   execute: () => Promise<void>;
@@ -190,6 +192,64 @@ class TaskSchedulerService {
    */
   setMaxConcurrent(max: number): void {
     this.maxConcurrent = Math.max(1, Math.min(max, 10));
+  }
+
+  // ===========================================================================
+  // V89: Skill Task Support
+  // ===========================================================================
+
+  /**
+   * Skill execution tracking map
+   */
+  private skillExecutions = new Map<string, SkillExecution>();
+
+  /**
+   * Schedule a skill execution as part of task
+   */
+  scheduleSkillExecution(execution: SkillExecution): void {
+    this.skillExecutions.set(execution.id, execution);
+    eventBus.emit('task:status_changed', {
+      taskId: execution.taskId,
+      payload: { type: 'skill', executionId: execution.id, status: execution.status },
+    });
+  }
+
+  /**
+   * Update skill execution status
+   */
+  updateSkillExecution(executionId: string, updates: Partial<SkillExecution>): void {
+    const execution = this.skillExecutions.get(executionId);
+    if (execution) {
+      Object.assign(execution, updates);
+      
+      // Emit event for UI updates
+      eventBus.emit('task:status_changed', {
+        taskId: execution.taskId,
+        payload: { type: 'skill', executionId: execution.id, status: execution.status, updates },
+      });
+
+      // Emit specific completion event
+      if (execution.status === 'completed' || execution.status === 'failed') {
+        eventBus.emit('task:completed', {
+          taskId: execution.taskId,
+          payload: { type: 'skill', execution },
+        });
+      }
+    }
+  }
+
+  /**
+   * Get skill executions for a task
+   */
+  getSkillExecutionsForTask(taskId: string): SkillExecution[] {
+    return Array.from(this.skillExecutions.values()).filter(e => e.taskId === taskId);
+  }
+
+  /**
+   * Get a specific skill execution
+   */
+  getSkillExecution(executionId: string): SkillExecution | undefined {
+    return this.skillExecutions.get(executionId);
   }
 }
 
