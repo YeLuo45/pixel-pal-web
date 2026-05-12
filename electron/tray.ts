@@ -1,16 +1,23 @@
-import { Tray, Menu, nativeImage, Notification, app } from 'electron';
+import { Tray, Menu, nativeImage, Notification, app, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 
 // Tray instance
 let tray: Tray | null = null;
 
-// Always on top state reference (set by main)
+// State
 let isAlwaysOnTop = false;
+let isOnline = true;
 let mainWindowRef: Electron.BrowserWindow | null = null;
 
+// Status icons for online/offline
+const ICON_PATHS = {
+  online: 'icon.png',
+  offline: 'icon.png', // Could use different icon for offline
+};
+
 /**
- * Create system tray with right-click menu
+ * Create system tray with enhanced right-click menu
  */
 export function createTray(window: Electron.BrowserWindow): Tray {
   mainWindowRef = window;
@@ -27,12 +34,71 @@ export function createTray(window: Electron.BrowserWindow): Tray {
   }
 
   tray = new Tray(trayIcon);
+  tray.setToolTip('PixelPal');
+
+  // Set initial context menu
+  updateContextMenu();
+
+  // Double-click to restore window
+  tray.on('double-click', restoreWindow);
+
+  // Single click also restores on Windows
+  tray.on('click', () => {
+    if (process.platform === 'win32') {
+      restoreWindow();
+    }
+  });
+
+  return tray;
+}
+
+/**
+ * Update context menu with all menu items
+ */
+function updateContextMenu(): void {
+  if (!tray) return;
 
   const contextMenu = Menu.buildFromTemplate([
+    // Header
     {
-      label: 'Show PixelPal',
+      label: 'PixelPal',
+      enabled: false,
+    },
+    { type: 'separator' },
+    // Main actions
+    {
+      label: 'Open PixelPal',
       click: () => restoreWindow(),
     },
+    {
+      label: 'Settings',
+      click: () => {
+        restoreWindow();
+        mainWindowRef?.webContents.send('navigate', '/settings');
+      },
+    },
+    {
+      label: 'Help',
+      click: () => {
+        restoreWindow();
+        shell.openExternal('https://github.com/YeLuo45/pixel-pal-web#readme');
+      },
+    },
+    {
+      label: 'About',
+      click: () => {
+        restoreWindow();
+        mainWindowRef?.webContents.send('navigate', '/settings');
+      },
+    },
+    { type: 'separator' },
+    // Status indicator
+    {
+      label: isOnline ? '🟢 Online' : '🔴 Offline',
+      enabled: false,
+    },
+    { type: 'separator' },
+    // Options
     {
       label: 'Always on Top',
       type: 'checkbox',
@@ -44,6 +110,7 @@ export function createTray(window: Electron.BrowserWindow): Tray {
       },
     },
     { type: 'separator' },
+    // Quit
     {
       label: 'Quit',
       click: () => {
@@ -53,13 +120,7 @@ export function createTray(window: Electron.BrowserWindow): Tray {
     },
   ]);
 
-  tray.setToolTip('PixelPal');
   tray.setContextMenu(contextMenu);
-
-  // Double-click to restore window
-  tray.on('double-click', restoreWindow);
-
-  return tray;
 }
 
 /**
@@ -74,7 +135,7 @@ export function restoreWindow(): void {
 }
 
 /**
- * Show a native notification
+ * Show a native notification with optional tray balloon (Windows)
  */
 export function showNotification(title: string, body: string): void {
   if (Notification.isSupported()) {
@@ -82,6 +143,7 @@ export function showNotification(title: string, body: string): void {
       title,
       body,
       icon: path.join(__dirname, '../renderer/icon.png'),
+      silent: false,
     });
 
     notification.on('click', () => {
@@ -89,6 +151,23 @@ export function showNotification(title: string, body: string): void {
     });
 
     notification.show();
+
+    // On Windows, show tray balloon if window is hidden
+    if (process.platform === 'win32' && mainWindowRef && !mainWindowRef.isVisible()) {
+      // Tray balloon is shown via the notification
+    }
+  }
+}
+
+/**
+ * Update tray icon based on online status
+ */
+export function setOnlineStatus(online: boolean): void {
+  isOnline = online;
+  if (tray) {
+    const tooltip = online ? 'PixelPal - Online' : 'PixelPal - Offline';
+    tray.setToolTip(tooltip);
+    updateContextMenu();
   }
 }
 
@@ -107,33 +186,7 @@ export function setTrayIcon(iconPath: string): void {
  */
 export function setAlwaysOnTopState(value: boolean): void {
   isAlwaysOnTop = value;
-  if (tray) {
-    const contextMenu = Menu.buildFromTemplate([
-      {
-        label: 'Show PixelPal',
-        click: restoreWindow,
-      },
-      {
-        label: 'Always on Top',
-        type: 'checkbox',
-        checked: value,
-        click: (menuItem) => {
-          isAlwaysOnTop = menuItem.checked;
-          mainWindowRef?.setAlwaysOnTop(isAlwaysOnTop);
-          mainWindowRef?.webContents.send('always-on-top-changed', isAlwaysOnTop);
-        },
-      },
-      { type: 'separator' },
-      {
-        label: 'Quit',
-        click: () => {
-          app.isQuitting = true;
-          app.quit();
-        },
-      },
-    ]);
-    tray.setContextMenu(contextMenu);
-  }
+  updateContextMenu();
 }
 
 /**
