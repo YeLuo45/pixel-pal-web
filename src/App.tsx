@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainPage } from './pages/MainPage';
 import { SkillStorePage } from './pages/SkillStorePage';
 import { SkillDevPage } from './pages/SkillDevPage';
+import { ProvidersPage } from './pages/ProvidersPage';
 import { useStore } from './store';
 import { initCompanion } from './services/companion';
 import { compactMemory } from './services/memory';
@@ -1099,6 +1100,7 @@ function App() {
             <Route path="/skill-store" element={<SkillStorePage />} />
             <Route path="/skill-store/:category" element={<SkillStorePage />} />
             <Route path="/skill-dev" element={<SkillDevPage />} />
+            <Route path="/settings/providers" element={<ProvidersPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Box>
