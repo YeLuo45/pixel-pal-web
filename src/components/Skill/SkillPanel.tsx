@@ -31,6 +31,7 @@ import {
   AutoAwesome as AutoAwesomeIcon,
   Share as ShareIcon,
   Add as AddIcon,
+  Build as BuildIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -425,6 +426,11 @@ export const SkillPanel: React.FC<SkillPanelProps> = ({ visible, onClose, messag
         <Typography variant="subtitle1" sx={{ fontSize: 14, fontWeight: 700, flex: 1 }}>
           {t('skill.title') || 'Skills'}
         </Typography>
+        <Tooltip title="Dev Tools">
+          <IconButton size="small" onClick={() => navigate('/skill-dev')} sx={{ color: 'text.secondary' }}>
+            <BuildIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
         <Tooltip title={t('skill.shareMarketplace') || 'Share to Marketplace'}>
           <IconButton size="small" onClick={() => navigate('/skill-store')} sx={{ color: 'text.secondary' }}>
             <ShareIcon fontSize="small" />
