@@ -117,7 +117,7 @@ export function initFileHandlers(window: BrowserWindow): void {
   });
 
   // Check if running as packaged app and handle file associations
-  ipcMain.on('file:setDropZoneEnabled', (_, enabled: boolean) => {
+  ipcMain.on('file:setDropZoneEnabled', (_event, _enabled: boolean) => {
     // Could be used to enable/disable drag-drop overlay in renderer
   });
 }

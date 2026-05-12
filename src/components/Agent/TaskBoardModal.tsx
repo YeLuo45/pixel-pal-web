@@ -1,7 +1,7 @@
 // V83 TaskBoardModal Component
 // 任务看板（Kanban三列）
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -41,6 +41,20 @@ export const TaskBoardModal: React.FC<TaskBoardModalProps> = ({ open, onClose })
   const [thoughts, setThoughts] = useState<Array<{ agentId: string; content: string; type: string }>>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
 
+  const handleTaskEvent = useCallback((_event: AgentEvent) => {
+    setTasks(taskScheduler.getPending());
+  }, []);
+
+  const handleAgentMessage = useCallback((event: AgentEvent) => {
+    if (event.payload && typeof event.payload === 'object' && 'content' in event.payload) {
+      const msg = event.payload as { content: string; type: string };
+      setThoughts(prev => [
+        ...prev.slice(-4),
+        { agentId: event.agentId || '', content: msg.content, type: msg.type },
+      ]);
+    }
+  }, []);
+
   useEffect(() => {
     if (open) {
       // Subscribe to task events
@@ -63,21 +77,7 @@ export const TaskBoardModal: React.FC<TaskBoardModalProps> = ({ open, onClose })
         unsubAgentMessage();
       };
     }
-  }, [open]);
-
-  const handleTaskEvent = (event: AgentEvent) => {
-    setTasks(taskScheduler.getPending());
-  };
-
-  const handleAgentMessage = (event: AgentEvent) => {
-    if (event.payload && typeof event.payload === 'object' && 'content' in (event.payload as any)) {
-      const msg = event.payload as { content: string; type: string };
-      setThoughts(prev => [
-        ...prev.slice(-4),
-        { agentId: event.agentId || '', content: msg.content, type: msg.type },
-      ]);
-    }
-  };
+  }, [open, handleTaskEvent, handleAgentMessage]);
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return;

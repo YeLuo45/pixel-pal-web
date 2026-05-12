@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, Notification, globalShortcut, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, Tray, globalShortcut, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createTray, restoreWindow, showNotification, setAlwaysOnTopState, destroyTray, setOnlineStatus } from './tray';
@@ -6,18 +6,20 @@ import { initUpdater, destroyUpdater } from './updater';
 import { initFileHandlers, destroyFileHandlers, handleFileAssociation } from './fileHandler';
 
 // Development mode check
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const isDev = !app.isPackaged;
 
 // Window instance
 let mainWindow: BrowserWindow | null = null;
-// Tray instance
+// Tray instance - kept for potential future use
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let tray: Tray | null = null;
 // Store window bounds for persistence
 let windowBounds: Electron.Rectangle = { x: undefined, y: undefined, width: 1024, height: 720 };
 // Always on top state
 let isAlwaysOnTop = false;
 // Login item settings
-let loginItemSettings = { openAtLogin: false };
+const loginItemSettings = { openAtLogin: false };
 
 // Minimize to tray preference
 let minimizeToTray = true;
@@ -313,7 +315,7 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  app.on('second-instance', (_event, commandLine) => {
+  app.on('second-instance', (_event, _commandLine) => {
     // Someone tried to run a second instance, focus our window
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();

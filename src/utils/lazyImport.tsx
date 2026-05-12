@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, ComponentType } from 'react';
 
 // Type for the loaded component
-type LazyComponent<P = {}> = React.LazyExoticComponent<ComponentType<P>>;
+type LazyComponent<P = Record<string, unknown>> = React.LazyExoticComponent<ComponentType<P>>;
 
 // Cache for loaded components
 const cache = new Map<string, LazyComponent>();
@@ -14,7 +14,7 @@ export interface LazyImportOptions {
 /**
  * Creates a lazily loaded component with caching
  */
-export function lazyImport<P = {}>(
+export function lazyImport<P = Record<string, unknown>>(
   importFn: () => Promise<{ default: ComponentType<P> }>,
   name: string
 ): LazyComponent<P> {
@@ -26,34 +26,6 @@ export function lazyImport<P = {}>(
 
   return cache.get(cacheKey) as LazyComponent<P>;
 }
-
-/**
- * Component for lazy loading with fallback
- */
-export interface LazyLoaderProps {
-  importFn: () => Promise<{ default: ComponentType<any> }>;
-  name: string;
-  fallback?: React.ReactNode;
-  SuspenseProps?: React.SuspenseProps;
-}
-
-/**
- * LazyLoader component with built-in Suspense
- */
-export const LazyLoader: React.FC<LazyLoaderProps> = ({
-  importFn,
-  name,
-  fallback = null,
-  SuspenseProps,
-}) => {
-  const LazyComponent = lazyImport(importFn, name);
-
-  return (
-    <Suspense fallback={fallback || <LoadingFallback />}>
-      <LazyComponent />
-    </Suspense>
-  );
-};
 
 /**
  * Loading fallback component
@@ -91,7 +63,7 @@ export const LoadingFallback: React.FC = () => (
  * Creates a component that only loads when rendered
  * Useful for code splitting large components
  */
-export function createLazyComponent<P = {}>(
+export function createLazyComponent<P = Record<string, unknown>>(
   importFn: () => Promise<{ default: ComponentType<P> }>
 ): React.FC<P> {
   const LazyComponent = lazy(importFn);
@@ -114,7 +86,7 @@ export function isModuleLoaded(name: string): boolean {
  * Preload a lazy module
  */
 export function preloadModule(
-  importFn: () => Promise<{ default: ComponentType<any> }>,
+  importFn: () => Promise<{ default: ComponentType<unknown> }>,
   name: string
 ): void {
   const cacheKey = `__lazy_${name}`;

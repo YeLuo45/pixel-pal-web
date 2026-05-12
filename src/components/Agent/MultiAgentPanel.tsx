@@ -2,7 +2,7 @@
 // V89 Updated: Added Agent-Skill collaboration chain display
 // 侧边栏Agent列表
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -68,6 +68,16 @@ const AgentSkillChainPanel: React.FC<AgentSkillChainPanelProps> = ({ agents }) =
   const [skillExecutions, setSkillExecutions] = useState<SkillExecution[]>([]);
   const [expanded, setExpanded] = useState(false);
 
+  const handleSkillEvent = useCallback(() => {
+    // Refresh executions for active agents
+    const allExecutions: SkillExecution[] = [];
+    agents.forEach(agent => {
+      const execs = agentManager.getSkillExecutionHistory(agent.id);
+      allExecutions.push(...execs);
+    });
+    setSkillExecutions(allExecutions.slice(-10)); // Last 10
+  }, [agents]);
+
   useEffect(() => {
     // Subscribe to skill execution events
     const unsubStart = eventBus.on('agent-skill:skill:execution_start', handleSkillEvent);
@@ -79,17 +89,7 @@ const AgentSkillChainPanel: React.FC<AgentSkillChainPanelProps> = ({ agents }) =
       unsubComplete();
       unsubFailed();
     };
-  }, []);
-
-  const handleSkillEvent = () => {
-    // Refresh executions for active agents
-    const allExecutions: SkillExecution[] = [];
-    agents.forEach(agent => {
-      const execs = agentManager.getSkillExecutionHistory(agent.id);
-      allExecutions.push(...execs);
-    });
-    setSkillExecutions(allExecutions.slice(-10)); // Last 10
-  };
+  }, [handleSkillEvent]);
 
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -127,7 +127,7 @@ const AgentSkillChainPanel: React.FC<AgentSkillChainPanelProps> = ({ agents }) =
         </AccordionSummary>
         <AccordionDetails sx={{ p: 0 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            {skillExecutions.map((exec, index) => {
+            {skillExecutions.map((exec, idx) => {
               const agent = agents.find(a => a.id === exec.agentId);
               return (
                 <Box
@@ -186,6 +186,16 @@ export const MultiAgentPanel: React.FC = () => {
   const [orchestratorOpen, setOrchestratorOpen] = useState(false);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
 
+  const updateAgents = useCallback(() => {
+    setAgents(agentManager.getAgents());
+  }, []);
+
+  const handleNewMessage = useCallback((event: AgentEvent) => {
+    if (event.agentId) {
+      setAgents(agentManager.getAgents());
+    }
+  }, []);
+
   useEffect(() => {
     // Initialize agents
     agentManager.initialize();
@@ -201,21 +211,11 @@ export const MultiAgentPanel: React.FC = () => {
       unsubStatus();
       unsubMessage();
     };
+  }, [updateAgents, handleNewMessage]);
+
+  const handleRefresh = useCallback(() => {
+    setAgents(agentManager.getAgents());
   }, []);
-
-  const updateAgents = () => {
-    setAgents(agentManager.getAgents());
-  };
-
-  const handleNewMessage = (event: AgentEvent) => {
-    if (event.agentId) {
-      setAgents(agentManager.getAgents());
-    }
-  };
-
-  const handleRefresh = () => {
-    setAgents(agentManager.getAgents());
-  };
 
   const runningCount = agents.filter(a => a.status === 'running' || a.status === 'thinking').length;
 
@@ -318,7 +318,7 @@ export const MultiAgentPanel: React.FC = () => {
         {/* Agent List */}
         <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>
           <List disablePadding>
-            {agents.map(agent => (
+            {agents.map((agent, agentIdx) => (
               <Box key={agent.id}>
                 <ListItem
                   onClick={() => toggleAgentExpand(agent.id)}
@@ -415,7 +415,7 @@ export const MultiAgentPanel: React.FC = () => {
                   </Box>
                 </Collapse>
 
-                {agents.indexOf(agent) < agents.length - 1 && <Divider sx={{ my: 0.5 }} />}
+                {agentIdx < agents.length - 1 && <Divider sx={{ my: 0.5 }} />}
               </Box>
             ))}
           </List>
