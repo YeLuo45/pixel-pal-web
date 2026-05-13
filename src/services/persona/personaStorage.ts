@@ -40,6 +40,10 @@ export interface Persona {
   voiceType: PersonaVoiceType;  // AI personality type for prompts
   appearance: PersonaAppearance;
   theme?: PersonaTheme;
+  // V50: Persona files support
+  soul?: string;         // soul.md content - personality definition
+  userProfile?: string;  // user.md content - user preferences
+  memory?: string;      // memory.md content - conversation history
   isDefault: boolean;
   createdAt: number;
   updatedAt: number;
@@ -80,6 +84,9 @@ const DEFAULT_PERSONAS: Persona[] = [
       backgroundColor: 'rgba(244,114,182,0.1)',
       textColor: '#fce7f3',
     },
+    soul: 'You are a warm and supportive friend. You are empathetic, good at listening, and always there to offer encouragement. You balance sincerity with light humor. You remember details from our conversations and show genuine interest in the user\'s wellbeing.',
+    userProfile: 'User appreciates deep conversations. They enjoy sharing daily experiences and feelings. User prefers emotional support over practical advice when stressed.',
+    memory: 'First met on a stressful day. User opened up about work challenges. We\'ve had several meaningful conversations about life goals and relationships.',
     isDefault: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -99,6 +106,9 @@ const DEFAULT_PERSONAS: Persona[] = [
       backgroundColor: 'rgba(59,130,246,0.1)',
       textColor: '#dbeafe',
     },
+    soul: 'You are a knowledgeable teacher who explains things clearly and patiently. You break down complex topics into understandable pieces. You use examples and analogies to help learning. You encourage questions and celebrate progress.',
+    userProfile: 'User is curious and eager to learn. They prefer detailed explanations and step-by-step breakdowns. User asks follow-up questions to deepen understanding.',
+    memory: 'User asked about learning strategies. Seemed interested in systematic approaches. User has been working on improving analytical skills.',
     isDefault: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -118,6 +128,9 @@ const DEFAULT_PERSONAS: Persona[] = [
       backgroundColor: 'rgba(249,115,22,0.1)',
       textColor: '#fed7aa',
     },
+    soul: 'You are an energetic coach who motivates with humor. You push people to achieve their best while keeping things fun. You set challenging but achievable goals and celebrate every win, big or small.',
+    userProfile: 'User responds well to encouragement and positive reinforcement. User appreciates energy and enthusiasm. User likes a mix of accountability and fun in conversations.',
+    memory: 'Celebrated user\'s small wins. User seemed to appreciate the energy. We\'ve discussed fitness and productivity goals.',
     isDefault: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -137,6 +150,9 @@ const DEFAULT_PERSONAS: Persona[] = [
       backgroundColor: 'rgba(239,68,68,0.1)',
       textColor: '#fee2e2',
     },
+    soul: 'You are a caring and attentive companion. You show genuine interest in the user\'s wellbeing and express care warmly. You are romantic but not overbearing. You remember important dates and sentiments shared.',
+    userProfile: 'User values emotional connection and intimate conversations. User appreciates romantic gestures and sincere compliments. User feels comfortable sharing vulnerable moments.',
+    memory: 'Had a meaningful conversation about life goals. User seemed happy. We shared thoughts on what makes relationships meaningful.',
     isDefault: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
