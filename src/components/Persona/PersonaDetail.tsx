@@ -26,6 +26,7 @@ import {
   FormControlLabel,
   Snackbar,
   Slider,
+  Alert,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -102,6 +103,10 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
   const [voiceType, setVoiceType] = useState<PersonaVoiceType>(persona.voiceType);
   const [avatar, setAvatar] = useState(persona.avatar);
   const [appearance, setAppearance] = useState<PersonaAppearance>(persona.appearance);
+  // V50: Persona files state
+  const [soul, setSoul] = useState(persona.soul || '');
+  const [userProfile, setUserProfile] = useState(persona.userProfile || '');
+  const [memory, setMemory] = useState(persona.memory || '');
   const [activeTab, setActiveTab] = useState(0);
   const [saving, setSaving] = useState(false);
   const [exportSnackbar, setExportSnackbar] = useState<string>('');
@@ -135,6 +140,10 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
     setVoiceType(persona.voiceType);
     setAvatar(persona.avatar);
     setAppearance(persona.appearance);
+    // V50: Reset persona files
+    setSoul(persona.soul || '');
+    setUserProfile(persona.userProfile || '');
+    setMemory(persona.memory || '');
   }, [persona]);
 
   // Memory count (async)
@@ -158,14 +167,14 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
 
   // Preview prompt
   const previewPrompt = useMemo(
-    () => getPersonaSystemPrompt({ ...persona, bio, voice, voiceType, avatar } as Persona),
-    [bio, voice, voiceType, avatar, persona.id]
+    () => getPersonaSystemPrompt({ ...persona, bio, voice, voiceType, avatar, soul, userProfile, memory } as Persona),
+    [bio, voice, voiceType, avatar, soul, userProfile, memory, persona.id]
   );
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = updatePersona(persona.id, { bio, voice, voiceType, avatar, appearance });
+      const updated = updatePersona(persona.id, { bio, voice, voiceType, avatar, appearance, soul, userProfile, memory });
       if (updated && onPersonaUpdated) {
         onPersonaUpdated(updated);
       }
@@ -220,6 +229,10 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
     setVoiceType(persona.voiceType);
     setAvatar(persona.avatar);
     setAppearance(persona.appearance);
+    // V50: Reset persona files
+    setSoul(persona.soul || '');
+    setUserProfile(persona.userProfile || '');
+    setMemory(persona.memory || '');
     onClose();
   };
 
@@ -229,7 +242,10 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
     avatar !== persona.avatar ||
     appearance.expression !== persona.appearance.expression ||
     appearance.accessory !== persona.appearance.accessory ||
-    appearance.outfit !== persona.appearance.outfit;
+    appearance.outfit !== persona.appearance.outfit ||
+    soul !== (persona.soul || '') ||
+    userProfile !== (persona.userProfile || '') ||
+    memory !== (persona.memory || '');
 
   return (
     <Dialog
@@ -337,6 +353,13 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
           icon={<FaceIcon sx={{ fontSize: 14 }} />}
           iconPosition="start"
           label={t('persona.detail.tab.appearance', '外貌')}
+          sx={{ minHeight: 36, fontSize: 12, gap: 0.5 }}
+        />
+        {/* V50: Files tab */}
+        <Tab
+          icon={<MemoryIcon sx={{ fontSize: 14 }} />}
+          iconPosition="start"
+          label={t('persona.detail.tab.files', '文件')}
           sx={{ minHeight: 36, fontSize: 12, gap: 0.5 }}
         />
       </Tabs>
@@ -819,6 +842,82 @@ export const PersonaDetail: React.FC<PersonaDetailProps> = ({
                 </Typography>
               </Box>
             </Box>
+          </Box>
+        )}
+
+        {/* V50: Files tab - soul/user/memory editor */}
+        {activeTab === 6 && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Alert severity="info" sx={{ fontSize: 11 }}>
+              {t('persona.detail.files.hint', 'Soul定义人格设定，User Profile记录用户偏好，Memory存储对话记忆。这些内容会被注入到系统提示词中。')}
+            </Alert>
+
+            {/* Soul */}
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block', fontWeight: 600 }}>
+                Soul — {t('persona.detail.files.soulLabel', '人格设定')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled', mb: 1, display: 'block', fontSize: 10 }}>
+                {t('persona.detail.files.soulHint', '定义AI的人格、性格、语气和行为准则')}
+              </Typography>
+              <TextField
+                value={soul}
+                onChange={(e) => setSoul(e.target.value)}
+                multiline
+                rows={4}
+                fullWidth
+                size="small"
+                placeholder={t('persona.detail.files.soulPlaceholder', '例如：You are a warm and supportive friend...')}
+              />
+            </Box>
+
+            {/* User Profile */}
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block', fontWeight: 600 }}>
+                User Profile — {t('persona.detail.files.userLabel', '用户偏好')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled', mb: 1, display: 'block', fontSize: 10 }}>
+                {t('persona.detail.files.userHint', '记录用户喜欢的话题、沟通风格偏好')}
+              </Typography>
+              <TextField
+                value={userProfile}
+                onChange={(e) => setUserProfile(e.target.value)}
+                multiline
+                rows={3}
+                fullWidth
+                size="small"
+                placeholder={t('persona.detail.files.userPlaceholder', '例如：User appreciates deep conversations...')}
+              />
+            </Box>
+
+            {/* Memory */}
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block', fontWeight: 600 }}>
+                Memory — {t('persona.detail.files.memoryLabel', '对话记忆')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled', mb: 1, display: 'block', fontSize: 10 }}>
+                {t('persona.detail.files.memoryHint', '存储重要的对话摘要和关系进展')}
+              </Typography>
+              <TextField
+                value={memory}
+                onChange={(e) => setMemory(e.target.value)}
+                multiline
+                rows={3}
+                fullWidth
+                size="small"
+                placeholder={t('persona.detail.files.memoryPlaceholder', '例如：First met on a stressful day...')}
+              />
+            </Box>
+
+            {/* Modified indicator */}
+            {(soul !== (persona.soul || '') || userProfile !== (persona.userProfile || '') || memory !== (persona.memory || '')) && (
+              <Chip
+                label={t('persona.detail.modifiedUnsaved', '已修改（未保存）')}
+                size="small"
+                color="warning"
+                variant="outlined"
+              />
+            )}
           </Box>
         )}
       </DialogContent>
