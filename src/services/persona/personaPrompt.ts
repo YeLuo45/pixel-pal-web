@@ -27,12 +27,27 @@ const INTIMACY_DESCRIPTIONS: Record<string, string> = {
  * Generate a persona-specific system prompt string.
  * Template: 你是一个${persona.bio}。\n语气要求：${voiceInstructions[persona.voice]}
  * Optionally appends intimacy level context if intimacyLevel is provided.
+ * V50: Appends soul/userProfile/memory files if present.
  */
 export function getPersonaSystemPrompt(persona: Persona, intimacyLevel?: string): string {
   const base = `你是一个${persona.bio}。\n语气要求：${VOICE_INSTRUCTIONS[persona.voiceType]}`;
+
+  let fullPrompt = base;
   if (intimacyLevel) {
     const desc = INTIMACY_DESCRIPTIONS[intimacyLevel] || '';
-    return `${base}\n[当前关系：${intimacyLevel} — ${desc}]`;
+    fullPrompt += `\n[当前关系：${intimacyLevel} — ${desc}]`;
   }
-  return base;
+
+  // V50: Append soul/userProfile/memory files if they exist
+  if (persona.soul) {
+    fullPrompt += `\n\n## Soul\n${persona.soul}`;
+  }
+  if (persona.userProfile) {
+    fullPrompt += `\n\n## User Profile\n${persona.userProfile}`;
+  }
+  if (persona.memory) {
+    fullPrompt += `\n\n## Memory\n${persona.memory}`;
+  }
+
+  return fullPrompt;
 }
