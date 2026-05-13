@@ -3,6 +3,8 @@ import { agentBus } from './agentBus'
 import { multiAgentStore } from './multiAgentStore'
 import type { AgentMessage, Task, AgentConfig } from './types'
 import { AgentType } from './types'
+import { taskAssigner } from './roleSystem'
+import type { TaskAssignment } from './roleSystem'
 
 let taskCounter = 0
 
@@ -32,7 +34,14 @@ export class OrchestratorAgent {
   async processUserRequest(input: { message: string }): Promise<void> {
     const parentId = `task-${++taskCounter}`
     this.currentTraceId = parentId
-    const subTasks = this.decomposeTask(parentId, input.message)
+
+    // V98: Use TaskAssigner for intelligent task decomposition and agent assignment
+    const assignment = taskAssigner.assign({ description: input.message })
+
+    console.log(`[Orchestrator] Task assignment: ${assignment.assignedRole} (${assignment.reasoning})`)
+
+    // Create task with assigned agent info
+    const subTasks = this.decomposeTask(parentId, input.message, assignment)
 
     subTasks.forEach(t => this.pendingTasks.set(t.id, t))
 
@@ -59,34 +68,61 @@ export class OrchestratorAgent {
     console.log(`[Orchestrator] Started ${subTasks.length} tasks`)
   }
 
-  private decomposeTask(parentId: string, message: string): Task[] {
+  private decomposeTask(parentId: string, message: string, assignment?: TaskAssignment): Task[] {
     const tasks: Task[] = []
 
-    if (message.match(/code|代码|写|function|def |class /i)) {
-      tasks.push({
-        id: `${parentId}-code`,
-        type: 'code_generation',
-        description: 'Generate code based on request',
-        inputs: { message },
-        status: 'pending',
-        createdAt: Date.now(),
-        dependencies: [],
-      })
-    }
+    // V98: Use complexity-based task decomposition
+    if (assignment?.shouldDecompose) {
+      // For complex tasks, create structured subtasks based on role
+      const role = assignment?.assignedRole || 'planner'
 
-    if (message.match(/review|审查|检查|test|测试/i)) {
-      tasks.push({
-        id: `${parentId}-review`,
-        type: 'code_review',
-        description: 'Review generated code',
-        inputs: { message },
-        status: 'pending',
-        createdAt: Date.now(),
-        dependencies: tasks.length > 0 ? [`${parentId}-code`] : [],
-      })
-    }
+      if (role === 'planner' || role === 'operator') {
+        // Planning phase
+        tasks.push({
+          id: `${parentId}-plan`,
+          type: 'task-planning',
+          description: `Plan: ${message.substring(0, 100)}...`,
+          inputs: { message },
+          status: 'pending',
+          createdAt: Date.now(),
+          dependencies: [],
+        })
 
-    if (tasks.length === 0) {
+        // Execution phase
+        tasks.push({
+          id: `${parentId}-exec`,
+          type: 'task-execution',
+          description: `Execute: ${message.substring(0, 100)}...`,
+          inputs: { message },
+          status: 'pending',
+          createdAt: Date.now(),
+          dependencies: [`${parentId}-plan`],
+        })
+
+        // Review phase
+        tasks.push({
+          id: `${parentId}-review`,
+          type: 'task-review',
+          description: `Review execution results`,
+          inputs: { message },
+          status: 'pending',
+          createdAt: Date.now(),
+          dependencies: [`${parentId}-exec`],
+        })
+      } else {
+        // For critic/summarizer roles, single task
+        tasks.push({
+          id: `${parentId}-task`,
+          type: `task-${role}`,
+          description: message,
+          inputs: { message },
+          status: 'pending',
+          createdAt: Date.now(),
+          dependencies: [],
+        })
+      }
+    } else {
+      // Simple single-step execution
       tasks.push({
         id: `${parentId}-exec`,
         type: 'general',

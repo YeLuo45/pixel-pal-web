@@ -13,3 +13,6 @@ export { criticEngine } from './CriticEngine'
 export { orchestratorService } from './Orchestrator'
 export { DEMO_SCENARIOS } from './Orchestrator'
 export type { OrchestratorState } from './Orchestrator'
+
+// V98 Agent Professional Role System
+export * from './roleSystem'

@@ -1,9 +1,14 @@
 import { executorAgent } from './executorAgent'
 import { reviewerAgent } from './reviewerAgent'
 import { agentRegistry } from './agentRegistry'
+import { roleAgentRegistry } from './roleSystem'
 
 export function initMultiAgentSystem(): void {
   console.log('[MultiAgent] Initializing...')
+
+  // V98: Initialize professional role system
+  roleAgentRegistry.initialize()
+  console.log('[MultiAgent] Role system initialized with', roleAgentRegistry.size(), 'roles')
 
   // executorAgent和reviewerAgent构造时会自动注册
   void executorAgent

@@ -1,11 +1,19 @@
 import type { AgentMessage } from './types'
+import { roleAgentRegistry } from './roleSystem'
+import type { AgentRole } from './roleSystem'
 
 type MessageHandler = (msg: AgentMessage) => void | Promise<void>
 
+/**
+ * V98 Enhancement: Role-based message routing
+ * Supports dispatching messages based on agent roles (planner, operator, critic, summarizer)
+ */
 class AgentBus {
   private handlers = new Map<string, Set<MessageHandler>>()
   private agentQueues = new Map<string, AgentMessage[]>()
   private processing = new Set<string>()
+  // V98: Role-based subscriptions for broadcast patterns
+  private roleSubscriptions = new Map<AgentRole, Set<string>>()
 
   subscribe(agentId: string, handler: MessageHandler): () => void {
     if (!this.handlers.has(agentId)) {
@@ -58,6 +66,28 @@ class AgentBus {
     } finally {
       this.processing.delete(agentId)
     }
+  }
+
+  // V98: Subscribe to messages by agent role
+  subscribeByRole(role: AgentRole, agentId: string, handler: MessageHandler): () => void {
+    if (!this.roleSubscriptions.has(role)) {
+      this.roleSubscriptions.set(role, new Set())
+    }
+    this.roleSubscriptions.get(role)!.add(agentId)
+    return this.subscribe(agentId, handler)
+  }
+
+  // V98: Send to all agents of a specific role
+  async sendToRole(role: AgentRole, msg: Omit<AgentMessage, 'to'>): Promise<void> {
+    const agents = roleAgentRegistry.getByRole(role)
+    await Promise.all(
+      agents.map(agent => this.send({ ...msg, to: agent.id }))
+    )
+  }
+
+  // V98: Get agents registered for a role
+  getAgentsByRole(role: AgentRole): string[] {
+    return roleAgentRegistry.getByRole(role).map(a => a.id)
   }
 }
 
