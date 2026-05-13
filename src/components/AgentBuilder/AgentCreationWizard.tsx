@@ -1,7 +1,8 @@
 /**
- * Agent Creation Wizard Component - V99
+ * Agent Creation Wizard Component - V100
  * 
  * 4-step wizard for creating Agents via natural language.
+ * Fixed: Added backdrop, close on backdrop click, Next button logic.
  */
 
 import React, { useState } from 'react';
@@ -18,6 +19,7 @@ import {
   Alert,
   CircularProgress,
   IconButton,
+  Backdrop,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -289,10 +291,25 @@ export const AgentCreationWizard: React.FC<AgentCreationWizardProps> = ({
     }
   };
 
+  const handleBackOrClose = () => {
+    if (currentStep === 'describe') {
+      onClose();
+    } else {
+      handleBack();
+    }
+  };
+
   if (!open) return null;
 
   return (
-    <Paper
+    <>
+      {/* Backdrop - click to close */}
+      <Backdrop
+        sx={{ zIndex: 999, bgcolor: 'rgba(0,0,0,0.7)' }}
+        onClick={onClose}
+      />
+
+      <Paper
       sx={{
         position: 'fixed',
         top: '50%',
@@ -360,7 +377,7 @@ export const AgentCreationWizard: React.FC<AgentCreationWizardProps> = ({
       >
         <Button
           startIcon={<BackIcon />}
-          onClick={currentStep === 'describe' ? onClose : handleBack}
+          onClick={handleBackOrClose}
           variant="outlined"
         >
           {currentStep === 'describe' ? 'Cancel' : 'Back'}
@@ -376,8 +393,20 @@ export const AgentCreationWizard: React.FC<AgentCreationWizardProps> = ({
             Next
           </Button>
         )}
+
+        {currentStep === 'test' && (
+          <Button
+            endIcon={<CheckIcon />}
+            onClick={handleTest}
+            variant="contained"
+            disabled={isProcessing || !generatedAgent}
+          >
+            {isProcessing ? 'Testing...' : 'Start Using Agent'}
+          </Button>
+        )}
       </Box>
     </Paper>
+    </>
   );
 };
 
