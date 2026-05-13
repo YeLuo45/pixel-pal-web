@@ -490,18 +490,32 @@ describe('Recommendation Integration', () => {
   });
 
   it('should allow dismissing multiple recommendations', () => {
+    // Mock Date.now() to ensure stable IDs across calls
+    const mockTime = 1700000000000;
+    const originalDateNow = Date.now;
+    Date.now = vi.fn(() => mockTime);
+
     const initial = recEngine.generateRecommendations();
     expect(initial.length).toBeGreaterThan(1);
 
-    recEngine.dismissRecommendation(initial[0].id);
-    recEngine.dismissRecommendation(initial[1].id);
+    // Capture the IDs to dismiss
+    const idToDismiss1 = initial[0].id;
+    const idToDismiss2 = initial[1].id;
 
+    recEngine.dismissRecommendation(idToDismiss1);
+    recEngine.dismissRecommendation(idToDismiss2);
+
+    // Override Date.now for second call to generate same IDs
+    Date.now = vi.fn(() => mockTime);
     const afterDismiss = recEngine.generateRecommendations();
-    const dismissedIds = afterDismiss.every(r => 
-      initial.slice(0, 2).some(i => i.id === r.id)
-    );
-    
-    // At least some should be filtered out
+
+    // Restore
+    Date.now = originalDateNow;
+
+    // Dismissed items should be filtered out
+    const dismissedIds = afterDismiss.map(r => r.id);
+    expect(dismissedIds).not.toContain(idToDismiss1);
+    expect(dismissedIds).not.toContain(idToDismiss2);
     expect(afterDismiss.length).toBeLessThan(initial.length);
   });
 });
