@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Box, Popper, Paper, Typography, Fade } from '@mui/material';
+import Box from '../ui/Box';
+import { Popper, Paper, Typography, Fade } from '@mui/material';
 import { useStore } from '../../store';
 import type { PetState } from '../../types';
 

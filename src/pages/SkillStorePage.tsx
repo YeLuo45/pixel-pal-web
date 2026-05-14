@@ -4,7 +4,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Stack, Grid, Chip, Snackbar, Alert, CircularProgress } from '@mui/material';
+import { Typography, Stack, Grid, Chip, Snackbar, Alert, CircularProgress } from '@mui/material';
+import { Box } from '../components/ui/Box';
 import { useNavigate } from 'react-router-dom';
 import { SkillStoreHeader } from '../components/SkillStore/SkillStoreHeader';
 import { CategoryTabs } from '../components/SkillStore/CategoryTabs';

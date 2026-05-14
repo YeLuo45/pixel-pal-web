@@ -10,7 +10,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { IconButton, Tooltip, Box } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Mic as MicIcon, MicOff as MicOffIcon } from '@mui/icons-material';
 import useSpeechRecognition from '../../hooks/useSpeechRecognition';
 import { detectEmotion, type EmotionResult } from '../../services/voice/emotionDetector';

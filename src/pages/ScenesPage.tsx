@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
-  Box, Typography, Button, Grid, Dialog, DialogTitle, DialogContent,
+  Typography, Button, Grid, Dialog, DialogTitle, DialogContent,
   DialogActions, Tabs, Tab, Chip,
 } from '@mui/material';
+import { Box } from '../components/ui/Box';
 import {
   Add as AddIcon, AutoAwesome as AutoAwesomeIcon,
   FileDownload as ExportIcon, FileUpload as ImportIcon,

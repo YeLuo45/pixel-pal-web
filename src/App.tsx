@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { Box } from './components/ui/Box';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainPage } from './pages/MainPage';
 import { SkillStorePage } from './pages/SkillStorePage';

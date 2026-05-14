@@ -6,7 +6,6 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
   Typography,
   Paper,
   Button,
@@ -17,6 +16,7 @@ import {
   Stack,
   Alert,
 } from '@mui/material';
+import { Box } from '../components/ui/Box';
 import AddIcon from '@mui/icons-material/Add';
 import { providerManager, DEFAULT_PROVIDERS } from '../services/providers';
 import type { ProviderConfig } from '../services/providers/types';

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, Button, Stack, Chip } from '@mui/material';
+import { Typography, Button, Stack, Chip } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Update as UpdateIcon } from '@mui/icons-material';
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.0.0';

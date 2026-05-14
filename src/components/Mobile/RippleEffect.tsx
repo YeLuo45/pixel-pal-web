@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { Box, Button, IconButton } from '@mui/material';
+import { Button, IconButton } from '@mui/material';
+import { Box } from '../ui/Box';
 
 export interface RippleEffectProps {
   children: React.ReactNode;

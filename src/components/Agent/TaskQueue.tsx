@@ -4,7 +4,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Chip, Tabs, Tab, IconButton, Tooltip } from '@mui/material';
+import { Typography, Chip, Tabs, Tab, IconButton, Tooltip } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { TaskCard } from './TaskCard';
 import { taskQueue } from '../../services/agent/taskQueue';

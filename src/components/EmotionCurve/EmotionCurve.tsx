@@ -5,7 +5,8 @@
  */
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { Box, Typography, Paper, Tabs, Tab, Chip, Skeleton } from '@mui/material';
+import { Typography, Paper, Tabs, Tab, Chip, Skeleton } from '@mui/material';
+import { Box } from '../ui/Box';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,

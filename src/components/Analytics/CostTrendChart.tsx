@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, ToggleButtonGroup, ToggleButton, Card, CardContent } from '@mui/material';
+import { Typography, ToggleButtonGroup, ToggleButton, Card, CardContent } from '@mui/material';
+import { Box } from '../ui/Box';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { dataPipelineEngine } from '../../services/dataPipeline/pipelineEngine';
 import type { DailyCostTrend } from '../../types/usage';

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Box, Typography, Tooltip, Divider } from '@mui/material';
+import { Typography, Tooltip, Divider } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Chat as ChatIcon, CalendarMonth as CalendarIcon, CheckBox as TaskIcon, Description as DocIcon, Email as EmailIcon, Edit as WriteIcon, Settings as SettingsIcon, Group as GroupIcon, Psychology as KnowledgeIcon, Extension as PluginIcon, Memory as MemoryIcon, BarChart as AnalyticsIcon, Hub as GraphIcon, AutoAwesome as ScenesIcon, FlashOn as AgentIcon, PsychologyAlt as MultiAgentIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { PluginService } from '../../services/plugin/PluginService';

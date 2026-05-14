@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, IconButton, Collapse, Typography } from '@mui/material';
+import { IconButton, Collapse, Typography } from '@mui/material';
+import { Box } from '../ui/Box';
 import { ExpandMore as ExpandIcon, ExpandLess as CollapseIcon } from '@mui/icons-material';
 
 interface CollapsiblePanelProps {

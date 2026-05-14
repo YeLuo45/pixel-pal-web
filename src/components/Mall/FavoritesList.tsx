@@ -3,7 +3,8 @@
  */
 
 import React from 'react';
-import { Box, Typography, IconButton, Button, Chip } from '@mui/material';
+import { Typography, IconButton, Button, Chip } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Delete as DeleteIcon, ShoppingCart as CartIcon } from '@mui/icons-material';
 import { useFavoritesStore } from '../../stores/favoritesStore';
 import { useMallStore } from '../../stores/mallStore';

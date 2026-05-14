@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Box, IconButton, Typography, Drawer } from '@mui/material';
+import { IconButton, Typography, Drawer } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { Sidebar } from './Sidebar';
 import { useSwipeGesture } from '../../hooks/useSwipeGesture';

@@ -3,7 +3,8 @@
  */
 
 import React from 'react';
-import { Box, Typography, Chip, useTheme } from '@mui/material';
+import { Typography, Chip, useTheme } from '@mui/material';
+import { Box } from '../ui/Box';
 import { useMallStore } from '../../stores/mallStore';
 import type { ProductCategory } from '../../types/mall';
 

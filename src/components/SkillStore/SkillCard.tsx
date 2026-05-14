@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { Box, Typography, Chip, Button, Stack, alpha } from '@mui/material';
+import { Typography, Chip, Button, Stack, alpha } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Star as StarIcon, Download as DownloadIcon, Check as CheckIcon } from '@mui/icons-material';
 import type { MarketplaceSkill } from '../../data/sampleMarketplaceSkills';
 import type { SkillCategory } from '../../services/skills/types';

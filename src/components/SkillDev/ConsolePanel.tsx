@@ -4,7 +4,8 @@
  */
 
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Box, Typography, IconButton, Tooltip, Collapse, Button } from '@mui/material';
+import { Typography, IconButton, Tooltip, Collapse, Button } from '@mui/material';
+import { Box } from '../ui/Box';
 import {
   Delete as ClearIcon,
   ContentCopy as CopyIcon,

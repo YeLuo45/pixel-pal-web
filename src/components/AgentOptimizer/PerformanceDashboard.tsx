@@ -3,7 +3,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Card, CardContent, Grid, Chip, LinearProgress } from '@mui/material';
+import { Typography, Card, CardContent, Grid, Chip, LinearProgress } from '@mui/material';
+import { Box } from '../ui/Box';
 import { performanceTracker } from '../../services/agentOptimizer/performanceTracker';
 import type { AgentPerformance } from '../../types/agentOptimizer';
 

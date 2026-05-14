@@ -4,7 +4,8 @@
  */
 
 import React, { useMemo } from 'react';
-import { Box, Typography, Chip, Stack, Divider, alpha } from '@mui/material';
+import { Typography, Chip, Stack, Divider, alpha } from '@mui/material';
+import { Box } from '../ui/Box';
 import type { SkillDefinition } from '../../services/skills/types';
 
 interface SkillPreviewProps {

@@ -9,7 +9,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box,
   Typography,
   IconButton,
   Tooltip,
@@ -17,6 +16,7 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
+import { Box } from '../components/ui/Box';
 import {
   Menu as MenuIcon,
   Sync as SyncIcon,

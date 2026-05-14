@@ -1,7 +1,8 @@
 // WeatherPlugin — Open-Meteo API integration
 // No API key required. Uses free Open-Meteo weather + geocoding APIs.
 import React from 'react';
-import { Box, Typography, TextField, Button, Paper, Stack, Chip, CircularProgress } from '@mui/material';
+import { Typography, TextField, Button, Paper, Stack, Chip, CircularProgress } from '@mui/material';
+import { Box } from '../../components/ui/Box';
 import { WbSunny, Cloud, Grain, Air, WaterDrop } from '@mui/icons-material';
 import { createPluginStorage } from './pluginStorage';
 import { PluginService } from './PluginService';

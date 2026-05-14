@@ -5,7 +5,8 @@
 
 import React, { useCallback, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { Box, Typography, Chip, Stack, Alert } from '@mui/material';
+import { Typography, Chip, Stack, Alert } from '@mui/material';
+import { Box } from '../ui/Box';
 import type { editor } from 'monaco-editor';
 
 interface CodeEditorProps {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Button, TextField, FormControl, Select, MenuItem, IconButton, Typography, Collapse } from '@mui/material';
+import { Button, TextField, FormControl, Select, MenuItem, IconButton, Typography, Collapse } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Add as AddIcon, Delete as DeleteIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
 import type { Action, ActionType } from '../../types/scene';
 import { createAction } from '../../types/scene';

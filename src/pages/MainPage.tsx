@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Drawer, useMediaQuery, IconButton } from '@mui/material';
+import { Drawer, useMediaQuery, IconButton } from '@mui/material';
+import { Box } from '../components/ui/Box';
 import { Menu as MenuIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import { Sidebar } from '../components/Layout/Sidebar';
 import { ChatPanel } from '../components/ChatPanel/ChatPanel';

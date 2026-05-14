@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Card, CardContent, Typography, Switch, IconButton, Chip } from '@mui/material';
+import { Card, CardContent, Typography, Switch, IconButton, Chip } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Edit as EditIcon, Delete as DeleteIcon, Bolt as BoltIcon } from '@mui/icons-material';
 import type { Scene } from '../../types/scene';
 import { useTranslation } from 'react-i18next';

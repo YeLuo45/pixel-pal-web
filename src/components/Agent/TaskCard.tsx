@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { Box, Typography, Chip, LinearProgress, IconButton, Tooltip } from '@mui/material';
+import { Typography, Chip, LinearProgress, IconButton, Tooltip } from '@mui/material';
+import { Box } from '../ui/Box';
 import {
   PlayArrow as PlayIcon,
   Pause as PauseIcon,

@@ -5,7 +5,8 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Typography, Collapse, IconButton, Tooltip } from '@mui/material';
+import { Typography, Collapse, IconButton, Tooltip } from '@mui/material';
+import { Box } from '../ui/Box';
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,

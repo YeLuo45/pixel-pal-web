@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, IconButton, Tooltip } from '@mui/material';
+import { Typography, IconButton, Tooltip } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Chat as ChatIcon, Psychology as PersonaIcon, SmartToy as AgentIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../store';

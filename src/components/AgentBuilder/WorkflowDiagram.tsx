@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { Box, Typography, Select, MenuItem, FormControl, InputLabel, Paper } from '@mui/material';
+import { Typography, Select, MenuItem, FormControl, InputLabel, Paper } from '@mui/material';
+import { Box } from '../ui/Box';
 import type { WorkflowDefinition, WorkflowTemplate, WorkflowStep } from '../../types/agentBuilder';
 import { TEMPLATE_ICONS } from '../../types/agentBuilder';
 

@@ -3,7 +3,8 @@
  */
 
 import React from 'react';
-import { Box, IconButton, Typography } from '@mui/material';
+import { IconButton, Typography } from '@mui/material';
+import { Box } from '../components/ui/Box';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { UsageStatsPanel } from '../components/Usage/UsageStatsPanel';

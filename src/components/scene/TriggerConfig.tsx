@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, FormControl, InputLabel, Select, MenuItem, TextField, Chip, Typography } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, TextField, Chip, Typography } from '@mui/material';
+import { Box } from '../ui/Box';
 import type { SelectChangeEvent } from '@mui/material';
 import type { Trigger, TimeTrigger, KeywordTrigger } from '../../types/scene';
 import { createTrigger } from '../../types/scene';

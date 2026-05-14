@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { Box, Typography, Stack } from '@mui/material';
+import { Typography, Stack } from '@mui/material';
+import { Box } from '../ui/Box';
 import type { SkillCategory } from '../../services/skills/types';
 
 interface CategoryTab {

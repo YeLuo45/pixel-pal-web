@@ -3,7 +3,8 @@
 // 思考气泡
 
 import React from 'react';
-import { Box, Typography, Avatar, Paper, Chip, CircularProgress } from '@mui/material';
+import { Typography, Avatar, Paper, Chip, CircularProgress } from '@mui/material';
+import { Box } from '../ui/Box';
 import { agentRegistry } from '../../services/agents/AgentRegistry';
 
 interface AgentThoughtBubbleProps {

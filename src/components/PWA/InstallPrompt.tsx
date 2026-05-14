@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Paper, IconButton } from '@mui/material';
+import { Button, Typography, Paper, IconButton } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Close as CloseIcon, GetApp as GetAppIcon } from '@mui/icons-material';
 
 export interface InstallPromptProps {

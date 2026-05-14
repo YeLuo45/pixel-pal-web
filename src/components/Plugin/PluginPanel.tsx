@@ -1,6 +1,7 @@
 // PluginPanel — wrapper component that renders a plugin's panel by pluginId
 import React from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Typography, IconButton } from '@mui/material';
+import { Box } from '../ui/Box';
 import { useTranslation } from 'react-i18next';
 import { ArrowBack as ArrowBackIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import { PluginService } from '../../services/plugin/PluginService';

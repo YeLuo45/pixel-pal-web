@@ -4,7 +4,8 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Box, Typography, Button, IconButton, Tooltip, Chip, Stack } from '@mui/material';
+import { Typography, Button, IconButton, Tooltip, Chip, Stack } from '@mui/material';
+import { Box } from '../components/ui/Box';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowBack as BackIcon,

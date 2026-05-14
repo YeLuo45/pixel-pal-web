@@ -6,7 +6,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Avatar } from '@mui/material';
+import { Typography, Avatar } from '@mui/material';
+import { Box } from '../ui/Box';
 import { roomManager, roomEventBus } from '../../services/room';
 import type { Participant, CursorPosition } from '../../types/collab';
 

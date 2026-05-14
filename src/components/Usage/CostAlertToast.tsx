@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Snackbar, Alert, AlertTitle, Box, Typography, IconButton, Button } from '@mui/material';
+import { Snackbar, Alert, AlertTitle, Typography, IconButton, Button } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Close as CloseIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import { budgetManager, type BudgetAlert } from '../../services/usage/BudgetManager';
 

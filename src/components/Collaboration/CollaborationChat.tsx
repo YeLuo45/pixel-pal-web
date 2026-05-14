@@ -9,7 +9,8 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Typography, CircularProgress, Fade } from '@mui/material';
+import { Typography, CircularProgress, Fade } from '@mui/material';
+import { Box } from '../ui/Box';
 import { useStore } from '../../store';
 import type { CollaborationMessage, PersonaRole, Subtask } from '../../services/collaboration/types';
 import { getRoleEmoji, getRoleDisplayName } from '../../services/collaboration/personaRoleRegistry';

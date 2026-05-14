@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { Box, TextField, InputAdornment, Typography, IconButton } from '@mui/material';
+import { TextField, InputAdornment, Typography, IconButton } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
 
 interface SkillStoreHeaderProps {

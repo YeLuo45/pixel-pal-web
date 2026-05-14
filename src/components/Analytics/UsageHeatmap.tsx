@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Card, CardContent } from '@mui/material';
+import { Typography, Card, CardContent } from '@mui/material';
+import { Box } from '../ui/Box';
 import { dataPipelineEngine } from '../../services/dataPipeline/pipelineEngine';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);

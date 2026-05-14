@@ -1,6 +1,7 @@
 // PluginStore — V62 Plugin Market UI
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Switch, Stack, Chip, Collapse, Button, Divider } from '@mui/material';
+import { Typography, Paper, Switch, Stack, Chip, Collapse, Button, Divider } from '@mui/material';
+import { Box } from '../ui/Box';
 import { ExpandMore as ExpandIcon, ExpandLess as CollapseIcon, Add as AddIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { pluginRegistry } from '../../services/plugins/pluginRegistry';

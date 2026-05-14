@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Card, CardContent, Grid, Chip, Alert, IconButton, Collapse, Button } from '@mui/material';
+import { Typography, Card, CardContent, Grid, Chip, Alert, IconButton, Collapse, Button } from '@mui/material';
+import { Box } from '../ui/Box';
 import { ExpandMore as ExpandIcon, ExpandLess as CollapseIcon, Download as DownloadIcon } from '@mui/icons-material';
 import { tokenTracker } from '../../services/usage/TokenTracker';
 import { metricsCollector } from '../../services/dataPipeline/metricsCollector';

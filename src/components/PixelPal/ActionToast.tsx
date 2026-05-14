@@ -8,7 +8,8 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Paper, Typography, IconButton, Button, Fade } from '@mui/material';
+import Box from '../ui/Box';
+import { Paper, Typography, IconButton, Button, Fade } from '@mui/material';
 import { Close as CloseIcon, CheckCircle as CheckIcon } from '@mui/icons-material';
 import { ACTION_COLORS, ACTION_ICONS } from '../../services/actions/ActionTypes';
 import type { CompanionAction } from '../../services/actions/ActionTypes';

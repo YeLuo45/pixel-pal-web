@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, IconButton, Chip, Typography, useMediaQuery, Drawer } from '@mui/material';
+import { IconButton, Chip, Typography, useMediaQuery, Drawer } from '@mui/material';
+import { Box } from '../ui/Box';
 import { Bolt as BoltIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useSceneStore } from '../../stores/sceneStore';
 import { executeScene } from '../../utils/sceneScheduler';
