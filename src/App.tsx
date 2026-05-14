@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { ThemeProvider } from './components/ui/ThemeProvider';
 import { Box } from './components/ui/Box';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/Layout/Sidebar';
@@ -24,7 +24,7 @@ import { CostAlertToast } from './components/Usage/CostAlertToast';
 import './services/i18n';
 import './styles/mobile.css';
 
-const linearDarkTheme = createTheme({
+const linearDarkTheme = {
   palette: {
     mode: 'dark',
     primary: {
@@ -493,10 +493,10 @@ const linearDarkTheme = createTheme({
       },
     },
   },
-});
+};
 
 // V51: MiniMax Light Theme
-const minimaxLightTheme = createTheme({
+const minimaxLightTheme = {
   palette: {
     mode: 'light',
     primary: {
@@ -976,7 +976,7 @@ const minimaxLightTheme = createTheme({
       },
     },
   },
-});
+};
 
 function App() {
   // V52: Register global keyboard shortcuts
@@ -1099,10 +1099,9 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider theme={currentTheme}>
-        <CssBaseline />
-        <Box sx={{ height: '100vh', overflow: 'hidden', display: 'flex' }}>
+        <Box css={{ height: '100vh', overflow: 'hidden', display: 'flex' }}>
           <Sidebar />
-          <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <Box css={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <Routes>
               <Route path="/" element={<MainPage />} />
               <Route path="/skill-store" element={<SkillStorePage />} />

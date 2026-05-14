@@ -1,4 +1,4 @@
-import { useMediaQuery } from '@mui/material';
+import { useMatchMedia } from './useMatchMedia';
 
 // Responsive breakpoints matching PRD:
 // Mobile: < 640px
@@ -6,17 +6,17 @@ import { useMediaQuery } from '@mui/material';
 // Desktop: > 1024px
 
 export const useMobile = () => {
-  const isMobile = useMediaQuery('(max-width: 639px)');
+  const isMobile = useMatchMedia('(max-width: 639px)');
   return isMobile;
 };
 
 export const useTablet = () => {
-  const isTablet = useMediaQuery('(min-width: 640px) and (max-width: 1024px)');
+  const isTablet = useMatchMedia('(min-width: 640px) and (max-width: 1024px)');
   return isTablet;
 };
 
 export const useDesktop = () => {
-  const isDesktop = useMediaQuery('(min-width: 1025px)');
+  const isDesktop = useMatchMedia('(min-width: 1025px)');
   return isDesktop;
 };
 
