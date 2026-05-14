@@ -24,12 +24,12 @@ import {
   ListItemText,
 } from '@mui/material';
 import {
-  ExpandMore as ExpandMoreIcon,
-  Message as MessageIcon,
-  Summarize as SummarizeIcon,
-  Schedule as ScheduleIcon,
-  People as PeopleIcon,
-} from '@mui/icons-material';
+  ChevronDown as ExpandMoreIcon,
+  MessageCircle as MessageIcon,
+  FileText as SummarizeIcon,
+  Clock as ScheduleIcon,
+  Users as PeopleIcon,
+} from 'lucide-react';
 import type { CollabHistoryEntry, CollabMessage } from '../../store';
 
 // Role emoji mapping

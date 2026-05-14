@@ -2,8 +2,8 @@
  * Category Filter Component - M4商城分类筛选
  */
 
+import { css } from '@emotion/react';
 import React from 'react';
-import { Typography, Chip, useTheme } from '@mui/material';
 import { Box } from '../ui/Box';
 import { useMallStore } from '../../stores/mallStore';
 import type { ProductCategory } from '../../types/mall';
@@ -29,24 +29,22 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   const selectedCategory = useMallStore(s => s.selectedCategory);
   const setSelectedCategory = useMallStore(s => s.setSelectedCategory);
   const getProductsByCategory = useMallStore(s => s.getProductsByCategory);
-  const theme = useTheme();
 
   return (
     <Box
-      sx={{
-        display: 'flex',
-        gap: 1,
-        overflowX: 'auto',
-        py: 1,
-        px: 0.5,
-        '&::-webkit-scrollbar': {
-          height: 4,
-        },
-        '&::-webkit-scrollbar-thumb': {
-          backgroundColor: 'rgba(255,255,255,0.1)',
-          borderRadius: 2,
-        },
-      }}
+      css={css`
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 8px 4px;
+        &::-webkit-scrollbar {
+          height: 4px;
+        }
+        &::-webkit-scrollbar-thumb {
+          background-color: rgba(255,255,255,0.1);
+          border-radius: 8px;
+        }
+      `}
     >
       {CATEGORY_CONFIG.map((cat) => {
         const isSelected = selectedCategory === cat.id;
@@ -55,52 +53,39 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
           : getProductsByCategory(cat.id as ProductCategory).length;
 
         return (
-          <Chip
+          <Box
             key={cat.id}
-            icon={
-              <Typography sx={{ fontSize: 16, lineHeight: 1 }}>
-                {cat.icon}
-              </Typography>
-            }
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography sx={{ fontSize: 12, fontWeight: isSelected ? 600 : 400 }}>
-                  {language === 'zh' ? cat.name : cat.nameEn}
-                </Typography>
-                {count !== undefined && (
-                  <Typography 
-                    sx={{ 
-                      fontSize: 10, 
-                      opacity: 0.7,
-                      display: { xs: 'none', sm: 'inline' }
-                    }}
-                  >
-                    ({count})
-                  </Typography>
-                )}
-              </Box>
-            }
             onClick={() => setSelectedCategory(cat.id)}
-            sx={{
-              flexShrink: 0,
-              bgcolor: isSelected 
-                ? `${cat.color}22` 
-                : 'rgba(255,255,255,0.05)',
-              borderColor: isSelected 
-                ? cat.color 
-                : 'transparent',
-              border: '1px solid',
-              color: isSelected ? cat.color : 'text.secondary',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                bgcolor: `${cat.color}15`,
-                transform: 'scale(1.02)',
-              },
-              '& .MuiChip-icon': {
-                color: 'inherit',
-              },
-            }}
-          />
+            css={css`
+              flex-shrink: 0;
+              background: ${isSelected ? `${cat.color}22` : 'rgba(255,255,255,0.05)'};
+              border: 1px solid ${isSelected ? cat.color : 'transparent'};
+              color: ${isSelected ? cat.color : 'rgba(255,255,255,0.5)'};
+              transition: all 0.2s ease;
+              border-radius: 16px;
+              padding: 4px 12px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              &:hover {
+                background: ${cat.color}15;
+                transform: scale(1.02);
+              }
+            `}
+          >
+            <Box css={css`font-size: 16px; line-height: 1;`}>{cat.icon}</Box>
+            <Box css={css`display: flex; align-items: center; gap: 4px;`}>
+              <Box css={css`font-size: 12px; font-weight: ${isSelected ? 600 : 400};`}>
+                {language === 'zh' ? cat.name : cat.nameEn}
+              </Box>
+              {count !== undefined && (
+                <Box css={css`font-size: 10px; opacity: 0.7; display: none; @media (min-width: 600px) { display: inline; }`}>
+                  ({count})
+                </Box>
+              )}
+            </Box>
+          </Box>
         );
       })}
     </Box>

@@ -5,7 +5,7 @@
 import React from 'react';
 import { IconButton, Typography } from '@mui/material';
 import { Box } from '../components/ui/Box';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { ArrowBackIcon } from '../components/ui/muiIconMap';
 import { useNavigate } from 'react-router-dom';
 import { UsageStatsPanel } from '../components/Usage/UsageStatsPanel';
 
@@ -13,9 +13,9 @@ export const UsageStatsPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: 'background.default' }}>
+    <Box css={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: 'background.default' }}>
       {/* Header */}
-      <Box sx={{ 
+      <Box css={{ 
         p: 1.5, 
         borderBottom: '1px solid rgba(255,255,255,0.08)', 
         display: 'flex', 
@@ -32,7 +32,7 @@ export const UsageStatsPage: React.FC = () => {
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box css={{ flex: 1, overflow: 'auto' }}>
         <UsageStatsPanel />
       </Box>
     </Box>

@@ -7,15 +7,15 @@ import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { Typography, IconButton, Tooltip, Collapse, Button } from '@mui/material';
 import { Box } from '../ui/Box';
 import {
-  Delete as ClearIcon,
-  ContentCopy as CopyIcon,
-  ExpandMore as ExpandIcon,
-  ExpandLess as CollapseIcon,
+  Trash2 as ClearIcon,
+  Copy as CopyIcon,
+  ChevronDown as ExpandIcon,
+  ChevronUp as CollapseIcon,
   Info as InfoIcon,
   CheckCircle as SuccessIcon,
-  Error as ErrorIcon,
-  Warning as WarnIcon,
-} from '@mui/icons-material';
+  AlertCircle as ErrorIcon,
+  AlertTriangle as WarnIcon,
+} from 'lucide-react';
 
 export interface ConsoleEntry {
   id: string;
@@ -86,7 +86,7 @@ const EntryItem: React.FC<EntryItemProps> = ({ entry, onToggleExpand }) => {
 
   return (
     <Box
-      sx={{
+      css={{
         display: 'flex',
         flexDirection: 'column',
         borderBottom: '1px solid rgba(255,255,255,0.04)',
@@ -94,9 +94,9 @@ const EntryItem: React.FC<EntryItemProps> = ({ entry, onToggleExpand }) => {
       }}
     >
       {/* Main row */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, py: 0.75, px: 1.5 }}>
+      <Box css={{ display: 'flex', alignItems: 'flex-start', gap: 1, py: 0.75, px: 1.5 }}>
         {/* Level icon */}
-        <Box sx={{ color: LEVEL_COLORS[entry.level], mt: 0.25, flexShrink: 0 }}>
+        <Box css={{ color: LEVEL_COLORS[entry.level], mt: 0.25, flexShrink: 0 }}>
           {LEVEL_ICONS[entry.level]}
         </Box>
 
@@ -115,7 +115,7 @@ const EntryItem: React.FC<EntryItemProps> = ({ entry, onToggleExpand }) => {
         </Typography>
 
         {/* Message */}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box css={{ flex: 1, minWidth: 0 }}>
           <Typography
             component="pre"
             sx={{
@@ -135,7 +135,7 @@ const EntryItem: React.FC<EntryItemProps> = ({ entry, onToggleExpand }) => {
 
           {/* Expandable data */}
           {isExpandable && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+            <Box css={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
               <Button
                 size="small"
                 onClick={handleToggle}
@@ -146,7 +146,7 @@ const EntryItem: React.FC<EntryItemProps> = ({ entry, onToggleExpand }) => {
                   color: 'text.secondary',
                   textTransform: 'none',
                 }}
-                endIcon={entry.expanded ? <CollapseIcon sx={{ fontSize: 12 }} /> : <ExpandIcon sx={{ fontSize: 12 }} />}
+                endIcon={entry.expanded ? <CollapseIcon css={{ fontSize: 12 }} /> : <ExpandIcon css={{ fontSize: 12 }} />}
               >
                 {entry.expanded ? 'Collapse' : 'Expand'}
               </Button>
@@ -156,7 +156,7 @@ const EntryItem: React.FC<EntryItemProps> = ({ entry, onToggleExpand }) => {
           {/* Expanded content */}
           <Collapse in={entry.expanded}>
             <Box
-              sx={{
+              css={{
                 mt: 1,
                 p: 1,
                 bgcolor: 'rgba(0,0,0,0.3)',
@@ -184,10 +184,10 @@ const EntryItem: React.FC<EntryItemProps> = ({ entry, onToggleExpand }) => {
         </Box>
 
         {/* Actions */}
-        <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+        <Box css={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
           <Tooltip title={copied ? 'Copied!' : 'Copy'}>
             <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }}>
-              <CopyIcon sx={{ fontSize: 12, color: copied ? 'success.main' : 'text.disabled' }} />
+              <CopyIcon css={{ fontSize: 12, color: copied ? 'success.main' : 'text.disabled' }} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -221,7 +221,7 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({ entries, onClear }) 
 
   return (
     <Box
-      sx={{
+      css={{
         width: 300,
         height: '100%',
         bgcolor: 'rgba(0,0,0,0.15)',
@@ -232,7 +232,7 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({ entries, onClear }) 
     >
       {/* Header */}
       <Box
-        sx={{
+        css={{
           px: 1.5,
           py: 1,
           borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -249,15 +249,15 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({ entries, onClear }) 
         </Typography>
         <Tooltip title="Clear Console">
           <IconButton size="small" onClick={onClear} sx={{ p: 0.5 }}>
-            <ClearIcon sx={{ fontSize: 14 }} />
+            <ClearIcon css={{ fontSize: 14 }} />
           </IconButton>
         </Tooltip>
       </Box>
 
       {/* Entries */}
-      <Box ref={containerRef} sx={{ flex: 1, overflowY: 'auto' }}>
+      <Box ref={containerRef} css={{ flex: 1, overflowY: 'auto' }}>
         {entries.length === 0 ? (
-          <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Box css={{ p: 2, textAlign: 'center' }}>
             <Typography variant="body2" sx={{ fontSize: 12, color: 'text.disabled' }}>
               No output yet
             </Typography>
@@ -279,7 +279,7 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({ entries, onClear }) 
       {/* Status bar */}
       {entries.length > 0 && (
         <Box
-          sx={{
+          css={{
             px: 1.5,
             py: 0.5,
             borderTop: '1px solid rgba(255,255,255,0.04)',

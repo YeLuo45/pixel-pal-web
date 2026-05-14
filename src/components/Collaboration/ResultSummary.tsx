@@ -8,12 +8,12 @@ import { useTranslation } from 'react-i18next';
 import { Typography, Button, Divider, Collapse, Chip } from '@mui/material';
 import { Box } from '../ui/Box';
 import {
-  CheckCircle as CheckIcon,
-  ContentCopy as CopyIcon,
-  Refresh as NewCollabIcon,
-  ExpandMore as ExpandIcon,
-  ExpandLess as CollapseIcon,
-} from '@mui/icons-material';
+  Check as CheckIcon,
+  Copy as CopyIcon,
+  RefreshCw as NewCollabIcon,
+  ChevronDown as ExpandIcon,
+  ChevronUp as CollapseIcon,
+} from 'lucide-react';
 import type { Subtask, SubtaskResult } from '../../services/collaboration/types';
 import { getRoleEmoji, getRoleDisplayName } from '../../services/collaboration/personaRoleRegistry';
 

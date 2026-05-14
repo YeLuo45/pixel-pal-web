@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IconButton } from '@mui/material';
 import { Box } from '../components/ui/Box';
-import { Menu as MenuIcon } from '@mui/icons-material';
+import { MenuIcon } from '../components/ui/muiIconMap';
 import { ChatPanel } from '../components/ChatPanel/ChatPanel';
 import { Calendar } from '../components/Calendar/Calendar';
 import { Tasks } from '../components/Tasks/Tasks';
@@ -97,7 +97,7 @@ export const MainPage: React.FC = () => {
   const ActivePanelComponent = resolvePanelComponent() as React.FC<Record<string, unknown>>;
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: '#08090a' }}>
+    <Box css={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: '#08090a' }}>
       {/* Mobile Drawer - Left side swipe accessible */}
       <MobileDrawer
         open={mobileDrawerOpen}
@@ -128,7 +128,7 @@ export const MainPage: React.FC = () => {
       {/* Main content */}
       <Box
         component="main"
-        sx={{
+        css={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
@@ -138,7 +138,7 @@ export const MainPage: React.FC = () => {
       >
         {/* Panel */}
         <Box
-          sx={{
+          css={{
             flex: 1,
             overflow: 'hidden',
             display: 'flex',

@@ -13,16 +13,16 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
-  Close as CloseIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Article as ArticleIcon,
-  Language as UrlIcon,
-  Note as NoteIcon,
-  Description as TextIcon,
-  AccessTime as TimeIcon,
+  X as CloseIcon,
+  Edit3 as EditIcon,
+  Trash2 as DeleteIcon,
+  FileText as ArticleIcon,
+  Globe as UrlIcon,
+  StickyNote as NoteIcon,
+  AlignLeft as TextIcon,
+  Clock as TimeIcon,
   Tag as TagIcon,
-} from '@mui/icons-material';
+} from 'lucide-react';
 import type { KnowledgeSource } from '../../services/rag/types';
 
 interface DocumentPreviewProps {

@@ -2,10 +2,10 @@
  * Product Card Component - M4商城商品卡片
  */
 
+import { css } from '@emotion/react';
 import React from 'react';
-import { Typography, IconButton, Chip, Tooltip } from '@mui/material';
 import { Box } from '../ui/Box';
-import { Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon, ShoppingCart as CartIcon } from '@mui/icons-material';
+import { FavoriteIcon, FavoriteBorderIcon, ShoppingCart as CartIcon } from '../ui/muiIconMap';
 import { useFavoritesStore } from '../../stores/favoritesStore';
 import { useMallStore } from '../../stores/mallStore';
 import type { Product } from '../../types/mall';
@@ -42,201 +42,212 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Box
-      sx={{
-        position: 'relative',
-        width: '100%',
-        bgcolor: 'rgba(255,255,255,0.03)',
-        borderRadius: 2,
-        border: '1px solid rgba(255,255,255,0.08)',
-        overflow: 'hidden',
-        transition: 'all 0.2s ease',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          borderColor: 'rgba(155, 127, 212, 0.3)',
-          boxShadow: '0 4px 20px rgba(155, 127, 212, 0.15)',
-          '& .product-actions': {
-            opacity: 1,
-          },
-        },
-      }}
+      css={css`
+        position: relative;
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.08);
+        overflow: hidden;
+        transition: all 0.2s ease;
+        &:hover {
+          transform: translateY(-2px);
+          border-color: rgba(155, 127, 212, 0.3);
+          box-shadow: 0 4px 20px rgba(155, 127, 212, 0.15);
+        }
+      `}
     >
       {/* Image / Icon Area */}
       <Box
-        sx={{
-          height: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 48,
-          bgcolor: 'rgba(155, 127, 212, 0.1)',
-          position: 'relative',
-        }}
+        css={css`
+          height: 100px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 48px;
+          background: rgba(155, 127, 212, 0.1);
+          position: relative;
+        `}
       >
         {product.image}
         
         {/* Badges */}
-        <Box sx={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 0.5 }}>
+        <Box css={css`position: absolute; top: 8px; left: 8px; display: flex; gap: 4px;`}>
           {product.isNew && (
-            <Chip
-              label="NEW"
-              size="small"
-              sx={{
-                height: 18,
-                fontSize: 9,
-                fontWeight: 700,
-                bgcolor: '#FF6B9D',
-                color: 'white',
-              }}
-            />
+            <Box
+              css={css`
+                height: 18px;
+                font-size: 9px;
+                font-weight: 700;
+                background: #FF6B9D;
+                color: white;
+                border-radius: 4px;
+                padding: 2px 6px;
+                display: inline-flex;
+                align-items: center;
+              `}
+            >
+              NEW
+            </Box>
           )}
           {product.isFeatured && !product.isNew && (
-            <Chip
-              label="HOT"
-              size="small"
-              sx={{
-                height: 18,
-                fontSize: 9,
-                fontWeight: 700,
-                bgcolor: '#FFB84D',
-                color: 'white',
-              }}
-            />
+            <Box
+              css={css`
+                height: 18px;
+                font-size: 9px;
+                font-weight: 700;
+                background: #FFB84D;
+                color: white;
+                border-radius: 4px;
+                padding: 2px 6px;
+                display: inline-flex;
+                align-items: center;
+              `}
+            >
+              HOT
+            </Box>
           )}
         </Box>
 
         {/* Discount Badge */}
         {discount && (
           <Box
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              bgcolor: '#FF6B9D',
-              color: 'white',
-              fontSize: 10,
-              fontWeight: 700,
-              px: 0.5,
-              py: 0.25,
-              borderRadius: 0.5,
-            }}
+            css={css`
+              position: absolute;
+              top: 8px;
+              right: 8px;
+              background: #FF6B9D;
+              color: white;
+              font-size: 10px;
+              font-weight: 700;
+              padding: 2px 4px;
+              border-radius: 4px;
+            `}
           >
             -{discount}%
           </Box>
         )}
 
         {/* Favorite Button */}
-        <IconButton
+        <Box
           onClick={(e) => {
             e.stopPropagation();
             toggleFavorite(product.id);
           }}
-          sx={{
-            position: 'absolute',
-            bottom: 8,
-            right: 8,
-            bgcolor: 'rgba(0,0,0,0.5)',
-            color: isFavorite ? '#FF6B9D' : 'white',
-            opacity: 0.8,
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              bgcolor: 'rgba(0,0,0,0.7)',
-              transform: 'scale(1.1)',
-            },
-          }}
+          css={css`
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.5);
+            color: ${isFavorite ? '#FF6B9D' : 'white'};
+            opacity: 0.8;
+            transition: all 0.2s ease;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            &:hover {
+              background: rgba(0,0,0,0.7);
+              transform: scale(1.1);
+            }
+          `}
         >
-          {isFavorite ? <FavoriteIcon sx={{ fontSize: 18 }} /> : <FavoriteBorderIcon sx={{ fontSize: 18 }} />}
-        </IconButton>
+          {isFavorite ? <FavoriteIcon size={18} /> : <FavoriteBorderIcon size={18} />}
+        </Box>
       </Box>
 
       {/* Content Area */}
-      <Box sx={{ p: 1.5 }}>
+      <Box css={css`padding: 12px;`}>
         {/* Name */}
-        <Typography
-          sx={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: 'text.primary',
-            mb: 0.5,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
+        <Box
+          css={css`
+            font-size: 14px;
+            font-weight: 600;
+            color: #f7f8f8;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          `}
         >
           {language === 'zh' ? product.name : product.nameEn}
-        </Typography>
+        </Box>
 
         {/* Description */}
-        <Typography
-          sx={{
-            fontSize: 11,
-            color: 'text.secondary',
-            mb: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
+        <Box
+          css={css`
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          `}
         >
           {language === 'zh' ? product.description : product.descriptionEn}
-        </Typography>
+        </Box>
 
         {/* Rating & Sales */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-          <Typography sx={{ fontSize: 11, color: '#FFB84D' }}>
+        <Box css={css`display: flex; align-items: center; gap: 8px; margin-bottom: 8px;`}>
+          <Box css={css`font-size: 11px; color: #FFB84D;`}>
             ★ {product.rating}
-          </Typography>
-          <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
+          </Box>
+          <Box css={css`font-size: 11px; color: rgba(255,255,255,0.3);`}>
             {product.sales} sold
-          </Typography>
+          </Box>
         </Box>
 
         {/* Price & Buy Button */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box css={css`display: flex; align-items: center; justify-content: space-between;`}>
           <Box>
-            <Typography
-              sx={{
-                fontSize: 16,
-                fontWeight: 700,
-                color: canAfford ? 'primary.main' : '#FF6B9D',
-              }}
+            <Box
+              css={css`
+                font-size: 16px;
+                font-weight: 700;
+                color: ${canAfford ? '#9b7fd4' : '#FF6B9D'};
+              `}
             >
               💰 {product.price}
-            </Typography>
+            </Box>
             {product.originalPrice && (
-              <Typography
-                sx={{
-                  fontSize: 11,
-                  color: 'text.disabled',
-                  textDecoration: 'line-through',
-                }}
+              <Box
+                css={css`
+                  font-size: 11px;
+                  color: rgba(255,255,255,0.3);
+                  text-decoration: line-through;
+                `}
               >
                 💰 {product.originalPrice}
-              </Typography>
+              </Box>
             )}
           </Box>
 
-          <Tooltip title={canAfford ? 'Purchase' : 'Insufficient coins'}>
-            <IconButton
-              onClick={handlePurchase}
-              disabled={!canAfford}
-              sx={{
-                bgcolor: canAfford ? 'primary.main' : 'rgba(255,255,255,0.1)',
-                color: canAfford ? 'white' : 'text.disabled',
-                width: 36,
-                height: 36,
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  bgcolor: canAfford ? 'primary.dark' : 'rgba(255,255,255,0.1)',
-                  transform: 'scale(1.05)',
-                },
-                '&.Mui-disabled': {
-                  bgcolor: 'rgba(255,255,255,0.05)',
-                  color: 'text.disabled',
-                },
-              }}
-            >
-              <CartIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
+          <Box
+            onClick={handlePurchase}
+            css={css`
+              background: ${canAfford ? '#9b7fd4' : 'rgba(255,255,255,0.1)'};
+              color: ${canAfford ? 'white' : 'rgba(255,255,255,0.3)'};
+              width: 36px;
+              height: 36px;
+              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              transition: all 0.2s ease;
+              cursor: ${canAfford ? 'pointer' : 'not-allowed'};
+              opacity: ${canAfford ? 1 : 0.5};
+              &:hover {
+                background: ${canAfford ? '#7b5fc4' : 'rgba(255,255,255,0.1)'};
+                transform: scale(1.05);
+              }
+            `}
+            title={canAfford ? 'Purchase' : 'Insufficient coins'}
+          >
+            <CartIcon size={18} />
+          </Box>
         </Box>
       </Box>
     </Box>

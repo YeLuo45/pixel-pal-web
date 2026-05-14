@@ -144,7 +144,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   }, [onChange]);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box css={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Editor
         height="100%"
         defaultLanguage="typescript"

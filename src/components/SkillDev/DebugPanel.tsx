@@ -5,7 +5,6 @@
 
 import React, { useState, useCallback } from 'react';
 import {
-  Box,
   Typography,
   TextField,
   Button,
@@ -16,13 +15,14 @@ import {
   Tooltip,
   Divider,
 } from '@mui/material';
+import { Box } from '../ui/Box';
 import {
-  PlayArrow as RunIcon,
-  Stop as StopIcon,
-  Refresh as ResetIcon,
-  ExpandMore as ExpandIcon,
-  ExpandLess as CollapseIcon,
-} from '@mui/icons-material';
+  Play as RunIcon,
+  Square as StopIcon,
+  RotateCcw as ResetIcon,
+  ChevronDown as ExpandIcon,
+  ChevronUp as CollapseIcon,
+} from 'lucide-react';
 
 interface DebugPanelProps {
   onRun: (input: string, context: Record<string, unknown>) => void;
@@ -106,7 +106,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
 
   return (
     <Box
-      sx={{
+      css={{
         height: 200,
         display: 'flex',
         flexDirection: 'column',
@@ -116,7 +116,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
     >
       {/* Header */}
       <Box
-        sx={{
+        css={{
           px: 2,
           py: 1,
           borderBottom: '1px solid rgba(255,255,255,0.04)',
@@ -125,7 +125,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
           justifyContent: 'space-between',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box css={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography
             variant="caption"
             sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.5 }}
@@ -146,17 +146,17 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
             }}
           />
         </Box>
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
+        <Box css={{ display: 'flex', gap: 0.5 }}>
           <Tooltip title="Reset">
             <IconButton size="small" onClick={handleReset} sx={{ p: 0.5 }}>
-              <ResetIcon sx={{ fontSize: 14 }} />
+              <ResetIcon css={{ fontSize: 14 }} />
             </IconButton>
           </Tooltip>
         </Box>
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 1.5, gap: 1 }}>
+      <Box css={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 1.5, gap: 1 }}>
         {/* Test Input */}
         <TextField
           size="small"
@@ -179,7 +179,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
         />
 
         {/* Context Toggle + JSON Editor */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Box css={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <Button
             size="small"
             onClick={() => setContextExpanded((v) => !v)}
@@ -193,13 +193,13 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
               minHeight: 'auto',
               '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
             }}
-            endIcon={contextExpanded ? <CollapseIcon sx={{ fontSize: 12 }} /> : <ExpandIcon sx={{ fontSize: 12 }} />}
+            endIcon={contextExpanded ? <CollapseIcon css={{ fontSize: 12 }} /> : <ExpandIcon css={{ fontSize: 12 }} />}
           >
             Context (JSON)
           </Button>
 
           {contextExpanded && (
-            <Box sx={{ flex: 1, overflow: 'hidden' }}>
+            <Box css={{ flex: 1, overflow: 'hidden' }}>
               <TextField
                 size="small"
                 fullWidth
@@ -230,11 +230,11 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
         </Box>
 
         {/* Run Button */}
-        <Box sx={{ flexShrink: 0, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+        <Box css={{ flexShrink: 0, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
           <Button
             variant="contained"
             size="small"
-            startIcon={isRunning ? <CircularProgress size={12} color="inherit" /> : <RunIcon sx={{ fontSize: 14 }} />}
+            startIcon={isRunning ? <CircularProgress size={12} color="inherit" /> : <RunIcon css={{ fontSize: 14 }} />}
             onClick={isRunning ? onStop : handleRun}
             disabled={!!contextError || !testInput.trim()}
             sx={{

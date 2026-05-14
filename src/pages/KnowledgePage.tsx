@@ -19,9 +19,9 @@ import {
 import { Box } from '../components/ui/Box';
 import {
   Menu as MenuIcon,
-  Sync as SyncIcon,
+  RefreshCw as SyncIcon,
   Settings as SettingsIcon,
-} from '@mui/icons-material';
+} from 'lucide-react';
 import { SourceList } from '../components/Knowledge/SourceList';
 import { RetrievalPanel } from '../components/Knowledge/RetrievalPanel';
 import { DocumentPreview } from '../components/Knowledge/DocumentPreview';

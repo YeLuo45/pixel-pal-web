@@ -3,19 +3,15 @@
  */
 
 import React from 'react';
+import { Box } from '../ui/Box';
+import { Typography, Chip, Tooltip } from '@mui/material';
 import {
-  Box,
-  Typography,
-  Chip,
-  Tooltip,
-} from '@mui/material';
-import {
-  Article as ArticleIcon,
-  Language as UrlIcon,
-  Note as NoteIcon,
-  Description as TextIcon,
-  AccessTime as TimeIcon,
-} from '@mui/icons-material';
+  FileText as ArticleIcon,
+  Globe as UrlIcon,
+  StickyNote as NoteIcon,
+  AlignLeft as TextIcon,
+  Clock as TimeIcon,
+} from 'lucide-react';
 import type { KnowledgeSource } from '../../services/rag/types';
 
 interface SourceCardProps {
