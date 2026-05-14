@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { Box } from './components/ui/Box';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Sidebar } from './components/Layout/Sidebar';
 import { MainPage } from './pages/MainPage';
 import { SkillStorePage } from './pages/SkillStorePage';
 import { SkillDevPage } from './pages/SkillDevPage';
@@ -1099,18 +1100,21 @@ function App() {
     <BrowserRouter>
       <ThemeProvider theme={currentTheme}>
         <CssBaseline />
-        <Box sx={{ height: '100vh', overflow: 'hidden' }}>
-          <Routes>
-            <Route path="/" element={<MainPage />} />
-            <Route path="/skill-store" element={<SkillStorePage />} />
-            <Route path="/skill-store/:category" element={<SkillStorePage />} />
-            <Route path="/skill-dev" element={<SkillDevPage />} />
-            <Route path="/settings/providers" element={<ProvidersPage />} />
-            <Route path="/settings/usage" element={<UsageStatsPage />} />
-            <Route path="/knowledge" element={<KnowledgePage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          <CostAlertToast />
+        <Box sx={{ height: '100vh', overflow: 'hidden', display: 'flex' }}>
+          <Sidebar />
+          <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <Routes>
+              <Route path="/" element={<MainPage />} />
+              <Route path="/skill-store" element={<SkillStorePage />} />
+              <Route path="/skill-store/:category" element={<SkillStorePage />} />
+              <Route path="/skill-dev" element={<SkillDevPage />} />
+              <Route path="/settings/providers" element={<ProvidersPage />} />
+              <Route path="/settings/usage" element={<UsageStatsPage />} />
+              <Route path="/knowledge" element={<KnowledgePage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            <CostAlertToast />
+          </Box>
         </Box>
       </ThemeProvider>
     </BrowserRouter>

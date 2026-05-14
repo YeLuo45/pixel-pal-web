@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, useMediaQuery, IconButton } from '@mui/material';
+import { IconButton } from '@mui/material';
 import { Box } from '../components/ui/Box';
-import { Menu as MenuIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
-import { Sidebar } from '../components/Layout/Sidebar';
+import { Menu as MenuIcon } from '@mui/icons-material';
 import { ChatPanel } from '../components/ChatPanel/ChatPanel';
 import { Calendar } from '../components/Calendar/Calendar';
 import { Tasks } from '../components/Tasks/Tasks';
@@ -47,8 +46,6 @@ export const MainPage: React.FC = () => {
   const activePanel = useStore((s) => s.activePanel);
   const activePluginId = useStore((s) => s.activePluginId);
   const setActivePluginId = useStore((s) => s.setActivePluginId);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const toggleSidebar = () => setSidebarCollapsed(v => !v);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [relationGraphOpen, setRelationGraphOpen] = useState(false);
 
@@ -101,40 +98,6 @@ export const MainPage: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: '#08090a' }}>
-      {/* Desktop sidebar */}
-      {!isMobile && !sidebarCollapsed && <Sidebar />}
-
-      {/* Floating toggle button when sidebar is collapsed on desktop */}
-      {!isMobile && sidebarCollapsed && (
-        <Box
-          component="button"
-          onClick={toggleSidebar}
-          sx={{
-            position: 'fixed',
-            bottom: '24px',
-            left: '24px',
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            bgcolor: '#0f1011',
-            border: '1px solid rgba(255,255,255,0.05)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 1000,
-            color: 'rgba(255,255,255,0.7)',
-            transition: 'all 0.15s ease',
-            '&:hover': {
-              bgcolor: 'rgba(255,255,255,0.12)',
-              color: 'rgba(255,255,255,0.9)',
-            },
-          }}
-        >
-          <ChevronRightIcon sx={{ fontSize: 20 }} />
-        </Box>
-      )}
-
       {/* Mobile Drawer - Left side swipe accessible */}
       <MobileDrawer
         open={mobileDrawerOpen}

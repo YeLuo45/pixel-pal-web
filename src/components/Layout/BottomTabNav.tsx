@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, IconButton, Tooltip } from '@mui/material';
 import { Box } from '../ui/Box';
-import { Chat as ChatIcon, Psychology as PersonaIcon, SmartToy as AgentIcon, Settings as SettingsIcon } from '@mui/icons-material';
+import { Chat as ChatIcon, Psychology as PersonaIcon, SmartToy as AgentIcon } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../store';
 
@@ -9,7 +9,6 @@ const TAB_ITEMS = [
   { id: 'chat', label: 'Chat', icon: ChatIcon, route: '/' },
   { id: 'persona', label: 'Persona', icon: PersonaIcon, route: '/persona' },
   { id: 'agent', label: 'Agent', icon: AgentIcon, route: '/agent' },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon, route: '/settings' },
 ] as const;
 
 interface BottomTabNavProps {
@@ -27,7 +26,6 @@ export const BottomTabNav: React.FC<BottomTabNavProps> = ({ onTabChange }) => {
     if (path === '/' || activePanel === 'chat') return 'chat';
     if (path === '/persona' || activePanel === 'persona') return 'persona';
     if (path === '/agent' || activePanel === 'agent') return 'agent';
-    if (path === '/settings' || activePanel === 'settings') return 'settings';
     return 'chat';
   };
 
@@ -37,9 +35,6 @@ export const BottomTabNav: React.FC<BottomTabNavProps> = ({ onTabChange }) => {
     if (tab.route === '/') {
       setActivePanel('chat');
       navigate('/');
-    } else if (tab.id === 'settings') {
-      setActivePanel('settings');
-      navigate('/settings');
     } else if (tab.id === 'agent') {
       setActivePanel('agent');
       navigate('/agent');
