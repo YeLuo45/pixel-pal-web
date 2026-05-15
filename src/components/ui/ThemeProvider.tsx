@@ -8,6 +8,7 @@
 import { Global, css } from '@emotion/react';
 import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { ReactNode, createContext, useContext } from 'react';
+import { borderRadius } from './design-tokens';
 
 // ============================================================================
 // Theme Types (compatible with MUI theme structure)
@@ -158,7 +159,7 @@ const darkMuiTheme = createTheme({
     caption: { fontWeight: 400 },
     overline: { fontWeight: 510, letterSpacing: '0.08em' },
   },
-  shape: { borderRadius: 8 },
+  shape: { borderRadius: borderRadius.md },
 });
 
 export const darkTheme: Theme = darkMuiTheme as unknown as Theme;
@@ -212,7 +213,7 @@ const lightMuiTheme = createTheme({
     caption: { fontWeight: 400 },
     overline: { fontWeight: 510, letterSpacing: '0.08em' },
   },
-  shape: { borderRadius: 8 },
+  shape: { borderRadius: borderRadius.md },
 });
 
 export const lightTheme: Theme = lightMuiTheme as unknown as Theme;

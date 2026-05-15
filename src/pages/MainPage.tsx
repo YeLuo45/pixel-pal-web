@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { IconButton } from '@mui/material';
 import { Box } from '../components/ui/Box';
 import { MenuIcon } from '../components/ui/muiIconMap';
+import { useTheme } from '../components/ui/ThemeProvider';
 import { ChatPanel } from '../components/ChatPanel/ChatPanel';
 import { Calendar } from '../components/Calendar/Calendar';
 import { Tasks } from '../components/Tasks/Tasks';
@@ -48,6 +49,7 @@ export const MainPage: React.FC = () => {
   const setActivePluginId = useStore((s) => s.setActivePluginId);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [relationGraphOpen, setRelationGraphOpen] = useState(false);
+  const theme = useTheme();
 
   // Use mobile hook for responsive breakpoints
   // Mobile: < 640px, Tablet: 640-1024px, Desktop: > 1024px
@@ -97,7 +99,7 @@ export const MainPage: React.FC = () => {
   const ActivePanelComponent = resolvePanelComponent() as React.FC<Record<string, unknown>>;
 
   return (
-    <Box css={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: '#08090a' }}>
+    <Box css={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: theme.palette.background.default }}>
       {/* Mobile Drawer - Left side swipe accessible */}
       <MobileDrawer
         open={mobileDrawerOpen}
@@ -144,7 +146,7 @@ export const MainPage: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             width: '100%',
-            bgcolor: '#08090a',
+            bgcolor: theme.palette.background.default,
             pb: isMobile ? '64px' : 0, // Space for bottom tab nav on mobile
           }}
         >
