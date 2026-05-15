@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { IconButton } from '@mui/material';
 import { Box } from '../components/ui/Box';
 import { MenuIcon } from '../components/ui/muiIconMap';
-import { useTheme } from '../components/ui/ThemeProvider';
+
 import { ChatPanel } from '../components/ChatPanel/ChatPanel';
 import { Calendar } from '../components/Calendar/Calendar';
 import { Tasks } from '../components/Tasks/Tasks';
@@ -49,10 +49,6 @@ export const MainPage: React.FC = () => {
   const setActivePluginId = useStore((s) => s.setActivePluginId);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [relationGraphOpen, setRelationGraphOpen] = useState(false);
-  const theme = useTheme();
-
-  // Use mobile hook for responsive breakpoints
-  // Mobile: < 640px, Tablet: 640-1024px, Desktop: > 1024px
   const isMobile = useMobile();
 
   // Listen for relation graph open event from Sidebar
@@ -146,7 +142,7 @@ export const MainPage: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             width: '100%',
-            bgcolor: theme.palette.background.default,
+            bgcolor: '#08090a',
             pb: isMobile ? '64px' : 0, // Space for bottom tab nav on mobile
           }}
         >
