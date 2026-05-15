@@ -240,9 +240,9 @@ export const SkillStorePage: React.FC = () => {
           <Typography variant="subtitle1" sx={{ fontSize: 14, fontWeight: 700, color: '#1E293B', mb: 2 }}>
             ⭐ 热门推荐
           </Typography>
-          <Stack direction="row" spacing={2} overflow="auto" sx={{ '&::-webkit-scrollbar': { height: 0 } }}>
+          <Grid container spacing={2}>
             {filteredSkills.slice(0, 4).map((skill) => (
-              <Box key={skill.id} sx={{ minWidth: 280 }}>
+              <Grid item xs={12} sm={6} md={3} key={skill.id}>
                 <SkillCard
                   skill={skill}
                   variant="store"
@@ -250,9 +250,9 @@ export const SkillStorePage: React.FC = () => {
                   onInstall={handleInstall}
                   onClick={handleSkillClick}
                 />
-              </Box>
+              </Grid>
             ))}
-          </Stack>
+          </Grid>
         </Box>
       )}
 
