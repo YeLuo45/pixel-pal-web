@@ -48,4 +48,9 @@ export interface BusEvents {
   'provider:registered': { providerId: string; name: string };
   'provider:unregistered': { providerId: string };
   'provider:switched': { fromProviderId: string; toProviderId: string };
+  // V108: Skill Chaining events
+  'chain:started': { chainId: string; executionId: string };
+  'chain:step-completed': { chainId: string; executionId: string; stepIndex: number; stepId: string };
+  'chain:completed': { chainId: string; executionId: string };
+  'chain:failed': { chainId: string; executionId: string; error: string };
 }

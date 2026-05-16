@@ -1,5 +1,8 @@
 /**
- * Chain services exports (V79)
+ * Chains Service
+ * V108: Skill Chaining stub
  */
-export { executeChain, matchChainTrigger, resolveTemplate, resolveStringTemplate, evaluateCondition } from './chainEngine';
-export { getAllChains, getChain, saveChain, deleteChain, setChainEnabled, clearAllChains } from './chainStorage';
+
+export * from './types';
+export { DefaultChainExecutor } from './ChainExecutor';
+export { ChainRunner } from './ChainRunner';
