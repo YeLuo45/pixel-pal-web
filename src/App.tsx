@@ -21,6 +21,7 @@ import { pluginRegistry } from './services/plugins/pluginRegistry';
 import { applyAppTheme, getPresetById, getSystemTheme, resetToDefault, applyCustomTheme } from './utils/appTheme';
 import { useHotkeys } from './hooks/useHotkeys';
 import { CostAlertToast } from './components/Usage/CostAlertToast';
+import { unifiedMessageBus, webChannelAdapter } from './services/bus';
 import './services/i18n';
 import './styles/mobile.css';
 
@@ -1044,6 +1045,9 @@ function App() {
   // Initialize companion service and memory on startup
   useEffect(() => {
     const init = async () => {
+      // V101: Initialize UnifiedMessageBus with WebChannelAdapter
+      unifiedMessageBus.registerAdapter(webChannelAdapter);
+
       await initCompanion(companion.personaId, companion.moodId, companion.customName);
       // Compact memory if needed (runs in background)
       compactMemory().catch(() => {});

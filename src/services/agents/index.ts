@@ -1,5 +1,6 @@
 export { agentRegistry } from './agentRegistry'
-export { agentBus } from './agentBus'
+export { agentExecutionBus } from './AgentExecutionBus'
+export { agentBus } from './agentBus' // backward compat re-export
 export { orchestratorAgent } from './orchestratorAgent'
 export { executorAgent } from './executorAgent'
 export { reviewerAgent } from './reviewerAgent'
