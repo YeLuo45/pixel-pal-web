@@ -152,6 +152,11 @@ export const Settings: React.FC = () => {
     models.length > 0 ? models[0].modelName : ''
   );
 
+  // V104: Loop Detection settings state
+  const [loopDetectionEnabled, setLoopDetectionEnabled] = useState(false);
+  const [maxIterations, setMaxIterations] = useState(20);
+  const [stallThreshold, setStallThreshold] = useState(3);
+
   const handleSaveCustomTheme = () => {
     const theme = createCustomPreset(customColors);
     setAppThemePreset('custom');
@@ -1350,6 +1355,54 @@ export const Settings: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
+            </Box>
+          )}
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
+
+        {/* V104: Loop Detection Settings */}
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600 }}>
+              🔄 Loop Detection
+            </Typography>
+            <Switch
+              size="small"
+              checked={loopDetectionEnabled}
+              onChange={(e) => setLoopDetectionEnabled(e.target.checked)}
+            />
+          </Stack>
+          {loopDetectionEnabled && (
+            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
+                <Typography variant="body2" sx={{ fontSize: 11, mb: 0.5, color: 'text.secondary' }}>
+                  Max Iterations: {maxIterations}
+                </Typography>
+                <Slider
+                  size="small"
+                  min={5}
+                  max={50}
+                  step={1}
+                  value={maxIterations}
+                  onChange={(_, v) => setMaxIterations(v as number)}
+                  sx={{ fontSize: 10 }}
+                />
+              </Box>
+              <Box>
+                <Typography variant="body2" sx={{ fontSize: 11, mb: 0.5, color: 'text.secondary' }}>
+                  Stall Threshold: {stallThreshold} consecutive identical responses
+                </Typography>
+                <Slider
+                  size="small"
+                  min={2}
+                  max={10}
+                  step={1}
+                  value={stallThreshold}
+                  onChange={(_, v) => setStallThreshold(v as number)}
+                  sx={{ fontSize: 10 }}
+                />
+              </Box>
             </Box>
           )}
         </Paper>

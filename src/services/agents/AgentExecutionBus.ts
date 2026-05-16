@@ -1,6 +1,8 @@
 import type { AgentMessage } from './types'
 import { planReviewGate } from '../bus/plan-review';
 import type { ReviewConfig, PlanReviewResult } from '../bus/plan-review/types';
+import { LoopDetector } from '../bus/loop-detection';
+import type { LoopDetectionConfig } from '../bus/loop-detection/types';
 
 type MessageHandler = (msg: AgentMessage) => void | Promise<void>
 
@@ -8,6 +10,16 @@ class AgentExecutionBus {
   private handlers = new Map<string, Set<MessageHandler>>()
   private agentQueues = new Map<string, AgentMessage[]>()
   private processing = new Set<string>()
+  // V104: Loop Detection
+  private loopDetector: LoopDetector | null = null;
+
+  /**
+   * Initialize loop detector with config
+   * V104: Loop Detection integration
+   */
+  initLoopDetector(config: LoopDetectionConfig): void {
+    this.loopDetector = new LoopDetector(config);
+  }
 
   subscribe(agentId: string, handler: MessageHandler): () => void {
     if (!this.handlers.has(agentId)) {
