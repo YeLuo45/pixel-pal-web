@@ -11,11 +11,20 @@ export { botConfigManager } from './BotConfigManager';
 export type { BotConfig, BotChannelConfig } from './BotConfigManager';
 export { userIdentityResolver } from './UserIdentityResolver';
 export type { Channel, RawMessage, UnifiedMessage, BusEvents } from './types';
+export type { CheckpointData, ProgressState } from './checkpoint/types';
 export type { ChannelAdapter } from './ChannelAdapter';
 
 // Re-export AgentExecutionBus (renamed from agentBus)
 export { agentExecutionBus } from '../agents/AgentExecutionBus';
 
+// V104: Loop Detection exports
+export { loopDetector } from './loop-detection';
+export type { LoopDetectionConfig, LoopDetectionResult } from './loop-detection';
+
 // V103: Plan Review Gate exports
 export { planReviewGate, PlanReviewGate } from './plan-review';
 export type { PlanReviewResult, ReviewConfig } from './plan-review';
+
+// V105: Checkpoint + Progress Tracker exports
+export { checkpointManager } from './checkpoint';
+export { progressTracker } from './checkpoint';

@@ -38,4 +38,10 @@ export interface BusEvents {
   // V104: Loop Detection events
   'loop:max_iterations_reached': { maxIterations: number };
   'loop:stall_detected': { stallThreshold: number; consecutiveCount: number };
+  // V105: Checkpoint + Progress Tracker events
+  'checkpoint:saved': { sessionId: string };
+  'checkpoint:loaded': { sessionId: string; checkpoint: CheckpointData };
+  'checkpoint:cleared': { sessionId: string };
+  'progress:updated': ProgressState;
+  'progress:completed': ProgressState;
 }

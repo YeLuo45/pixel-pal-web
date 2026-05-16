@@ -1409,6 +1409,29 @@ export const Settings: React.FC = () => {
 
         <Divider sx={{ opacity: 0.1 }} />
 
+        {/* V105: Checkpoint Settings */}
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600 }}>
+              💾 Checkpoint
+            </Typography>
+            <Switch
+              size="small"
+              checked={loopDetectionEnabled}
+              onChange={(e) => setLoopDetectionEnabled(e.target.checked)}
+            />
+          </Stack>
+          {loopDetectionEnabled && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary', display: 'block' }}>
+                Checkpoint saves allow you to resume interrupted agent tasks
+              </Typography>
+            </Box>
+          )}
+        </Paper>
+
+        <Divider sx={{ opacity: 0.1 }} />
+
         {/* Data Backup & Restore */}
         <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
           <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, mb: 2 }}>
