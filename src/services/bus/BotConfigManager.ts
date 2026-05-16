@@ -20,6 +20,9 @@ export interface BotConfig {
   whatsapp: BotChannelConfig;
   feishu: BotChannelConfig;
   slack: BotChannelConfig;
+  dingtalk: BotChannelConfig;
+  email: BotChannelConfig;
+  qq: BotChannelConfig;
 }
 
 const STORAGE_KEY = 'pixelpal_bot_config';
@@ -46,6 +49,21 @@ const DEFAULT_CONFIG: BotConfig = {
     allowFrom: [],
   },
   slack: {
+    enabled: false,
+    token: '',
+    allowFrom: [],
+  },
+  dingtalk: {
+    enabled: false,
+    token: '',
+    allowFrom: [],
+  },
+  email: {
+    enabled: false,
+    token: '',
+    allowFrom: [],
+  },
+  qq: {
     enabled: false,
     token: '',
     allowFrom: [],
@@ -77,6 +95,9 @@ class BotConfigManager {
           whatsapp: { ...DEFAULT_CONFIG.whatsapp, ...parsed.whatsapp },
           feishu: { ...DEFAULT_CONFIG.feishu, ...parsed.feishu },
           slack: { ...DEFAULT_CONFIG.slack, ...parsed.slack },
+          dingtalk: { ...DEFAULT_CONFIG.dingtalk, ...parsed.dingtalk },
+          email: { ...DEFAULT_CONFIG.email, ...parsed.email },
+          qq: { ...DEFAULT_CONFIG.qq, ...parsed.qq },
         };
       }
     } catch (e) {
@@ -114,14 +135,14 @@ class BotConfigManager {
   /**
    * Get configuration for a specific channel
    */
-  getChannelConfig(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack'): BotChannelConfig {
+  getChannelConfig(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack' | 'dingtalk' | 'email' | 'qq'): BotChannelConfig {
     return { ...this.config[channel] };
   }
 
   /**
    * Check if a channel is enabled
    */
-  isEnabled(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack'): boolean {
+  isEnabled(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack' | 'dingtalk' | 'email' | 'qq'): boolean {
     return this.config[channel].enabled && !!this.config[channel].token;
   }
 
@@ -129,13 +150,13 @@ class BotConfigManager {
    * Check if any channel is configured (for startup decisions)
    */
   hasAnyEnabled(): boolean {
-    return this.isEnabled('telegram') || this.isEnabled('discord') || this.isEnabled('whatsapp') || this.isEnabled('feishu') || this.isEnabled('slack');
+    return this.isEnabled('telegram') || this.isEnabled('discord') || this.isEnabled('whatsapp') || this.isEnabled('feishu') || this.isEnabled('slack') || this.isEnabled('dingtalk') || this.isEnabled('email') || this.isEnabled('qq');
   }
 
   /**
    * Update configuration for a specific channel
    */
-  updateChannel(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack', updates: Partial<BotChannelConfig>): void {
+  updateChannel(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack' | 'dingtalk' | 'email' | 'qq', updates: Partial<BotChannelConfig>): void {
     this.config[channel] = {
       ...this.config[channel],
       ...updates,
@@ -146,14 +167,14 @@ class BotConfigManager {
   /**
    * Enable or disable a channel
    */
-  setEnabled(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack', enabled: boolean): void {
+  setEnabled(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack' | 'dingtalk' | 'email' | 'qq', enabled: boolean): void {
     this.updateChannel(channel, { enabled });
   }
 
   /**
    * Set bot token for a channel
    */
-  setToken(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack', token: string): void {
+  setToken(channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack' | 'dingtalk' | 'email' | 'qq', token: string): void {
     this.updateChannel(channel, { token: token.trim() });
   }
 

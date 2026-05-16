@@ -20,7 +20,7 @@ import { botConfigManager, type BotChannelConfig } from '../../services/bus/BotC
 
 /** Individual channel config row */
 const ChannelConfigRow: React.FC<{
-  channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack';
+  channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack' | 'dingtalk' | 'email' | 'qq';
   icon: React.ReactNode;
   label: string;
   config: BotChannelConfig;
@@ -85,7 +85,7 @@ const ChannelConfigRow: React.FC<{
               <TextField
                 size="small"
                 type={showToken ? 'text' : 'password'}
-                placeholder={channel === 'telegram' ? '123456789:ABCdefGHI...' : channel === 'discord' ? 'MTIz...' : channel === 'whatsapp' ? 'whatsapp-token...' : channel === 'feishu' ? 'feishu-app-id:secret' : 'xoxb-xxx...'}
+                placeholder={channel === 'telegram' ? '123456789:ABCdefGHI...' : channel === 'discord' ? 'MTIz...' : channel === 'whatsapp' ? 'whatsapp-token...' : channel === 'feishu' ? 'feishu-app-id:secret' : channel === 'slack' ? 'xoxb-xxx...' : channel === 'dingtalk' ? 'dingtalk-token-xxx' : channel === 'email' ? 'smtp@example.com' : 'qq-bot-id-xxx'}
                 value={localToken}
                 onChange={(e) => setLocalToken(e.target.value)}
                 sx={{
@@ -124,7 +124,13 @@ const ChannelConfigRow: React.FC<{
               ? 'Get token from WhatsApp Business API'
               : channel === 'feishu'
               ? 'Get token from Feishu Open Platform'
-              : 'Get token from Slack App Credentials'}
+              : channel === 'slack'
+              ? 'Get token from Slack App Credentials'
+              : channel === 'dingtalk'
+              ? 'Get token from DingTalk Open Platform'
+              : channel === 'email'
+              ? 'Configure SMTP credentials'
+              : 'Get QQ bot ID from OneBot adapter'}
           </Typography>
         </Box>
       </Collapse>
@@ -143,7 +149,7 @@ export const BotChannelsSettings: React.FC = () => {
     });
   }, []);
 
-  const handleUpdate = (channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack', updates: Partial<BotChannelConfig>) => {
+  const handleUpdate = (channel: 'telegram' | 'discord' | 'whatsapp' | 'feishu' | 'slack' | 'dingtalk' | 'email' | 'qq', updates: Partial<BotChannelConfig>) => {
     botConfigManager.updateChannel(channel, updates);
   };
 
@@ -191,6 +197,27 @@ export const BotChannelsSettings: React.FC = () => {
           label="Slack Bot"
           config={config.slack}
           onUpdate={(u) => handleUpdate('slack', u)}
+        />
+        <ChannelConfigRow
+          channel="dingtalk"
+          icon={<Box sx={{ fontSize: 18 }}>🔔</Box>}
+          label="DingTalk Bot"
+          config={config.dingtalk}
+          onUpdate={(u) => handleUpdate('dingtalk', u)}
+        />
+        <ChannelConfigRow
+          channel="email"
+          icon={<Box sx={{ fontSize: 18 }}>📧</Box>}
+          label="Email Bot"
+          config={config.email}
+          onUpdate={(u) => handleUpdate('email', u)}
+        />
+        <ChannelConfigRow
+          channel="qq"
+          icon={<Box sx={{ fontSize: 18 }}>🐧</Box>}
+          label="QQ Bot"
+          config={config.qq}
+          onUpdate={(u) => handleUpdate('qq', u)}
         />
       </Stack>
 
