@@ -1,7 +1,13 @@
-// V84 Agent Components Index
-export { MultiAgentPanel } from './MultiAgentPanel'
-export { TaskBoardModal } from './TaskBoardModal'
-export { AgentThoughtBubble } from './AgentThoughtBubble'
-export { OrchestratorPanel } from './OrchestratorPanel'
-export { CriticBadge, CriticScoreMini } from './CriticBadge'
-export { TaskTree } from './TaskTree'
+/**
+ * Agent Components Index
+ */
+
+export { AgentLogPanel } from './AgentLogPanel';
+export { TaskTreeViz } from './TaskTreeViz';
+export { AgentDashboard } from './AgentDashboard';
+export { TimelineView } from './TimelineView';
+export { CollaborativeExpander } from './CollaborativeExpander';
+export { ProgressPanel } from './ProgressPanel';
+export { CollaborationBoard } from './CollaborationBoard';
+export { AgentTimeline } from './AgentTimeline';
+export { UnifiedDashboard } from './UnifiedDashboard';
