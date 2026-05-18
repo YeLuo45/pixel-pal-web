@@ -5,7 +5,7 @@
  * Tracks agent execution progress with EventEmitter for real-time updates.
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '@/lib/EventEmitter';
 import type { ProgressState } from './types';
 
 export class ProgressTracker extends EventEmitter {
