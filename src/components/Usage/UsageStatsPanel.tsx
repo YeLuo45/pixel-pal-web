@@ -5,9 +5,15 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Grid, Tabs, Tab, Card, CardContent, Chip, 
-  LinearProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Switch, TextField, IconButton, Tooltip, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@mui/material';
+import { MyBox, MyTypography, MyPaper, MyGrid, MyTabs, MyTabs, MyCard, MyCard, MyChip, MyLinearProgress, MySwitch, MyTextField, MyIconButton, MyTooltip, MyToggleButton, MyToggleButtonGroup } from '../MUI替代';
 import { TrendingUp, TrendingDown, AttachMoney, ShowChart, Speed, CheckCircle, 
   Warning, Error as ErrorIcon, Refresh as RefreshIcon, Download as DownloadIcon,
   Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';

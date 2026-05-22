@@ -3,15 +3,7 @@
  */
 
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Chip,
-  Divider,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+import { MyBox, MyTypography, MyButton, MyChip, MyDivider, MyIconButton, MyTooltip } from '../MUI替代';
 import {
   X as CloseIcon,
   Edit3 as EditIcon,

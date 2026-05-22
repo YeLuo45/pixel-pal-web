@@ -4,10 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box, Typography, TextField, Button, Paper,
-  Stack, Switch, Collapse, IconButton,
-} from '@mui/material';
+import { MyBox, MyTypography, MyTextField, MyButton, MyPaper, MyStack, MySwitch, MyCollapse, MyIconButton } from '../MUI替代';
 import {
   Send as TelegramIcon,
   Games as DiscordIcon,

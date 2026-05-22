@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip } from '@mui/material';
+import { MyTooltip } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { useTheme } from '../ui/ThemeProvider';
 import { Chat as ChatIcon, Psychology as PersonaIcon, SmartToy as AgentIcon } from '@mui/icons-material';

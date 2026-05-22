@@ -9,13 +9,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Box,
-  Typography,
-  Button,
-  IconButton,
-  Avatar,
-  Chip,
 } from '@mui/material';
+import { MyBox, MyTypography, MyButton, MyIconButton, MyIconButton, MyChip } from '../MUI替代';
 import {
   Close as CloseIcon,
   Reply as ReplyIcon,

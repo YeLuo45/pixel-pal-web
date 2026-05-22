@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box, Typography, TextField, Button, Paper,
-  FormControl, InputLabel, Select, MenuItem,
-  Alert, Divider, Stack, IconButton,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Chip, Tooltip, Slider, Collapse, Switch, List, ListItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Slider,
 } from '@mui/material';
+import { MyBox, MyTypography, MyTextField, MyButton, MyPaper, MySelect, MySelect, MySelect, MySelect, MyAlert, MyDivider, MyStack, MyIconButton, MyChip, MyTooltip, MyCollapse, MySwitch, MyList, MyListItem } from '../MUI替代';
 import {
   Visibility, VisibilityOff, Save as SaveIcon,
   Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon,

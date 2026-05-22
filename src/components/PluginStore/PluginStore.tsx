@@ -1,6 +1,6 @@
 // PluginStore — V62 Plugin Market UI
 import React, { useState, useEffect } from 'react';
-import { Typography, Paper, Stack, Chip, Collapse, Button, Divider } from '@mui/material';
+import { MyTypography, MyPaper, MyStack, MyChip, MyCollapse, MyButton, MyDivider } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { ExpandMore as ExpandIcon, ExpandLess as CollapseIcon, Add as AddIcon } from '@mui/icons-material';
 import { MySwitch } from '../MUI替代';

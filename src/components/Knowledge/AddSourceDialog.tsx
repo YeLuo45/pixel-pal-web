@@ -10,17 +10,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  TextField,
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-  Chip,
-  IconButton,
-  LinearProgress,
-  Alert,
 } from '@mui/material';
+import { MyButton, MyTextField, MyBox, MyTypography, MyTabs, MyTabs, MyChip, MyIconButton, MyLinearProgress, MyAlert } from '../MUI替代';
 import {
   Close as CloseIcon,
   Upload as UploadIcon,

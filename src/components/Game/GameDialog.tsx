@@ -10,15 +10,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  TextField,
-  Box,
-  Typography,
-  IconButton,
-  Chip,
-  Paper,
-  InputAdornment,
 } from '@mui/material';
+import { MyButton, MyTextField, MyBox, MyTypography, MyIconButton, MyChip, MyPaper, MyInputAdornment } from '../MUI替代';
 import {
   Close as CloseIcon,
   EmojiEvents as TrophyIcon,

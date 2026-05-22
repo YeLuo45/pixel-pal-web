@@ -1,11 +1,13 @@
 // TelegramPlugin — Built-in Telegram bot plugin with polling/webhook support
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Typography, IconButton, Button,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Chip, Switch, FormControlLabel,
-  CircularProgress, Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControlLabel,
 } from '@mui/material';
+import { MyBox, MyTypography, MyIconButton, MyButton, MyTextField, MyChip, MySwitch, MyCircularProgress, MyAlert } from '../../components/MUI替代';
 import { Send as SendIcon, Refresh as RefreshIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import type { Plugin } from './types';
 import { PluginService } from './PluginService';

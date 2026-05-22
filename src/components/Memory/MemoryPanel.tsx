@@ -14,34 +14,17 @@ import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
 import WordCloud from 'wordcloud';
 import {
-  Box,
-  Typography,
-  Paper,
-  TextField,
-  InputAdornment,
-  Chip,
-  Stack,
-  Button,
-  IconButton,
-  Tabs,
-  Tab,
-  List,
-  ListItem,
-  ListItemText,
   ListItemSecondaryAction,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  LinearProgress,
-  Divider,
-  Collapse,
   Slider,
-  Popper,
   ClickAwayListener,
   List as MuiList,
   ListItem as MuiListItem,
 } from '@mui/material';
+import { MyBox, MyTypography, MyPaper, MyTextField, MyInputAdornment, MyChip, MyStack, MyButton, MyIconButton, MyTabs, MyTabs, MyList, MyListItem, MyListItemText, MyLinearProgress, MyDivider, MyCollapse, MyPopper } from '../MUI替代';
 import {
   Search as SearchIcon,
   Memory as MemoryIcon,

@@ -10,22 +10,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  IconButton,
-  Chip,
-  CircularProgress,
-  Alert,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  Tooltip,
-  Switch,
   FormControlLabel,
 } from '@mui/material';
+import { MyBox, MyTypography, MyTextField, MyButton, MyIconButton, MyChip, MyCircularProgress, MyAlert, MyPaper, MyList, MyListItem, MyListItemText, MyTooltip, MySwitch } from '../MUI替代';
 import { MySwitch } from '../MUI替代';
 import {
   Search as SearchIcon,

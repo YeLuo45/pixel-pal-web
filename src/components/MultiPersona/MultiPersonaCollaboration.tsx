@@ -12,39 +12,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  IconButton,
-  Chip,
-  Avatar,
-  Collapse,
-  Divider,
-  Tooltip,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
   ListItemAvatar,
-  ListItemText,
   ListItemSecondaryAction,
   Badge,
-  LinearProgress,
-  Tab,
-  Tabs,
-  Card,
-  CardContent,
   CardHeader,
   FormControlLabel,
 } from '@mui/material';
+import { MyBox, MyPaper, MyTypography, MyButton, MyIconButton, MyChip, MyIconButton, MyCollapse, MyDivider, MyTooltip, MyTextField, MySelect, MySelect, MySelect, MySelect, MyList, MyListItem, MyListItemText, MyLinearProgress, MyTabs, MyTabs, MyCard, MyCard } from '../MUI替代';
 import { MySwitch } from '../MUI替代';
 import {
   Add as AddIcon,

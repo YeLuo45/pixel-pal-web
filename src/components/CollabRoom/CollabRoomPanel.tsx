@@ -9,27 +9,14 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
-  Button,
-  TextField,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton,
-  Chip,
-  List,
-  ListItem,
   ListItemAvatar,
-  ListItemText,
-  Avatar,
-  Switch,
   FormControlLabel,
-  Tooltip,
-  Divider,
-  Alert,
 } from '@mui/material';
+import { MyBox, MyTypography, MyButton, MyTextField, MyIconButton, MyChip, MyList, MyListItem, MyListItemText, MyIconButton, MySwitch, MyTooltip, MyDivider, MyAlert } from '../MUI替代';
 import { MySwitch } from '../MUI替代';
 import {
   Add as AddIcon,

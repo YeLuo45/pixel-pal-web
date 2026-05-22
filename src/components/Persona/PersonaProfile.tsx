@@ -9,14 +9,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Box,
-  Typography,
-  IconButton,
-  LinearProgress,
-  Grid,
-  Avatar,
-  Divider,
 } from '@mui/material';
+import { MyBox, MyTypography, MyIconButton, MyLinearProgress, MyGrid, MyIconButton, MyDivider } from '../MUI替代';
 import {
   Close as CloseIcon,
   EmojiEvents as TrophyIcon,

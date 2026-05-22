@@ -10,19 +10,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box,
-  Typography,
-  Collapse,
-  Divider,
-  Chip,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  List,
-  ListItem,
   ListItemAvatar,
-  ListItemText,
 } from '@mui/material';
+import { MyBox, MyTypography, MyCollapse, MyDivider, MyChip, MyList, MyListItem, MyListItemText } from '../MUI替代';
 import {
   ChevronDown as ExpandMoreIcon,
   MessageCircle as MessageIcon,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormControl, InputLabel, Select, MenuItem, TextField, Chip, Typography } from '@mui/material';
+import { MySelect, MySelect, MySelect, MySelect, MyTextField, MyChip, MyTypography } from '../MUI替代';
 import { Box } from '../ui/Box';
 import type { SelectChangeEvent } from '@mui/material';
 import type { Trigger, TimeTrigger, KeywordTrigger } from '../../types/scene';

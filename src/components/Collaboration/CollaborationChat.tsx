@@ -9,7 +9,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Typography, CircularProgress, Fade } from '@mui/material';
+import { MyTypography, MyCircularProgress, MyFade } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { useStore } from '../../store';
 import type { CollaborationMessage, PersonaRole, Subtask } from '../../services/collaboration/types';

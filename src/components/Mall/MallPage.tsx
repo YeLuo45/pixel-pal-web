@@ -6,24 +6,12 @@
 
 import React, { useState } from 'react';
 import {
-  Box,
-  Typography,
-  TextField,
-  IconButton,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Snackbar,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  InputAdornment,
-  Chip,
 } from '@mui/material';
+import { MyBox, MyTypography, MyTextField, MyIconButton, MySelect, MySelect, MySelect, MySelect, MySnackbar, MyAlert, MyButton, MyInputAdornment, MyChip } from '../MUI替代';
 import {
   Search as SearchIcon,
   LocalOffer as RedeemIcon,

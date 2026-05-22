@@ -9,13 +9,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Typography,
-  IconButton,
-  Tooltip,
-  Divider,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
+import { MyTypography, MyIconButton, MyTooltip, MyDivider } from '../components/MUI替代';
 import { Box } from '../components/ui/Box';
 import {
   Menu as MenuIcon,

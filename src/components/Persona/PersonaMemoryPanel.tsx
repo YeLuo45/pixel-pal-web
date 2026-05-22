@@ -6,32 +6,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box,
-  Typography,
-  Paper,
-  TextField,
-  InputAdornment,
-  Chip,
-  Stack,
-  Button,
-  IconButton,
-  Tabs,
-  Tab,
-  List,
-  ListItem,
-  ListItemText,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  LinearProgress,
-  Divider,
   Slider,
-  Tooltip,
-  Card,
-  CardContent,
-  Grid,
 } from '@mui/material';
+import { MyBox, MyTypography, MyPaper, MyTextField, MyInputAdornment, MyChip, MyStack, MyButton, MyIconButton, MyTabs, MyTabs, MyList, MyListItem, MyListItemText, MyLinearProgress, MyDivider, MyTooltip, MyCard, MyCard, MyGrid } from '../MUI替代';
 import {
   Search as SearchIcon,
   Timeline as TimelineIcon,

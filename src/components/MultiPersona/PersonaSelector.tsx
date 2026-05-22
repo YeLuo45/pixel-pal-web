@@ -8,21 +8,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  IconButton,
-  Chip,
-  Avatar,
   Menu,
-  MenuItem,
   ListItemIcon,
-  ListItemText,
-  Divider,
-  Tooltip,
   Badge,
 } from '@mui/material';
+import { MyBox, MyPaper, MyTypography, MyButton, MyIconButton, MyChip, MyIconButton, MySelect, MyListItemText, MyDivider, MyTooltip } from '../MUI替代';
 import {
   Person as PersonIcon,
   Star as StarIcon,

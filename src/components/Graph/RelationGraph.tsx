@@ -14,12 +14,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  IconButton,
-  Typography,
-  Box,
-  Paper,
-  Chip,
 } from '@mui/material';
+import { MyIconButton, MyTypography, MyBox, MyPaper, MyChip } from '../MUI替代';
 import { Close as CloseIcon } from '@mui/icons-material';
 import {
   computeRelationGraph,

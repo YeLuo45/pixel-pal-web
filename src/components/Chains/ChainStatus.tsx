@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Card, CardContent, Typography, Chip, LinearProgress, Box } from '@mui/material';
+import { MyCard, MyCard, MyTypography, MyChip, MyLinearProgress, MyBox } from '../MUI替代';
 
 export const ChainStatus: React.FC = () => {
   return (

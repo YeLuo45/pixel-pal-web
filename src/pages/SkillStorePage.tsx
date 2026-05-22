@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, Stack, Grid, Chip, Snackbar, Alert, CircularProgress } from '@mui/material';
+import { MyTypography, MyStack, MyGrid, MyChip, MySnackbar, MyAlert, MyCircularProgress } from '../components/MUI替代';
 import { Box } from '../components/ui/Box';
 import { useTheme } from '../components/ui/ThemeProvider';
 import { useNavigate } from 'react-router-dom';

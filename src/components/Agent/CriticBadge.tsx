@@ -2,7 +2,7 @@
 // Displays critic score badge with color coding (green/yellow/red)
 
 import React from 'react';
-import { Typography, Tooltip, Chip } from '@mui/material';
+import { MyTypography, MyTooltip, MyChip } from '../MUI替代';
 import { Box } from '../ui/Box';
 import {
   CheckCircle as GreenIcon,

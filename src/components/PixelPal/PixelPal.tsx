@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import Box from '../ui/Box';
-import { Popper, Paper, Typography, Fade } from '@mui/material';
+import { MyPopper, MyPaper, MyTypography, MyFade } from '../MUI替代';
 import { useStore } from '../../store';
 import type { PetState } from '../../types';
 

@@ -6,26 +6,13 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box,
-  Typography,
-  Paper,
-  Tabs,
-  Tab,
-  Chip,
-  Stack,
-  Card,
-  CardContent,
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
   ListItemSecondaryAction,
 } from '@mui/material';
+import { MyBox, MyTypography, MyPaper, MyTabs, MyTabs, MyChip, MyStack, MyCard, MyCard, MyButton, MyIconButton, MyList, MyListItem, MyListItemText } from '../MUI替代';
 import {
   Close as CloseIcon,
   TrendingUp as TrendingUpIcon,

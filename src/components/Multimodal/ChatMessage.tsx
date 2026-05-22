@@ -10,19 +10,13 @@
 
 import React, { useState, useCallback } from 'react';
 import {
-  Box,
-  Paper,
-  Typography,
-  IconButton,
-  Collapse,
   ImageList,
   ImageListItem,
   ImageListItemBar,
-  Tooltip,
   Dialog,
   DialogContent,
-  Button,
 } from '@mui/material';
+import { MyBox, MyPaper, MyTypography, MyIconButton, MyCollapse, MyTooltip, MyButton } from '../MUI替代';
 import {
   ExpandMore as ExpandMoreIcon,
   VolumeUp as VolumeUpIcon,

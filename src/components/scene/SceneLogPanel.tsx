@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box, Typography, IconButton, Chip, List, ListItem,
-  Divider, Button,
-} from '@mui/material';
+import { MyBox, MyTypography, MyIconButton, MyChip, MyList, MyListItem, MyDivider, MyButton } from '../MUI替代';
 import {
   History as HistoryIcon,
   Delete as DeleteIcon,

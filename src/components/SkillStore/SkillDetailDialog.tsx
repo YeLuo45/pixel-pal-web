@@ -8,20 +8,9 @@ import {
   Dialog,
   DialogContent,
   DialogActions,
-  Box,
-  Typography,
-  Button,
-  Stack,
-  Chip,
-  IconButton,
-  Divider,
   alpha,
-  Alert,
-  Collapse,
-  List,
-  ListItem,
-  ListItemText,
 } from '@mui/material';
+import { MyBox, MyTypography, MyButton, MyStack, MyChip, MyIconButton, MyDivider, MyAlert, MyCollapse, MyList, MyListItem, MyListItemText } from '../MUI替代';
 import {
   Close as CloseIcon,
   Star as StarIcon,

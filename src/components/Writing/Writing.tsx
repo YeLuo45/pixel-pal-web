@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box, Typography, TextField, Button, CircularProgress,
-  Tabs, Tab, Alert, Divider,
-} from '@mui/material';
+import { MyBox, MyTypography, MyTextField, MyButton, MyCircularProgress, MyTabs, MyTabs, MyAlert, MyDivider } from '../MUI替代';
 import { AutoAwesome as SparkIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { writingChatCompletion, initModelRegistry } from '../../services/ai/model-registry-adapter';

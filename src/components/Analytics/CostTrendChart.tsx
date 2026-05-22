@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Typography, ToggleButtonGroup, ToggleButton, Card, CardContent } from '@mui/material';
+import { MyTypography, MyToggleButtonGroup, MyToggleButton, MyCard, MyCard } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { dataPipelineEngine } from '../../services/dataPipeline/pipelineEngine';

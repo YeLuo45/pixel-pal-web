@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Typography, Button, TextField, CircularProgress,
-  List, ListItem, ListItemText, Paper, IconButton,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Divider, Chip, Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
+import { MyBox, MyTypography, MyButton, MyTextField, MyCircularProgress, MyList, MyListItem, MyListItemText, MyPaper, MyIconButton, MyDivider, MyChip, MyAlert } from '../MUI替代';
 import { useTranslation } from 'react-i18next';
 import { Email as EmailIcon, Send as SendIcon, Refresh as RefreshIcon, ArrowBack } from '@mui/icons-material';
 import { useStore } from '../../store';

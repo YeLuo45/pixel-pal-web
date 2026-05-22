@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Typography, IconButton, Tooltip, LinearProgress, Chip } from '@mui/material';
+import { MyTypography, MyIconButton, MyTooltip, MyLinearProgress, MyChip } from '../MUI替代';
 import { Box } from '../ui/Box';
 import {
   Pause as PauseIcon,

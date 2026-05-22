@@ -16,15 +16,9 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Box,
-  Typography,
-  Paper,
-  IconButton,
-  Chip,
-  Tooltip,
-  Fade,
   Badge,
 } from '@mui/material';
+import { MyBox, MyTypography, MyPaper, MyIconButton, MyChip, MyTooltip, MyFade } from '../../components/MUI替代';
 import {
   Favorite as HeartIcon,
   FavoriteBorder as HeartBorderIcon,

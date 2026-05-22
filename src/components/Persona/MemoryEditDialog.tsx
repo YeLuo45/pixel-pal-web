@@ -10,20 +10,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  TextField,
-  IconButton,
-  Box,
-  Typography,
-  Chip,
-  Stack,
   Slider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Divider,
 } from '@mui/material';
+import { MyButton, MyTextField, MyIconButton, MyBox, MyTypography, MyChip, MyStack, MySelect, MySelect, MySelect, MySelect, MyDivider } from '../MUI替代';
 import {
   Close as CloseIcon,
   Delete as DeleteIcon,

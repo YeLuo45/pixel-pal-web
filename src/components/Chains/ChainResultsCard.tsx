@@ -4,14 +4,9 @@
 
 import React, { useState } from 'react';
 import {
-  Box,
-  Typography,
-  Collapse,
-  Chip,
-  Stack,
-  Divider,
   alpha,
 } from '@mui/material';
+import { MyBox, MyTypography, MyCollapse, MyChip, MyStack, MyDivider } from '../MUI替代';
 import {
   ExpandMore as ExpandIcon,
   ExpandLess as CollapseIcon,

@@ -7,19 +7,9 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  Box,
-  Typography,
-  Button,
-  Stack,
-  TextField,
-  IconButton,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Chip,
   alpha,
 } from '@mui/material';
+import { MyBox, MyTypography, MyButton, MyStack, MyTextField, MyIconButton, MySelect, MySelect, MySelect, MySelect, MyChip } from '../MUI替代';
 import {
   Close as CloseIcon,
   Upload as UploadIcon,

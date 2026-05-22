@@ -10,16 +10,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  TextField,
-  Box,
-  Typography,
-  IconButton,
-  Tooltip,
-  Alert,
-  Fade,
-  Chip,
 } from '@mui/material';
+import { MyButton, MyTextField, MyBox, MyTypography, MyIconButton, MyTooltip, MyAlert, MyFade, MyChip } from '../MUI替代';
 import {
   ContentCopy as CopyIcon,
   Check as CheckIcon,

@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { Typography, Chip, Button, Stack, alpha, useTheme } from '@mui/material';
+import { alpha, useTheme } from '@mui/material';
+import { MyTypography, MyChip, MyButton, MyStack } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { Star as StarIcon, Download as DownloadIcon, Check as CheckIcon } from '@mui/icons-material';
 import type { MarketplaceSkill } from '../../data/sampleMarketplaceSkills';

@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
-  Typography, Button, Grid, Dialog, DialogTitle, DialogContent,
-  DialogActions, Tabs, Tab, Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
+import { MyTypography, MyButton, MyGrid, MyTabs, MyTabs, MyChip } from '../components/MUI替代';
 import { Box } from '../components/ui/Box';
 import {
   Add as AddIcon, AutoAwesome as AutoAwesomeIcon,

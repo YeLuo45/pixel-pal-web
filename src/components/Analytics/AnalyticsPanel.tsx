@@ -4,7 +4,8 @@
  */
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { Typography, Paper, Grid, Chip, Skeleton, Tooltip as MuiTooltip, ToggleButton, ToggleButtonGroup, Button } from '@mui/material';
+import { Tooltip as MuiTooltip } from '@mui/material';
+import { MyTypography, MyPaper, MyGrid, MyChip, MySkeleton, MyToggleButton, MyToggleButtonGroup, MyButton } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useTranslation } from 'react-i18next';

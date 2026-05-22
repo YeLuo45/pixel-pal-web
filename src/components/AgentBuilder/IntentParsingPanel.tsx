@@ -6,21 +6,9 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Chip,
   Slider,
-  Stack,
-  Button,
-  CircularProgress,
-  Alert,
-  Paper,
 } from '@mui/material';
+import { MyBox, MyTypography, MyTextField, MySelect, MySelect, MySelect, MySelect, MyChip, MyStack, MyButton, MyCircularProgress, MyAlert, MyPaper } from '../MUI替代';
 import {
   Check as CheckIcon,
   Edit as EditIcon,

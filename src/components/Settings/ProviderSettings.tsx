@@ -5,19 +5,12 @@
 
 import React, { useState } from 'react';
 import {
-  List,
-  ListItem,
-  ListItemText,
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  IconButton,
-  Box,
-  Typography,
 } from '@mui/material';
+import { MyList, MyListItem, MyListItemText, MyButton, MyTextField, MyIconButton, MyBox, MyTypography } from '../MUI替代';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { builtInProviders } from '../../services/providers';

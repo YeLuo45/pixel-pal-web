@@ -1,24 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
   Menu,
-  MenuItem,
-  Divider,
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  Select,
-  IconButton,
-  Tooltip,
   Badge,
-  LinearProgress,
-  Switch,
   FormControlLabel,
 } from '@mui/material';
+import { MyBox, MyTypography, MySelect, MyDivider, MyButton, MyTextField, MySelect, MyIconButton, MyTooltip, MyLinearProgress, MySwitch } from '../MUI替代';
 import { MySwitch } from '../MUI替代';
 import {
   Person as PersonIcon,

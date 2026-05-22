@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
-  FormControlLabel, useMediaQuery, Box, Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControlLabel,
+  useMediaQuery,
 } from '@mui/material';
+import { MyButton, MyTextField, MyBox, MyChip } from '../MUI替代';
 import { MySwitch } from '../MUI替代';
 import type { Scene, Trigger, Action } from '../../types/scene';
 import { TriggerConfig } from './TriggerConfig';

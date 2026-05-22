@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Box, TextField, IconButton,
-  Typography, Paper, Divider,
-  Tooltip, Chip, Avatar, Menu, MenuItem, Button,
+  Menu,
 } from '@mui/material';
+import { MyBox, MyTextField, MyIconButton, MyTypography, MyPaper, MyDivider, MyTooltip, MyChip, MyIconButton, MySelect, MyButton } from '../MUI替代';
 import { Send as SendIcon, Mic as MicIcon, MicOff as MicOffIcon, VolumeUp as VolumeUpIcon, VolumeOff as VolumeOffIcon, Stop as StopIcon, Close as CloseIcon, Pause as PauseIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { useStore } from '../../store';
 import { MemoPanel } from '../Memo/MemoPanel';

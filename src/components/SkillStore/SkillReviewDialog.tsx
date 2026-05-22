@@ -7,14 +7,9 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  Box,
-  Typography,
-  Button,
-  Stack,
-  TextField,
-  IconButton,
   alpha,
 } from '@mui/material';
+import { MyBox, MyTypography, MyButton, MyStack, MyTextField, MyIconButton } from '../MUI替代';
 import { Close as CloseIcon, Star as StarIcon } from '@mui/icons-material';
 import type { MarketplaceSkill } from '../../data/sampleMarketplaceSkills';
 import type { SkillRating } from '../../data/sampleMarketplaceSkills';

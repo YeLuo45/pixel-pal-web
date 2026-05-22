@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { IconButton, Tooltip } from '@mui/material';
+import { MyIconButton, MyTooltip } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { Mic as MicIcon, MicOff as MicOffIcon } from '@mui/icons-material';
 import useSpeechRecognition from '../../hooks/useSpeechRecognition';

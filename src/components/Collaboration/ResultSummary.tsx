@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Typography, Button, Divider, Collapse, Chip } from '@mui/material';
+import { MyTypography, MyButton, MyDivider, MyCollapse, MyChip } from '../MUI替代';
 import { Box } from '../ui/Box';
 import {
   Check as CheckIcon,

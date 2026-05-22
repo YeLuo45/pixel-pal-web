@@ -9,14 +9,10 @@
 
 import React, { useState, useCallback } from 'react';
 import {
-  IconButton,
-  Tooltip,
   Menu,
-  MenuItem,
-  Typography,
-  Box,
   Slider,
 } from '@mui/material';
+import { MyIconButton, MyTooltip, MySelect, MyTypography, MyBox } from '../MUI替代';
 import {
   VolumeUp as VolumeUpIcon,
   VolumeOff as VolumeOffIcon,

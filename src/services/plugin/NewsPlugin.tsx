@@ -1,6 +1,6 @@
 // NewsPlugin — RSS feed reader
 import React from 'react';
-import { Typography, TextField, Chip, IconButton, CircularProgress, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { MyTypography, MyTextField, MyChip, MyIconButton, MyCircularProgress, MyList, MyListItem, MyListItemText, MyDivider } from '../../components/MUI替代';
 import { Box } from '../../components/ui/Box';
 import { OpenInNew as OpenIcon, Add as AddIcon } from '@mui/icons-material';
 import { createPluginStorage } from './pluginStorage';

@@ -10,18 +10,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stack,
-  Typography,
-  IconButton,
-  Alert,
-  CircularProgress,
 } from '@mui/material';
+import { MyButton, MyTextField, MySelect, MySelect, MySelect, MySelect, MyStack, MyTypography, MyIconButton, MyAlert, MyCircularProgress } from '../MUI替代';
 import CloseIcon from '@mui/icons-material/Close';
 import type { ProviderConfig } from '../../services/providers/types';
 import { DEFAULT_PROVIDERS, PROVIDER_BASE_URLS, getProviderDefinition } from '../../data/defaultProviders';

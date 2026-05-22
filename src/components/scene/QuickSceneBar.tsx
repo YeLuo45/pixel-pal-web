@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { IconButton, Chip, Typography, useMediaQuery, Drawer } from '@mui/material';
+import { useMediaQuery } from '@mui/material';
+import { MyIconButton, MyChip, MyTypography, MyDrawer } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { Bolt as BoltIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useSceneStore } from '../../stores/sceneStore';

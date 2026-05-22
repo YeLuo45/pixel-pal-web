@@ -11,18 +11,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box,
-  Typography,
-  List,
-  ListItem,
   ListItemAvatar,
-  ListItemText,
-  Chip,
-  IconButton,
-  Collapse,
-  Divider,
-  Tooltip,
 } from '@mui/material';
+import { MyBox, MyTypography, MyList, MyListItem, MyListItemText, MyChip, MyIconButton, MyCollapse, MyDivider, MyTooltip } from '../MUI替代';
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,

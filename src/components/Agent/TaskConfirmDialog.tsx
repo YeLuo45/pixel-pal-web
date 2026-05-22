@@ -14,21 +14,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Box,
-  Typography,
   Checkbox,
-  IconButton,
-  Button,
-  Paper,
-  List,
-  ListItem,
   ListItemIcon,
-  ListItemText,
-  TextField,
-  Chip,
-  Divider,
-  Tooltip,
 } from '@mui/material';
+import { MyBox, MyTypography, MyIconButton, MyButton, MyPaper, MyList, MyListItem, MyListItemText, MyTextField, MyChip, MyDivider, MyTooltip } from '../MUI替代';
 import {
   Delete as DeleteIcon,
   ArrowUpward as ArrowUpIcon,

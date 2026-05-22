@@ -7,7 +7,7 @@
 
 import React from 'react';
 import Box from '../ui/Box';
-import { Typography } from '@mui/material';
+import { MyTypography } from '../MUI替代';
 import { ACTION_COLORS, ACTION_ICONS, ACTION_LABELS } from '../../services/actions/ActionTypes';
 import type { CompanionActionType } from '../../services/actions/ActionTypes';
 

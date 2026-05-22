@@ -6,25 +6,13 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react/i18next';
 import {
-  Box,
-  Typography,
-  Paper,
-  LinearProgress,
-  Stack,
-  Chip,
-  Card,
-  CardContent,
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
   ListItemIcon,
 } from '@mui/material';
+import { MyBox, MyTypography, MyPaper, MyLinearProgress, MyStack, MyChip, MyCard, MyCard, MyButton, MyIconButton, MyList, MyListItem, MyListItemText } from '../MUI替代';
 import {
   Favorite as HeartIcon,
   People as PeopleIcon,
