@@ -383,6 +383,35 @@ Provide a clear, helpful final answer.`;
 
     return parts.join('\n');
   }
+
+  // ---------------------------------------------------------------------------
+  // Version Chain Management (V132)
+  // ---------------------------------------------------------------------------
+
+  /** Get all versions for a skill */
+  getVersions(skillId: string): string[] {
+    const skill = this.skills.get(skillId);
+    if (!skill) return [];
+    // Return version chain from skill metadata or default
+    const chain = (skill as Record<string, unknown>)._versionChain as string[] | undefined;
+    return chain || [skill.version];
+  }
+
+  /** Force a specific version of a skill to be used */
+  forceVersion(skillId: string, version: string): void {
+    const skill = this.skills.get(skillId);
+    if (!skill) return;
+    // Store forced version in skill metadata
+    (skill as Record<string, unknown>)._forcedVersion = version;
+  }
+
+  /** Get the currently active version for a skill */
+  getActiveVersion(skillId: string): string {
+    const skill = this.skills.get(skillId);
+    if (!skill) return 'v1';
+    const forced = (skill as Record<string, unknown>)._forcedVersion as string | undefined;
+    return forced || skill.version;
+  }
 }
 
 // =============================================================================

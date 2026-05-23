@@ -234,6 +234,13 @@ interface AppState {
   setCollabRoomId: (id: string | null) => void;
   collabRoomPanelOpen: boolean;
   setCollabRoomPanelOpen: (open: boolean) => void;
+
+  // V132: Skill Evolution State
+  activeSkillId: string | null;
+  setActiveSkillId: (id: string | null) => void;
+  evolvingSkillIds: string[];
+  addEvolvingSkillId: (skillId: string) => void;
+  removeEvolvingSkillId: (skillId: string) => void;
 }
 
 // V40: Collaboration progress tracking
@@ -860,6 +867,21 @@ export const useStore = create<AppState>()(
       setCollabRoomId: (id) => set({ collabRoomId: id }),
       collabRoomPanelOpen: false,
       setCollabRoomPanelOpen: (open) => set({ collabRoomPanelOpen: open }),
+
+      // V132: Skill Evolution State
+      activeSkillId: null,
+      setActiveSkillId: (id) => set({ activeSkillId: id }),
+      evolvingSkillIds: [],
+      addEvolvingSkillId: (skillId) =>
+        set((state) => ({
+          evolvingSkillIds: state.evolvingSkillIds.includes(skillId)
+            ? state.evolvingSkillIds
+            : [...state.evolvingSkillIds, skillId],
+        })),
+      removeEvolvingSkillId: (skillId) =>
+        set((state) => ({
+          evolvingSkillIds: state.evolvingSkillIds.filter((id) => id !== skillId),
+        })),
     }),
     {
       name: 'pixelpal-storage',
