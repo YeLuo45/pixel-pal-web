@@ -5,12 +5,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MyBox, MyTypography, MyIconButton, MyChip, MyDivider, MyTextField, MyButton, MySelect, MySelect, MySelect, MySelect } from '../MUI替代';
+import { MyBox, MyTypography, MyIconButton, MyChip, MyDivider, MyTextField, MyButton, MySelect, MyToggleButton, MyToggleButtonGroup } from '../MUI替代';
 import {
   Add as AddIcon,
   FlashOn as FlashIcon,
   Settings as SettingsIcon,
   Delete as DeleteIcon,
+  Layers as LayersIcon,
 } from '@mui/icons-material';
 import { TaskQueue } from './TaskQueue';
 import { taskQueue } from '../../services/agent/taskQueue';
@@ -19,6 +20,8 @@ import { memoryManager } from '../../services/agent/memory/memoryManager';
 import { saveTaskQueue } from '../../services/storage/taskStorage';
 import type { Task, TaskPriority } from '../../services/agent/types';
 import { useSceneAwareness } from '../../hooks/useSceneAwareness';
+import { useLayeredMemory } from '../../hooks/useLayeredMemory';
+import { useStore } from '../../store';
 
 export const AgentPanel: React.FC = () => {
   const { t } = useTranslation();
@@ -26,6 +29,10 @@ export const AgentPanel: React.FC = () => {
   const [newGoal, setNewGoal] = useState('');
   const [newPriority, setNewPriority] = useState<TaskPriority>('normal');
   const [memoryStats, setMemoryStats] = useState({ count: 0, preview: null as string | null });
+  const [agentTab, setAgentTab] = useState<'queue' | 'memory'>('queue');
+  const activeLayer = useStore((s) => s.activeLayer);
+  const setActiveLayer = useStore((s) => s.setActiveLayer);
+  const { metaRules, recentSessions, insights, autoSkills } = useLayeredMemory();
 
   // Scene awareness tracking
   const { recordAction, recordError } = useSceneAwareness();
@@ -131,6 +138,21 @@ export const AgentPanel: React.FC = () => {
             sx={{ fontSize: 10, height: 20, bgcolor: 'rgba(158,158,158,0.15)', color: '#9E9E9E' }}
           />
         )}
+
+        {/* Tab switch */}
+        <ToggleButtonGroup
+          value={agentTab}
+          exclusive
+          onChange={(_, v) => v && setAgentTab(v)}
+          size="small"
+          sx={{ height: 22, '& .MuiToggleButton-root': { py: 0, px: 1, fontSize: 10 } }}
+        >
+          <ToggleButton value="queue">{t('agent.queue', '队列')}</ToggleButton>
+          <ToggleButton value="memory">
+            <LayersIcon sx={{ fontSize: 12, mr: 0.5 }} />
+            {t('agent.memoryLayers', '记忆层')}
+          </ToggleButton>
+        </ToggleButtonGroup>
 
         {/* Quick start button */}
         {!isRunning && stats.pending > 0 && (
@@ -275,9 +297,103 @@ export const AgentPanel: React.FC = () => {
         </IconButton>
       </Box>
 
-      {/* Task queue */}
+      {/* Task queue / Memory Layers */}
       <Box sx={{ flex: 1, overflow: 'hidden' }}>
-        <TaskQueue />
+        {agentTab === 'queue' ? (
+          <TaskQueue />
+        ) : (
+          /* V131: Memory Layers tab */
+          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Layer filter */}
+            <Box sx={{ px: 2, py: 1, borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {(['All', 'L0', 'L1', 'L2', 'L3', 'L4'] as const).map((layer) => (
+                <Button
+                  key={layer}
+                  size="small"
+                  variant={activeLayer === layer ? 'contained' : 'outlined'}
+                  onClick={() => setActiveLayer(layer)}
+                  sx={{ fontSize: 9, py: 0.25, px: 0.75, minWidth: 0 }}
+                >
+                  {layer}
+                </Button>
+              ))}
+            </Box>
+            <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 1 }}>
+              {/* L0: MetaRules */}
+              {(activeLayer === 'All' || activeLayer === 'L0') && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 700 }}>
+                    L0 {t('agent.metaRules', '元规则')}
+                  </Typography>
+                  {metaRules.map((rule, i) => (
+                    <Typography key={i} variant="caption" sx={{ fontSize: 10, display: 'block', color: 'text.secondary' }}>
+                      • {rule}
+                    </Typography>
+                  ))}
+                </Box>
+              )}
+              {/* L1: Insights */}
+              {(activeLayer === 'All' || activeLayer === 'L1') && insights.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 700 }}>
+                    L1 {t('agent.insights', '洞察索引')}
+                  </Typography>
+                  {insights.map((entry) => (
+                    <Box key={entry.skillId} sx={{ mb: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontSize: 10, color: 'primary.main' }}>
+                        {entry.skillId}
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', ml: 1 }}>
+                        {entry.keywords.join(', ')}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              {/* L3: Auto Skills */}
+              {(activeLayer === 'All' || activeLayer === 'L3') && autoSkills.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 700 }}>
+                    L3 {t('agent.autoSkills', '自动技能')}
+                  </Typography>
+                  {autoSkills.map((skill) => (
+                    <Box key={skill.id} sx={{ mb: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontSize: 10, color: 'primary.main' }}>
+                        {skill.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', ml: 1 }}>
+                        [{skill.enabled ? 'ON' : 'OFF'}]
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              {/* L4: Recent Sessions */}
+              {(activeLayer === 'All' || activeLayer === 'L4') && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 700 }}>
+                    L4 {t('agent.recentSessions', '最近会话')}
+                  </Typography>
+                  {recentSessions.length === 0 && (
+                    <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled' }}>
+                      {t('agent.noSessions', '尚无会话记录')}
+                    </Typography>
+                  )}
+                  {recentSessions.slice(0, 20).map((entry) => (
+                    <Box key={entry.id} sx={{ mb: 0.5, opacity: 0.8 }}>
+                      <Typography variant="caption" sx={{ fontSize: 9, color: 'text.primary' }}>
+                        {entry.taskType}
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontSize: 9, color: entry.outcome === 'success' ? '#4CAF50' : entry.outcome === 'failed' ? '#F44336' : '#FF9800', ml: 1 }}>
+                        {entry.outcome}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          </Box>
+        )}
       </Box>
     </Box>
   );

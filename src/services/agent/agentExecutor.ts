@@ -16,6 +16,7 @@ import { memoryManager } from './memory/memoryManager';
 import { emotionContextInjector } from './emotionContextInjector';
 import { sceneContextInjector } from './sceneContextInjector';
 import { getCurrentPlatformAdapter } from '../../platform/agentPlatformHook';
+import { layeredMemoryStore } from '../memory/LayeredMemoryStore';
 
 // ============================================================================
 // Types
@@ -102,6 +103,25 @@ class AgentExecutorImpl {
         void memoryManager.extractFromMessages();
         
         this.onTaskComplete?.(task, summary);
+
+        // V131: Write episodic entry for L4 memory
+        void layeredMemoryStore.writeEpisodic({
+          timestamp: Date.now(),
+          taskType: 'agent_task',
+          inputs: { goal: task.goal, stepCount: task.steps.length },
+          outcome: 'success',
+          agents: [],
+          skillIds: [],
+          patternSignature: task.goal.slice(0, 64),
+        }).then(async (entryId) => {
+          // V131: Check if pattern crystallization is warranted
+          const draft = await layeredMemoryStore.checkAndCrystallize();
+          if (draft) {
+            console.info('[AgentExecutor] New skill pattern detected:', draft.name);
+            // Dispatch event so UI can prompt user to enable the draft skill
+            window.dispatchEvent(new CustomEvent('layered:skillCrystallized', { detail: draft }));
+          }
+        });
 
         // Send emotional response if recommended action exists and hasn't been triggered
         void this.sendEmotionResponse();

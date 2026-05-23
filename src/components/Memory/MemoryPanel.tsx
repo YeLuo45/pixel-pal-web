@@ -37,6 +37,7 @@ import {
   EmojiEmotions as EmotionIcon,
   LocalOffer as TagIcon,
   Summarize as SummarizeIcon,
+  Layers as LayersIcon,
 } from '@mui/icons-material';
 import {
   getMemoryStats,
@@ -61,6 +62,7 @@ import {
   type ScoredMemory,
 } from '../../services/memory/smartRetrieval';
 import { generateMemoryInsights } from '../../services/memory/summarization';
+import { useLayeredMemory } from '../../hooks/useLayeredMemory';
 import {
   getEmotionLogs,
   getEmotionLogsForDay,
@@ -119,6 +121,9 @@ function formatDate(timestamp: number): string {
 
 export const MemoryPanel: React.FC = () => {
   const { t } = useTranslation();
+
+  // V131: Layered memory data
+  const { metaRules, recentSessions, insights, globalFacts, autoSkills } = useLayeredMemory();
 
   // Active persona from store
   const activePersonaId = useStore((s) => s.activePersonaId);
@@ -578,6 +583,8 @@ export const MemoryPanel: React.FC = () => {
           <Tab icon={<InsightIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.insights')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
           <Tab icon={<EmotionIcon sx={{ fontSize: 16 }} />} label={t('emotionPanel.title')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
           <Tab icon={<SummarizeIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.weeklyReport')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
+          {/* V131: Memory Layers tab */}
+          <Tab icon={<LayersIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.layers', '记忆层')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
         </Tabs>
       </Box>
 
@@ -654,6 +661,127 @@ export const MemoryPanel: React.FC = () => {
             loading={weeklySummaryLoading}
             onRefresh={loadWeeklySummaries}
           />
+        )}
+        {/* V131: Memory Layers tab */}
+        {tab === 6 && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+              {/* L0: MetaRules */}
+              <Paper sx={{ p: 1.5 }}>
+                <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 700, color: 'primary.main', display: 'block', mb: 1 }}>
+                  L0 {t('memoryPanel.metaRules', '元规则')}
+                </Typography>
+                {metaRules.map((rule, i) => (
+                  <Typography key={i} variant="caption" sx={{ fontSize: 10, display: 'block', color: 'text.secondary', mb: 0.5 }}>
+                    • {rule}
+                  </Typography>
+                ))}
+              </Paper>
+              {/* L2: Global Facts */}
+              <Paper sx={{ p: 1.5 }}>
+                <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 700, color: 'primary.main', display: 'block', mb: 1 }}>
+                  L2 {t('memoryPanel.globalFacts', '全局事实')}
+                </Typography>
+                {globalFacts.length === 0 && (
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled' }}>
+                    {t('memoryPanel.noFacts', '尚无全局事实')}
+                  </Typography>
+                )}
+                {globalFacts.slice(0, 10).map((fact) => (
+                  <Box key={fact.key} sx={{ mb: 0.5 }}>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: 'text.primary' }}>
+                      {fact.key}
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', ml: 1 }}>
+                      [{fact.source}]
+                    </Typography>
+                  </Box>
+                ))}
+              </Paper>
+            </Box>
+            {/* L1: Insight Index */}
+            <Paper sx={{ p: 1.5 }}>
+              <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 700, color: 'primary.main', display: 'block', mb: 1 }}>
+                L1 {t('memoryPanel.insightIndex', '洞察索引')}
+              </Typography>
+              {insights.length === 0 && (
+                <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled' }}>
+                  {t('memoryPanel.noInsights', '尚无洞察索引')}
+                </Typography>
+              )}
+              {insights.map((entry) => (
+                <Box key={entry.skillId} sx={{ mb: 0.5, display: 'flex', gap: 1, alignItems: 'baseline' }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: 'primary.main', minWidth: 80 }}>
+                    {entry.skillId}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', flex: 1 }}>
+                    {entry.keywords.join(', ')}
+                  </Typography>
+                </Box>
+              ))}
+            </Paper>
+            {/* L3: Auto Skills */}
+            <Paper sx={{ p: 1.5 }}>
+              <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 700, color: 'primary.main', display: 'block', mb: 1 }}>
+                L3 {t('memoryPanel.autoSkills', '自动技能')} ({autoSkills.length})
+              </Typography>
+              {autoSkills.length === 0 && (
+                <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled' }}>
+                  {t('memoryPanel.noAutoSkills', '尚无自动技能，重复任务模式将自动结晶')}
+                </Typography>
+              )}
+              {autoSkills.map((skill) => (
+                <Box key={skill.id} sx={{ mb: 1, p: 1, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600 }}>
+                      {skill.name}
+                    </Typography>
+                    <Chip
+                      label={skill.enabled ? 'ON' : 'OFF'}
+                      size="small"
+                      sx={{ fontSize: 8, height: 16, bgcolor: skill.enabled ? 'rgba(76,175,80,0.2)' : 'rgba(158,158,158,0.2)', color: skill.enabled ? '#4CAF50' : '#9E9E9E' }}
+                    />
+                  </Box>
+                  <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary' }}>
+                    {skill.description || skill.trigger}
+                  </Typography>
+                </Box>
+              ))}
+            </Paper>
+            {/* L4: Recent Sessions */}
+            <Paper sx={{ p: 1.5 }}>
+              <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 700, color: 'primary.main', display: 'block', mb: 1 }}>
+                L4 {t('memoryPanel.recentSessions', '最近会话')} ({recentSessions.length})
+              </Typography>
+              {recentSessions.length === 0 && (
+                <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled' }}>
+                  {t('memoryPanel.noSessions', '尚无会话记录')}
+                </Typography>
+              )}
+              {recentSessions.slice(0, 30).map((entry) => (
+                <Box key={entry.id} sx={{ mb: 0.75, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: 'text.primary' }}>
+                      {entry.taskType}
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled' }}>
+                      {new Date(entry.timestamp).toLocaleString()}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={entry.outcome}
+                    size="small"
+                    sx={{
+                      fontSize: 8,
+                      height: 16,
+                      bgcolor: entry.outcome === 'success' ? 'rgba(76,175,80,0.2)' : entry.outcome === 'failed' ? 'rgba(244,67,54,0.2)' : 'rgba(255,152,0,0.2)',
+                      color: entry.outcome === 'success' ? '#4CAF50' : entry.outcome === 'failed' ? '#F44336' : '#FF9800',
+                    }}
+                  />
+                </Box>
+              ))}
+            </Paper>
+          </Box>
         )}
       </Box>
 

@@ -234,6 +234,10 @@ interface AppState {
   setCollabRoomId: (id: string | null) => void;
   collabRoomPanelOpen: boolean;
   setCollabRoomPanelOpen: (open: boolean) => void;
+
+  // V131: Memory Layer active filter
+  activeLayer: 'L0' | 'L1' | 'L2' | 'L3' | 'L4' | 'All';
+  setActiveLayer: (layer: 'L0' | 'L1' | 'L2' | 'L3' | 'L4' | 'All') => void;
 }
 
 // V40: Collaboration progress tracking
@@ -860,6 +864,10 @@ export const useStore = create<AppState>()(
       setCollabRoomId: (id) => set({ collabRoomId: id }),
       collabRoomPanelOpen: false,
       setCollabRoomPanelOpen: (open) => set({ collabRoomPanelOpen: open }),
+
+      // V131: Memory Layer active filter
+      activeLayer: 'All' as const,
+      setActiveLayer: (layer) => set({ activeLayer: layer }),
     }),
     {
       name: 'pixelpal-storage',
