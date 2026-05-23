@@ -19,6 +19,9 @@ import { memoryManager } from '../../services/agent/memory/memoryManager';
 import { saveTaskQueue } from '../../services/storage/taskStorage';
 import type { Task, TaskPriority } from '../../services/agent/types';
 import { useSceneAwareness } from '../../hooks/useSceneAwareness';
+import { MarketplacePanel } from '../Marketplace/MarketplacePanel';
+
+type LowerTab = 'tasks' | 'marketplace';
 
 export const AgentPanel: React.FC = () => {
   const { t } = useTranslation();
@@ -26,6 +29,7 @@ export const AgentPanel: React.FC = () => {
   const [newGoal, setNewGoal] = useState('');
   const [newPriority, setNewPriority] = useState<TaskPriority>('normal');
   const [memoryStats, setMemoryStats] = useState({ count: 0, preview: null as string | null });
+  const [lowerTab, setLowerTab] = useState<LowerTab>('tasks');
 
   // Scene awareness tracking
   const { recordAction, recordError } = useSceneAwareness();
@@ -275,9 +279,37 @@ export const AgentPanel: React.FC = () => {
         </IconButton>
       </Box>
 
-      {/* Task queue */}
+      {/* Lower tabs: Tasks | Marketplace */}
+      <Box sx={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <Box
+          onClick={() => setLowerTab('tasks')}
+          sx={{
+            flex: 1, py: 0.75, textAlign: 'center', cursor: 'pointer',
+            borderBottom: lowerTab === 'tasks' ? '2px solid #2196F3' : '2px solid transparent',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
+          }}
+        >
+          <Typography variant="caption" sx={{ fontSize: 11, color: lowerTab === 'tasks' ? '#2196F3' : 'text.disabled' }}>
+            Tasks
+          </Typography>
+        </Box>
+        <Box
+          onClick={() => setLowerTab('marketplace')}
+          sx={{
+            flex: 1, py: 0.75, textAlign: 'center', cursor: 'pointer',
+            borderBottom: lowerTab === 'marketplace' ? '2px solid #2196F3' : '2px solid transparent',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
+          }}
+        >
+          <Typography variant="caption" sx={{ fontSize: 11, color: lowerTab === 'marketplace' ? '#2196F3' : 'text.disabled' }}>
+            Marketplace
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Content area */}
       <Box sx={{ flex: 1, overflow: 'hidden' }}>
-        <TaskQueue />
+        {lowerTab === 'tasks' ? <TaskQueue /> : <MarketplacePanel />}
       </Box>
     </Box>
   );
