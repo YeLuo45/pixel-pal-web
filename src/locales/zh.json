@@ -39,7 +39,20 @@
     "mediumIntimacy": "中亲密度",
     "highIntimacy": "高亲密度",
     "calculating": "布局计算中...",
-    "execution": "执行日志"
+    "execution": "执行日志",
+    "mcp": {
+      "title": "MCP",
+      "tabs": {
+        "clients": "客户端",
+        "tools": "工具",
+        "logs": "日志"
+      },
+      "connectedClients": "已连接客户端",
+      "connectedClientsDesc": "当前通过 SSE 连接的客户数",
+      "serverUptime": "服务器运行时间",
+      "serverUptimeDesc": "MCP 服务器运行时长",
+      "noLogs": "暂无调用日志"
+    }
   },
   "chat": {
     "title": "AI 聊天",

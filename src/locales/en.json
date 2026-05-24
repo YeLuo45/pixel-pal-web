@@ -39,7 +39,20 @@
     "mediumIntimacy": "Medium",
     "highIntimacy": "High",
     "calculating": "Calculating layout...",
-    "execution": "Execution Log"
+    "execution": "Execution Log",
+    "mcp": {
+      "title": "MCP",
+      "tabs": {
+        "clients": "Clients",
+        "tools": "Tools",
+        "logs": "Logs"
+      },
+      "connectedClients": "Connected Clients",
+      "connectedClientsDesc": "Number of clients connected via SSE",
+      "serverUptime": "Server Uptime",
+      "serverUptimeDesc": "MCP server running time",
+      "noLogs": "No call logs yet"
+    }
   },
   "chat": {
     "title": "AI Chat",

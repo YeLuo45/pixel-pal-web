@@ -26,6 +26,7 @@ import { ExecutionLogPanel } from '../components/Execution/ExecutionLogPanel';
 import { BottomTabNav } from '../components/Layout/BottomTabNav';
 import { MobileDrawer } from '../components/Layout/MobileDrawer';
 import { useMobile } from '../hooks/useMobile';
+import { McpPanel } from '../components/MCP/McpPanel';
 
 const PANEL_COMPONENTS = {
   chat: ChatPanel,
@@ -45,6 +46,7 @@ const PANEL_COMPONENTS = {
   graph: () => null, // RelationGraph is rendered as a dialog at root level
   tools: ToolsPanel,
   execution: ExecutionLogPanel,
+  mcp: McpPanel,
 } as const;
 
 export const MainPage: React.FC = () => {
