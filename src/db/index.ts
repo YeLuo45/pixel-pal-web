@@ -242,6 +242,26 @@ async function createTables(db: Database): Promise<void> {
   SQL`CREATE INDEX IF NOT EXISTS idx_council_messages_agent ON council_messages(agent_id)`;
   SQL`CREATE INDEX IF NOT EXISTS idx_council_messages_type ON council_messages(type)`;
   SQL`CREATE INDEX IF NOT EXISTS idx_council_messages_council ON council_messages(council_id)`;
+
+  // Dream Memory table (V152)
+  SQL`
+    CREATE TABLE IF NOT EXISTS dream_memory (
+      id TEXT PRIMARY KEY,
+      content TEXT NOT NULL,
+      summary TEXT,
+      layer TEXT NOT NULL DEFAULT 'warm',
+      access_count INTEGER NOT NULL DEFAULT 0,
+      last_access INTEGER,
+      created_at INTEGER NOT NULL,
+      embedding BLOB,
+      change_id TEXT,
+      last_modified INTEGER,
+      device_id TEXT
+    )
+  `;
+  SQL`CREATE INDEX IF NOT EXISTS idx_dream_memory_layer ON dream_memory(layer)`;
+  SQL`CREATE INDEX IF NOT EXISTS idx_dream_memory_last_access ON dream_memory(last_access)`;
+  SQL`CREATE INDEX IF NOT EXISTS idx_dream_memory_created ON dream_memory(created_at)`;
 }
 
 export function getDatabase(): Database | null {

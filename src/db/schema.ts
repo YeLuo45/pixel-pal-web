@@ -191,3 +191,24 @@ export const councilMessages = sqliteTable('council_messages', {
 // Type exports
 export type CouncilAgentRow = typeof councilAgents.$inferSelect;
 export type CouncilMessageRow = typeof councilMessages.$inferSelect;
+
+// ============================================================================
+// Dream Memory tables (V152)
+// ============================================================================
+
+export const dreamMemory = sqliteTable('dream_memory', {
+  id: text('id').primaryKey(),
+  content: text('content').notNull(),
+  summary: text('summary'),
+  layer: text('layer').notNull().default('warm'), // 'hot' | 'warm' | 'cold'
+  access_count: integer('access_count').notNull().default(0),
+  last_access: integer('last_access'),
+  created_at: integer('created_at').notNull(),
+  embedding: blob('embedding'),
+  change_id: text('change_id'),
+  last_modified: integer('last_modified'),
+  device_id: text('device_id'),
+});
+
+// Type exports
+export type DreamMemoryRow = typeof dreamMemory.$inferSelect;
