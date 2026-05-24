@@ -27,6 +27,7 @@ import { BottomTabNav } from '../components/Layout/BottomTabNav';
 import { MobileDrawer } from '../components/Layout/MobileDrawer';
 import { useMobile } from '../hooks/useMobile';
 import { McpPanel } from '../components/MCP/McpPanel';
+import { EvolutionDashboard } from '../components/evolution';
 
 const PANEL_COMPONENTS = {
   chat: ChatPanel,
@@ -163,6 +164,9 @@ export const MainPage: React.FC = () => {
 
       {/* Relation Graph Dialog — rendered at root level */}
       <RelationGraph open={relationGraphOpen} onClose={() => setRelationGraphOpen(false)} />
+
+      {/* Evolution Dashboard — rendered at root level */}
+      <EvolutionDashboard />
     </Box>
   );
 };

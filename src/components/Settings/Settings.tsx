@@ -28,6 +28,8 @@ import { APP_THEME_PRESETS, createCustomPreset, applyAppTheme, applyCustomTheme,
 import { AnalyticsDashboard } from '../Analytics/AnalyticsDashboard';
 import { PerformanceDashboard, OptimizationPanel, AgentLeaderboard } from '../AgentOptimizer';
 import { BotChannelsSettings } from './BotChannelsSettings';
+import { EvolutionDashboard } from '../evolution';
+import { useEvolutionStore } from '../../stores/evolutionStore';
 
 const PROVIDER_LABELS: Record<string, string> = {
   openai: 'OpenAI',
@@ -797,6 +799,34 @@ export const Settings: React.FC = () => {
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
                   Token usage, cost tracking, and budget management
+                </Typography>
+              </Box>
+            </Stack>
+            <OpenInNewIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+          </Stack>
+        </Paper>
+
+        {/* V154: Evolution Engine Card */}
+        <Paper
+          sx={{
+            p: 2,
+            bgcolor: 'rgba(129, 140, 248, 0.1)',
+            borderRadius: 2,
+            border: '1px solid rgba(129, 140, 248, 0.3)',
+            cursor: 'pointer',
+            '&:hover': { bgcolor: 'rgba(129, 140, 248, 0.15)' },
+          }}
+          onClick={() => useEvolutionStore.getState().openPanel()}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" alignItems="center" gap={2}>
+              <Typography variant="h6" sx={{ fontSize: 24 }}>🔬</Typography>
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Evolution Dashboard
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
+                  Monitor AI self-evolution patterns and strategies
                 </Typography>
               </Box>
             </Stack>
