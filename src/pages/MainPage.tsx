@@ -22,6 +22,7 @@ import { useStore } from '../store';
 import { RelationGraph } from '../components/Graph/RelationGraph';
 import { AgentPanel } from '../components/Agent/AgentPanel';
 import { ToolsPanel } from '../components/Tools/ToolsPanel';
+import { ExecutionLogPanel } from '../components/Execution/ExecutionLogPanel';
 import { BottomTabNav } from '../components/Layout/BottomTabNav';
 import { MobileDrawer } from '../components/Layout/MobileDrawer';
 import { useMobile } from '../hooks/useMobile';
@@ -43,6 +44,7 @@ const PANEL_COMPONENTS = {
   agent: AgentPanel,
   graph: () => null, // RelationGraph is rendered as a dialog at root level
   tools: ToolsPanel,
+  execution: ExecutionLogPanel,
 } as const;
 
 export const MainPage: React.FC = () => {

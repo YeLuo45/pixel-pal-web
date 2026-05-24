@@ -45,6 +45,7 @@ import type { SkillExecutionResult } from '../../services/skills/types';
 import { matchChainTrigger, executeChain } from '../../services/chains/chainEngine';
 import { getAllChains } from '../../services/chains/chainStorage';
 import { AgentCreationWizard } from '../AgentBuilder';
+import { useCompositionExecution } from '../../hooks/useCompositionExecution';
 
 // Three-dot typing indicator component
 const TypingIndicator: React.FC = () => {
@@ -152,6 +153,9 @@ export const ChatPanel: React.FC = () => {
   const voiceSettings = useStore((s) => s.voiceSettings);
   const personaIntimacy = useStore((s) => s.personaIntimacy);
   const setPersonaIntimacy = useStore((s) => s.setPersonaIntimacy);
+
+  // V143: DSL execution hook
+  const { runDSL } = useCompositionExecution();
 
   // Collab state
   const collabSession = useStore((s) => s.collabSession);
@@ -861,6 +865,25 @@ export const ChatPanel: React.FC = () => {
           timestamp: Date.now(),
           personaId: activePersonaId,
         });
+      }
+      return;
+    }
+
+    // ---- DSL TRIGGER ----
+    if (userMsg.startsWith('#dsl:')) {
+      const dsl = userMsg.slice(4).trim();
+      addMessage({ role: 'system', content: `⚡ DSL 执行中...`, personaId: activePersonaId });
+      const result = await runDSL(dsl, { triggerMessage: userMsg, personaId: activePersonaId });
+      if (result) {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: result.success ? String(result.output || '执行完成') : `DSL 执行失败: ${result.error}`,
+          timestamp: Date.now(),
+          personaId: activePersonaId,
+        });
+      } else {
+        addMessage({ role: 'system', content: `⚠️ DSL 编译或执行失败`, personaId: activePersonaId });
       }
       return;
     }

@@ -3,8 +3,9 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Box } from '../ui/Box';
 import { MyIconButton, MyTooltip } from '../MUI替代';
-import { ChatIcon, CalendarMonthIcon, CheckBoxIcon, DescriptionIcon, EmailIcon, EditIcon, SettingsIcon, GroupIcon, PsychologyIcon, ExtensionIcon, MemoryIcon, BarChartIcon, HubIcon, ScenesIcon, FlashOnIcon, MultiAgentIcon, ChevronLeftIcon, ChevronRightIcon } from '../ui/muiIconMap';
+import { ChatIcon, CalendarMonthIcon, CheckBoxIcon, DescriptionIcon, EmailIcon, EditIcon, SettingsIcon, GroupIcon, PsychologyIcon, ExtensionIcon, MemoryIcon, BarChartIcon, HubIcon, ScenesIcon, FlashOnIcon, MultiAgentIcon, ChevronLeftIcon, ChevronRightIcon, ActivityIcon } from '../ui/muiIconMap';
 const CalendarIcon = CalendarMonthIcon;
+const ExecutionIcon = ActivityIcon;
 import { useStore } from '../../store';
 import { PluginService } from '../../services/plugin/PluginService';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { id: 'agent', labelKey: 'nav.agent', icon: FlashOnIcon },
   { id: 'multiagent', labelKey: 'nav.multiAgent', icon: MultiAgentIcon },
   { id: 'tools', labelKey: 'nav.tools', icon: ExtensionIcon },
+  { id: 'execution', labelKey: 'nav.execution', icon: ExecutionIcon },
   { id: 'settings', labelKey: 'nav.settings', icon: SettingsIcon },
 ] as const;
 

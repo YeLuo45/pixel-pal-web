@@ -56,6 +56,7 @@ import {
   AlignLeft as TextIcon,
   MessageCircle as MessageIcon,
   Clock as ScheduleIcon,
+  List as ListIcon,
 } from 'lucide-react';
 
 // Re-export with MUI-compatible names
@@ -108,4 +109,5 @@ export {
   TextIcon,
   MessageIcon,
   ScheduleIcon,
+  ListIcon,
 };

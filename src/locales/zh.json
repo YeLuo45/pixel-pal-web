@@ -38,7 +38,8 @@
     "lowIntimacy": "低亲密度",
     "mediumIntimacy": "中亲密度",
     "highIntimacy": "高亲密度",
-    "calculating": "布局计算中..."
+    "calculating": "布局计算中...",
+    "execution": "执行日志"
   },
   "chat": {
     "title": "AI 聊天",

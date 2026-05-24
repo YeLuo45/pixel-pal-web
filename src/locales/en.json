@@ -38,7 +38,8 @@
     "lowIntimacy": "Low",
     "mediumIntimacy": "Medium",
     "highIntimacy": "High",
-    "calculating": "Calculating layout..."
+    "calculating": "Calculating layout...",
+    "execution": "Execution Log"
   },
   "chat": {
     "title": "AI Chat",
