@@ -135,6 +135,22 @@ async function createTables(db: Database): Promise<void> {
   // Create indexes for sync_log
   SQL`CREATE INDEX IF NOT EXISTS idx_sync_log_timestamp ON sync_log(timestamp)`;
   SQL`CREATE INDEX IF NOT EXISTS idx_sync_log_table ON sync_log(table_name)`;
+
+  // Pipelines table (V147: Role Orchestration)
+  SQL`
+    CREATE TABLE IF NOT EXISTS pipelines (
+      id TEXT PRIMARY KEY,
+      stages TEXT NOT NULL,
+      current_stage INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      change_id TEXT,
+      last_modified INTEGER,
+      device_id TEXT
+    )
+  `;
+  SQL`CREATE INDEX IF NOT EXISTS idx_pipelines_status ON pipelines(status)`;
 }
 
 export function getDatabase(): Database | null {
