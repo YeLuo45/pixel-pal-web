@@ -1,0 +1,153 @@
+/**
+ * V146: SQLite Database Initialization with wa-sqlite
+ * 
+ * Initializes wa-sqlite WASM database and creates tables if needed.
+ * Includes migration check from localStorage to SQLite.
+ */
+
+import type { Database } from 'wa-sqlite';
+import { Database as WADatabase } from 'wa-sqlite';
+import * as waSqlite from 'wa-sqlite';
+
+let dbInstance: Database | null = null;
+
+// Device ID for sync (generated once per device)
+let deviceId: string | null = null;
+
+export function getDeviceId(): string {
+  if (!deviceId) {
+    deviceId = localStorage.getItem('pixelpal_device_id') || crypto.randomUUID();
+    localStorage.setItem('pixelpal_device_id', deviceId);
+  }
+  return deviceId;
+}
+
+export async function initDatabase(): Promise<Database> {
+  if (dbInstance) return dbInstance;
+
+  const SQL = await waSqlite.instantiate();
+  const path = ':memory:';
+  dbInstance = new WADatabase(SQL, path);
+
+  // Create tables
+  await createTables(dbInstance);
+
+  // Check for un-migrated localStorage data and run migration if needed
+  const { hasUnmigratedData, isMigrationComplete, runMigrations, markMigrationComplete } = await import('./migration');
+  if (hasUnmigratedData() && !isMigrationComplete()) {
+    await runMigrations();
+    markMigrationComplete();
+  }
+
+  return dbInstance;
+}
+
+async function createTables(db: Database): Promise<void> {
+  const SQL = db.getSQL();
+
+  // Messages table
+  SQL`
+    CREATE TABLE IF NOT EXISTS messages (
+      id TEXT PRIMARY KEY,
+      role TEXT,
+      content TEXT,
+      persona_id TEXT,
+      timestamp INTEGER,
+      attachments TEXT,
+      change_id TEXT,
+      last_modified INTEGER,
+      device_id TEXT
+    )
+  `;
+
+  // Memories table
+  SQL`
+    CREATE TABLE IF NOT EXISTS memories (
+      id TEXT PRIMARY KEY,
+      type TEXT,
+      content TEXT,
+      importance INTEGER,
+      persona_id TEXT,
+      created_at INTEGER,
+      expires_at INTEGER,
+      tags TEXT,
+      change_id TEXT,
+      last_modified INTEGER,
+      device_id TEXT
+    )
+  `;
+
+  // Settings table
+  SQL`
+    CREATE TABLE IF NOT EXISTS settings (
+      id TEXT PRIMARY KEY,
+      key TEXT UNIQUE,
+      value TEXT,
+      change_id TEXT,
+      last_modified INTEGER,
+      device_id TEXT
+    )
+  `;
+
+  // Personas table
+  SQL`
+    CREATE TABLE IF NOT EXISTS personas (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      description TEXT,
+      avatar TEXT,
+      personality TEXT,
+      skills TEXT,
+      change_id TEXT,
+      last_modified INTEGER,
+      device_id TEXT
+    )
+  `;
+
+  // Skills table
+  SQL`
+    CREATE TABLE IF NOT EXISTS skills (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      description TEXT,
+      code TEXT,
+      enabled INTEGER DEFAULT 1,
+      config TEXT,
+      change_id TEXT,
+      last_modified INTEGER,
+      device_id TEXT
+    )
+  `;
+
+  // Sync log table
+  SQL`
+    CREATE TABLE IF NOT EXISTS sync_log (
+      id TEXT PRIMARY KEY,
+      table_name TEXT NOT NULL,
+      row_id TEXT NOT NULL,
+      operation TEXT NOT NULL,
+      timestamp INTEGER NOT NULL,
+      device_id TEXT NOT NULL,
+      change_data TEXT
+    )
+  `;
+
+  // Create indexes for sync_log
+  SQL`CREATE INDEX IF NOT EXISTS idx_sync_log_timestamp ON sync_log(timestamp)`;
+  SQL`CREATE INDEX IF NOT EXISTS idx_sync_log_table ON sync_log(table_name)`;
+}
+
+export function getDatabase(): Database | null {
+  return dbInstance;
+}
+
+export function generateChangeId(): string {
+  return crypto.randomUUID();
+}
+
+export function now(): number {
+  return Date.now();
+}
+
+// Re-export migration functions for external use
+export { hasUnmigratedData, isMigrationComplete, runMigrations, markMigrationComplete } from './migration';

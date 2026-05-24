@@ -36,6 +36,7 @@
     "@types/flexsearch": "^0.7.6",
     "cron-parser": "^5.5.0",
     "date-fns": "^4.1.0",
+    "drizzle-orm": "^0.45.2",
     "flexsearch": "^0.8.212",
     "i18next": "^24.2.3",
     "idb": "^8.0.3",
@@ -50,6 +51,7 @@
     "recharts": "^3.8.1",
     "rss-parser": "^3.13.0",
     "uuid": "^13.0.0",
+    "wa-sqlite": "^1.0.0",
     "wordcloud": "^1.2.3",
     "xlsx": "^0.18.5",
     "zustand": "^5.0.13"
@@ -61,6 +63,7 @@
     "@types/react-dom": "18.3.0",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "drizzle-kit": "^0.31.10",
     "electron": "^36.9.5",
     "electron-builder": "^26.8.1",
     "electron-log": "^5.4.3",
