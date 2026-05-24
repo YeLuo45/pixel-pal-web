@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MySlider } from '../MUI替代';
-import { MyBox, MyTypography, MyTextField, MySelect, MySelect, MySelect, MySelect, MyChip, MyStack, MyButton, MyCircularProgress, MyAlert, MyPaper } from '../MUI替代';
+import { MyBox, MyTypography, MyTextField, MySelect, MyChip, MyStack, MyButton, MyCircularProgress, MyAlert, MyPaper } from '../MUI替代';
 import {
   Check as CheckIcon,
   Edit as EditIcon,

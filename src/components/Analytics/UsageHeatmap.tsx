@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { MyTypography, MyCard, MyCard } from '../MUI替代';
+import { MyTypography, MyCard } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { dataPipelineEngine } from '../../services/dataPipeline/pipelineEngine';
 

@@ -6,8 +6,8 @@
  */
 
 import type { Database } from 'wa-sqlite';
-import { getDatabase, generateChangeId, now } from '../db/index';
-import { addChangeLogEntry } from '../db/syncLog';
+import { getDatabase, generateChangeId, now } from '../../db/index';
+import { addChangeLogEntry } from '../../db/syncLog';
 
 // ============================================================================
 // Types

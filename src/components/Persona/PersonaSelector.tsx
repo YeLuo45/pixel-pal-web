@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MyMenu, MyDialog, MyBadge, MyFormControlLabel } from '../MUI替代';
-import { MyBox, MyTypography, MySelect, MyDivider, MyButton, MyTextField, MySelect, MyIconButton, MyTooltip, MyLinearProgress, MySwitch } from '../MUI替代';
-import { MySwitch } from '../MUI替代';
+import { MyBox, MyTypography, MySelect, MyDivider, MyButton, MyTextField, MyIconButton, MyTooltip, MyLinearProgress } from '../MUI替代';
 import {
   Person as PersonIcon,
   Add as AddIcon,

@@ -33,3 +33,5 @@ export const alpha = (color: string, opacity: number): string => {
 };
 
 export default alpha;
+
+export const MyAlpha = alpha;

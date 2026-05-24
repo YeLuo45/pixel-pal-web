@@ -269,7 +269,7 @@ export const StrategyOptimizerPanel: React.FC<StrategyOptimizerPanelProps> = ({
                   <MyBox sx={{ flex: 1 }}>
                     <MyTypography variant="caption" color="text.secondary">
                       Effective Weight
-                    </Typography>
+                    </MyTypography>
                     <MySlider
                       value={effectiveWeight}
                       min={0}

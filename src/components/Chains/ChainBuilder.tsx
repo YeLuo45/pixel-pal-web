@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { MyCard, MyCard, MyTypography, MyTextField, MyIconButton, MyButton, MyBox } from '../MUI替代';
+import { MyCard, MyTypography, MyTextField, MyIconButton, MyButton, MyBox } from '../MUI替代';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import type { ChainStep } from '../../services/chains/types';
 

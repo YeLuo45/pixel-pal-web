@@ -1,3 +1,11 @@
+// Persistence store initialization
+let storeInitialized = false;
+
+export async function initMemoryStore(): Promise<void> {
+  if (storeInitialized) return;
+  storeInitialized = true;
+}
+
 /**
  * IndexedDB storage for agent memory persistence (V146)
  * 

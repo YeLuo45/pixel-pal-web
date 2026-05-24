@@ -10,8 +10,7 @@ export { MySwitch } from './基础组件/MySwitch';
 
 // 核心组件
 export { MyAlert } from './MyAlert';
-export { MyAlertTitle } from './MyAlert';
-export { MyCard } from './MyCard';
+export { MyCard, MyCardContent } from './MyCard';
 export { MyCardActionArea } from './MyCardActionArea';
 export { MyCardHeader } from './MyCardHeader';
 export { MyCircularProgress } from './MyCircularProgress';
@@ -32,23 +31,21 @@ export { MyListItemText } from './MyListItemText';
 export { MyPaper } from './MyPaper';
 export { MyPopper } from './MyPopper';
 export { MySelect, MyMenuItem } from './MySelect';
-export { MySelectChangeEvent } from './MySelect';
 export { MySkeleton } from './MySkeleton';
 export { MySnackbar } from './MySnackbar';
 export { MyStack } from './MyStack';
-export { MyTabs } from './MyTabs';
+export { MyTabs, MyTab } from './MyTabs';
 export { MyTextField } from './MyTextField';
 export { MyToggleButton } from './MyToggleButton';
 export { MyToggleButtonGroup } from './MyToggleButtonGroup';
 export { MyTooltip } from './MyTooltip';
-export { MyUseTheme, MyThemeProvider } from './MyUseTheme';
+export { MyUseTheme } from './MyUseTheme';
 
 // Dialog
 export { MyDialog, MyDialogTitle, MyDialogContent, MyDialogActions } from './MyDialog';
 
 // Menu
 export { MyMenu } from './MyMenu';
-export { MyMenuItem } from './MyMenuItem';
 
 // Form
 export { MyFormControl, MyInputLabel, MyFormControlLabel } from './MyFormControl';

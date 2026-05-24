@@ -3,7 +3,7 @@
  */
 
 import { ToolRegistry } from './registry';
-import { ToolSpec } from './registry';
+import type { ToolSpec } from './types';
 import { agentExecutor } from '../agent/agentExecutor';
 import { pluginRegistry } from '../plugins/pluginRegistry';
 

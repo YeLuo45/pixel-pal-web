@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Box } from '../ui/Box';
 import { MyTypography, MyPaper } from '../MUI替代';
 import { useTranslation } from 'react-i18next';
-import { NetworkIcon, TerminalIcon, ListIcon, ClockIcon } from '../ui/muiIconMap';
+import { NetworkIcon, TerminalIcon, ListIcon, TimeIcon } from '../ui/muiIconMap';
 
 interface CallLogEntry {
   id: string;
@@ -203,7 +203,7 @@ export const McpPanel: React.FC<McpPanelProps> = ({ tools: externalTools }) => {
                 bgcolor: 'rgba(255,255,255,0.03)',
               }}
             >
-              <ClockIcon size={24} css={{ color: '#666' }} />
+              <TimeIcon size={24} css={{ color: '#666' }} />
               <Box css={{ flex: 1 }}>
                 <MyTypography variant="body2" css={{ color: '#fff', fontWeight: 500 }}>
                   {t('mcp.serverUptime')}

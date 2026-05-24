@@ -6,8 +6,8 @@
  */
 
 import type { Database } from 'wa-sqlite';
-import { getDatabase, getDeviceId, generateChangeId, now } from '../db/index';
-import { addChangeLogEntry } from '../db/syncLog';
+import { getDatabase, getDeviceId, generateChangeId, now } from '../../db/index';
+import { addChangeLogEntry } from '../../db/syncLog';
 
 export class SqliteStorage {
   private db: Database | null;

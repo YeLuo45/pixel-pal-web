@@ -71,4 +71,20 @@ export const MyCard: FC<MyCardProps> = ({
   );
 };
 
+
+// MyCardContent - content wrapper for MyCard
+export interface MyCardContentProps {
+  children: React.ReactNode;
+  sx?: object;
+  className?: string;
+}
+
+export const MyCardContent: FC<MyCardContentProps> = ({ children, sx, className = '' }) => {
+  return (
+    <div className={className} style={{ padding: '0 16px 16px', ...sx }}>
+      {children}
+    </div>
+  );
+};
+
 export default MyCard;

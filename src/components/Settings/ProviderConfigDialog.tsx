@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MyDialog } from '../MUI替代';
-import { MyButton, MyTextField, MySelect, MySelect, MySelect, MySelect, MyStack, MyTypography, MyIconButton, MyAlert, MyCircularProgress } from '../MUI替代';
+import { MyButton, MyTextField, MySelect, MyStack, MyTypography, MyIconButton, MyAlert, MyCircularProgress } from '../MUI替代';
 import CloseIcon from '@mui/icons-material/Close';
 import type { ProviderConfig } from '../../services/providers/types';
 import { DEFAULT_PROVIDERS, PROVIDER_BASE_URLS, getProviderDefinition } from '../../data/defaultProviders';

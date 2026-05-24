@@ -6,7 +6,7 @@
  */
 
 import type { Database } from 'wa-sqlite';
-import { getDatabase } from '../index';
+import { getDatabase } from './index';
 
 interface MigrationResult {
   success: boolean;

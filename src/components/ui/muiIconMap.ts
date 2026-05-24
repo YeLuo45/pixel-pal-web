@@ -43,6 +43,8 @@ import {
   TrendingDown as TrendingDownIcon,
   ArrowRight as TrendingFlatIcon,
   TrendingUp as TrendingUpIcon,
+  Terminal as TerminalIcon,
+  Activity as ActivityIcon,
   Plus, // AddIcon duplicate
   ArrowLeft, // ArrowBackIcon duplicate
   X, // CloseIcon duplicate
@@ -101,6 +103,7 @@ export {
   TrendingDownIcon,
   TrendingFlatIcon,
   TrendingUpIcon,
+  ActivityIcon,
   ScenesIcon,
   StarIcon,
   TimeIcon,
@@ -112,4 +115,5 @@ export {
   MessageIcon,
   ScheduleIcon,
   ListIcon,
+  TerminalIcon,
 };

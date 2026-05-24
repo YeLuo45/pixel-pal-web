@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react/i18next';
 import { MyDialog, MyListItemIcon } from '../MUI替代';
-import { MyBox, MyTypography, MyPaper, MyLinearProgress, MyStack, MyChip, MyCard, MyCard, MyButton, MyIconButton, MyList, MyListItem, MyListItemText } from '../MUI替代';
+import { MyBox, MyTypography, MyPaper, MyLinearProgress, MyStack, MyChip, MyCard, MyButton, MyIconButton, MyList, MyListItem, MyListItemText } from '../MUI替代';
 import {
   Favorite as HeartIcon,
   People as PeopleIcon,

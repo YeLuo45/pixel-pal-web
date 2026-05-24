@@ -75,13 +75,6 @@ export {
   type EvolutionAPIResponse,
 } from './api/EvolutionAPIServer';
 export { EvolutionAPIClient } from './api/EvolutionAPIClient';
-export {
-  EvolutionAPIAdapter,
-  createEvolutionMCPTools,
-  type EvolutionMCPTools,
-  type MCPTool,
-} from './api/EvolutionAPIAdapter';
-
 // V160: Multi-Personality Comparison
 export {
   PersonalityComparisonEngine,

@@ -305,7 +305,7 @@ export const MySelect: FC<MySelectProps> = ({
                 <li
                   key={`text-${index}`}
                   role="option"
-                  aria-selected={String((child as { props?: { value?: string | number }).props?.value) === String(selectedValue)}
+                  aria-selected={String(((child as any)?.props?.value)) === String(selectedValue)}
                   style={{
                     padding: `${theme.spacing(0.75)} ${theme.spacing(1)}`,
                     cursor: 'pointer',

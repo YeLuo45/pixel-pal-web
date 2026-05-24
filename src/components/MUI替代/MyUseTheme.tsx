@@ -126,4 +126,7 @@ export const useTheme = (): Theme => {
   return useContext(ThemeContext);
 };
 
+// Alias for MUI compatibility
+export const MyUseTheme = useTheme;
+
 export default useTheme;

@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { MyTable, MyTableBody, MyTableContainer, MyTableHead } from '../MUI替代';
 
 import { MyTableCell, MyTableRow } from '../MUI替代';
-import { MyBox, MyTypography, MyPaper, MyGrid, MyTabs, MyTabs, MyCard, MyCard, MyChip, MyLinearProgress, MySwitch, MyTextField, MyIconButton, MyTooltip, MyToggleButton, MyToggleButtonGroup } from '../MUI替代';
+import { MyBox, MyTypography, MyPaper, MyGrid, MyTabs, MyCard, MyChip, MyLinearProgress, MySwitch, MyTextField, MyIconButton, MyTooltip, MyToggleButton, MyToggleButtonGroup } from '../MUI替代';
 import { TrendingUp, TrendingDown, AttachMoney, ShowChart, Speed, CheckCircle, 
   Warning, Error as ErrorIcon, Refresh as RefreshIcon, Download as DownloadIcon,
   Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';

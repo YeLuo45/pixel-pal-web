@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { MyTypography, MyCard, MyCard } from '../MUI替代';
+import { MyTypography, MyCard } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { tokenTracker } from '../../services/usage/TokenTracker';

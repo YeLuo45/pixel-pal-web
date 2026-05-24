@@ -6,7 +6,7 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MyDialog } from '../MUI替代';
-import { MyBox, MyTypography, MyButton, MyIconButton, MyIconButton, MyChip } from '../MUI替代';
+import { MyBox, MyTypography, MyButton, MyIconButton, MyChip } from '../MUI替代';
 import {
   Close as CloseIcon,
   Reply as ReplyIcon,

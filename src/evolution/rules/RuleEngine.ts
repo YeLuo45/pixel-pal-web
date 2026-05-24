@@ -4,7 +4,8 @@
  * Evaluates rules against context and triggers actions.
  */
 
-import { ruleRegistry, type EvolutionRule, type EvolutionContext } from './EvolutionRule';
+import { ruleRegistry } from './RuleRegistry';
+import type { EvolutionRule, EvolutionContext } from './EvolutionRule';
 import { hookManager } from '../../core/hooks/HookManager';
 
 class RuleEngine {

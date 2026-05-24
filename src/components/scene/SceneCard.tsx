@@ -1,5 +1,5 @@
 import React from 'react';
-import { MyCard, MyCard, MyTypography, MyIconButton, MyChip } from '../MUI替代';
+import { MyCard, MyTypography, MyIconButton, MyChip } from '../MUI替代';
 import { Box } from '../ui/Box';
 import { Edit as EditIcon, Delete as DeleteIcon, Bolt as BoltIcon } from '@mui/icons-material';
 import { MySwitch } from '../MUI替代';
