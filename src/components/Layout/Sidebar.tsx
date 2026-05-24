@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Box } from '../ui/Box';
 import { MyIconButton, MyTooltip } from '../MUI替代';
-import { ChatIcon, CalendarMonthIcon, CheckBoxIcon, DescriptionIcon, EmailIcon, EditIcon, SettingsIcon, GroupIcon, PsychologyIcon, ExtensionIcon, MemoryIcon, BarChartIcon, HubIcon, ScenesIcon, FlashOnIcon, MultiAgentIcon, ChevronLeftIcon, ChevronRightIcon, ActivityIcon } from '../ui/muiIconMap';
+import { ChatIcon, CalendarMonthIcon, CheckBoxIcon, DescriptionIcon, EmailIcon, EditIcon, SettingsIcon, GroupIcon, PsychologyIcon, ExtensionIcon, MemoryIcon, BarChartIcon, HubIcon, ScenesIcon, FlashOnIcon, MultiAgentIcon, ChevronLeftIcon, ChevronRightIcon, ActivityIcon, BugIcon } from '../ui/muiIconMap';
 const CalendarIcon = CalendarMonthIcon;
 const ExecutionIcon = ActivityIcon;
 import { useStore } from '../../store';
@@ -29,6 +29,8 @@ const NAV_ITEMS = [
   { id: 'multiagent', labelKey: 'nav.multiAgent', icon: MultiAgentIcon },
   { id: 'tools', labelKey: 'nav.tools', icon: ExtensionIcon },
   { id: 'execution', labelKey: 'nav.execution', icon: ExecutionIcon },
+  { id: 'roleDebug', labelKey: 'nav.roleDebug', icon: BugIcon },
+  { id: 'roleMetrics', labelKey: 'nav.roleMetrics', icon: ActivityIcon },
   { id: 'settings', labelKey: 'nav.settings', icon: SettingsIcon },
 ] as const;
 

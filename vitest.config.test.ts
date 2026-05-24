@@ -9,7 +9,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporters: ['text'],
-      include: ['src/services/composition/**'],
+      include: ['src/services/composition/**', 'src/services/roles/**'],
     },
   },
   resolve: {

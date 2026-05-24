@@ -57,6 +57,8 @@ import {
   MessageCircle as MessageIcon,
   Clock as ScheduleIcon,
   List as ListIcon,
+  Bug as BugIcon,
+  Activity as ActivityIcon,
 } from 'lucide-react';
 
 // Re-export with MUI-compatible names
@@ -110,4 +112,6 @@ export {
   MessageIcon,
   ScheduleIcon,
   ListIcon,
+  BugIcon,
+  ActivityIcon,
 };

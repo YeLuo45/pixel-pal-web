@@ -39,7 +39,9 @@
     "mediumIntimacy": "Medium",
     "highIntimacy": "High",
     "calculating": "Calculating layout...",
-    "execution": "Execution Log"
+    "execution": "Execution Log",
+    "roleDebug": "Role Debug",
+    "roleMetrics": "Role Metrics"
   },
   "chat": {
     "title": "AI Chat",

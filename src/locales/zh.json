@@ -39,7 +39,9 @@
     "mediumIntimacy": "中亲密度",
     "highIntimacy": "高亲密度",
     "calculating": "布局计算中...",
-    "execution": "执行日志"
+    "execution": "执行日志",
+    "roleDebug": "角色调试",
+    "roleMetrics": "角色仪表盘"
   },
   "chat": {
     "title": "AI 聊天",
