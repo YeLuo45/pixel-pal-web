@@ -67,3 +67,17 @@ export {
   type StrategyAdaptation,
   type FallbackEvent,
 } from './integration/EvolutionIntegrationHub';
+
+// V159: Evolution API
+export {
+  EvolutionAPIServer,
+  type EvolutionAPIRequest,
+  type EvolutionAPIResponse,
+} from './api/EvolutionAPIServer';
+export { EvolutionAPIClient } from './api/EvolutionAPIClient';
+export {
+  EvolutionAPIAdapter,
+  createEvolutionMCPTools,
+  type EvolutionMCPTools,
+  type MCPTool,
+} from './api/EvolutionAPIAdapter';
