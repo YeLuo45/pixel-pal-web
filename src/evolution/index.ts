@@ -81,3 +81,11 @@ export {
   type EvolutionMCPTools,
   type MCPTool,
 } from './api/EvolutionAPIAdapter';
+
+// V160: Multi-Personality Comparison
+export {
+  PersonalityComparisonEngine,
+  type PersonalityMetrics,
+  type ComparisonResult,
+} from './comparison/PersonalityComparisonEngine';
+export { PersonalityRadarChart } from './comparison/PersonalityRadarChart';
