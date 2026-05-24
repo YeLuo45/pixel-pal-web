@@ -89,3 +89,10 @@ export {
   type ComparisonResult,
 } from './comparison/PersonalityComparisonEngine';
 export { PersonalityRadarChart } from './comparison/PersonalityRadarChart';
+
+// V161: Evolution Scheduler Dashboard
+export { SchedulerDashboard } from './scheduler/SchedulerDashboard';
+export { RuleTimeline } from './scheduler/RuleTimeline';
+export type { TimelineEvent } from './scheduler/RuleTimeline';
+export { TriggerConfigModal } from './scheduler/TriggerConfigModal';
+export type { RuleConfig } from './scheduler/TriggerConfigModal';
