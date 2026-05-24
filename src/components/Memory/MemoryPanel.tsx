@@ -76,6 +76,7 @@ import {
   calculateEmotionDistribution,
   checkPersistentNegativeEmotion,
 } from '../../services/emotion';
+import { EmotionMemoryStore, type EmotionMemory } from '../../services/emotion/EmotionMemoryStore';
 import { getAllPersonas, type Persona } from '../../services/persona';
 import { useStore } from '../../store';
 import { RelationGraph } from '../Graph/RelationGraph';
@@ -136,6 +137,10 @@ export const MemoryPanel: React.FC = () => {
   // Weekly Summary state (V57)
   const [weeklySummaries, setWeeklySummaries] = useState<WeeklySummary[]>([]);
   const [weeklySummaryLoading, setWeeklySummaryLoading] = useState(false);
+
+  // Emotion Memory state (V146)
+  const [emotionMemories, setEmotionMemories] = useState<EmotionMemory[]>([]);
+  const [emotionMemoryLoading, setEmotionMemoryLoading] = useState(false);
 
   // Load emotion logs
   const loadEmotionLogs = useCallback(() => {
@@ -336,6 +341,19 @@ export const MemoryPanel: React.FC = () => {
     setWeeklySummaryLoading(false);
   }, []);
 
+  // Load emotion memories (V146)
+  const loadEmotionMemories = useCallback(async () => {
+    setEmotionMemoryLoading(true);
+    try {
+      const store = new EmotionMemoryStore();
+      const memories = await store.loadRecentEmotions(50);
+      setEmotionMemories(memories);
+    } catch (err) {
+      console.error('Failed to load emotion memories:', err);
+    }
+    setEmotionMemoryLoading(false);
+  }, []);
+
   // Initial load
   useEffect(() => {
     loadMemories();
@@ -355,6 +373,13 @@ export const MemoryPanel: React.FC = () => {
       window.removeEventListener('emotion:logsCleared', handleEmotionUpdate);
     };
   }, [loadEmotionLogs]);
+
+  // Load emotion memories when tab === 6 (V146)
+  useEffect(() => {
+    if (tab === 6) {
+      loadEmotionMemories();
+    }
+  }, [tab, loadEmotionMemories]);
 
   // Sort memories
   const sortedMemories = [...memories].sort((a, b) => {
@@ -578,6 +603,7 @@ export const MemoryPanel: React.FC = () => {
           <Tab icon={<InsightIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.insights')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
           <Tab icon={<EmotionIcon sx={{ fontSize: 16 }} />} label={t('emotionPanel.title')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
           <Tab icon={<SummarizeIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.weeklyReport')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
+          <Tab icon={<EmotionIcon sx={{ fontSize: 16 }} />} label={t('memoryPanel.emotionMemory')} iconPosition="start" sx={{ minHeight: 48, fontSize: 12 }} />
         </Tabs>
       </Box>
 
@@ -653,6 +679,12 @@ export const MemoryPanel: React.FC = () => {
             summaries={weeklySummaries}
             loading={weeklySummaryLoading}
             onRefresh={loadWeeklySummaries}
+          />
+        )}
+        {tab === 6 && (
+          <EmotionMemoryTab
+            memories={emotionMemories}
+            loading={emotionMemoryLoading}
           />
         )}
       </Box>
@@ -2138,6 +2170,117 @@ function WeeklySummaryTab({ summaries, loading, onRefresh }: WeeklySummaryTabPro
         })}
       </Stack>
     </Box>
+  );
+}
+
+// V146: Emotion Memory Tab - shows cross-session emotion data from EmotionMemoryStore
+const EMOTION_EMOJI: Record<string, string> = {
+  joy: '😊', sadness: '😢', anger: '😠', fear: '😨',
+  surprise: '😲', anticipation: '🤔', trust: '🤝', disgust: '😒',
+};
+
+function getRelativeTime(timestamp: number): string {
+  const diff = Date.now() - timestamp;
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  return `${day}d ago`;
+}
+
+interface EmotionMemoryTabProps {
+  memories: EmotionMemory[];
+  loading: boolean;
+}
+
+function EmotionMemoryTab({ memories, loading }: EmotionMemoryTabProps) {
+  const { t } = useTranslation();
+  const [filterType, setFilterType] = useState<string>('all');
+
+  const emotionTypes = ['all', 'joy', 'sadness', 'anger', 'fear', 'surprise', 'anticipation', 'trust', 'disgust'];
+
+  const filteredMemories = filterType === 'all'
+    ? memories
+    : memories.filter(m => m.emotionType === filterType);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress size={24} />
+      </Box>
+    );
+  }
+
+  return (
+    <Stack spacing={2}>
+      {/* Filter */}
+      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+        {emotionTypes.map(type => (
+          <Chip
+            key={type}
+            label={type === 'all' ? '全部' : `${EMOTION_EMOJI[type] || '😶'} ${type}`}
+            size="small"
+            onClick={() => setFilterType(type)}
+            sx={{
+              fontSize: 10,
+              height: 22,
+              bgcolor: filterType === type ? 'primary.main' : 'rgba(255,255,255,0.08)',
+              color: filterType === type ? 'white' : 'text.secondary',
+            }}
+          />
+        ))}
+      </Box>
+
+      {/* Empty state */}
+      {filteredMemories.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <EmotionIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: 12 }}>
+            {memories.length === 0 ? t('memoryPanel.noEmotionMemories', 'No emotion memories yet') : t('memoryPanel.noMatchingEmotions', 'No emotions match this filter')}
+          </Typography>
+        </Box>
+      ) : (
+        <Stack spacing={1}>
+          {filteredMemories.map(memory => (
+            <Paper
+              key={memory.id}
+              sx={{
+                p: 1.5,
+                bgcolor: 'rgba(255,255,255,0.03)',
+                borderRadius: 1,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                <Typography variant="body2" sx={{ fontSize: 20 }}>
+                  {EMOTION_EMOJI[memory.emotionType] || '😶'}
+                </Typography>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600, textTransform: 'capitalize' }}>
+                    {memory.emotionType}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled', display: 'block' }}>
+                    {getRelativeTime(memory.timestamp)}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography variant="caption" sx={{ fontSize: 9, color: 'text.disabled' }}>
+                    {Math.round(memory.intensity * 100)}%
+                  </Typography>
+                  <Box sx={{ width: 40, height: 4, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+                    <Box sx={{ width: `${memory.intensity * 100}%`, height: '100%', bgcolor: 'primary.main', borderRadius: 1 }} />
+                  </Box>
+                </Box>
+              </Box>
+              <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary' }}>
+                {memory.trigger}
+              </Typography>
+            </Paper>
+          ))}
+        </Stack>
+      )}
+    </Stack>
   );
 }
 
