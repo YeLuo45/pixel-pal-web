@@ -1124,7 +1124,7 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter basename="/pixel-pal-web">
+    <HashRouter>
       <ThemeProvider theme={currentTheme}>
         <Box css={{ height: '100vh', overflow: 'hidden', display: 'flex' }}>
           <Sidebar />
@@ -1143,7 +1143,7 @@ function App() {
           </Box>
         </Box>
       </ThemeProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
