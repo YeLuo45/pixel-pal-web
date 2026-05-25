@@ -1124,7 +1124,7 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/pixel-pal-web">
       <ThemeProvider theme={currentTheme}>
         <Box css={{ height: '100vh', overflow: 'hidden', display: 'flex' }}>
           <Sidebar />
