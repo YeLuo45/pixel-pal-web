@@ -81,11 +81,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
         height: 100%;
         display: flex;
         flex-direction: column;
-        background: var(--color-bg-primary, #0f1011);
-        border-right: 1px solid var(--color-border, rgba(255,255,255,0.05));
+        background: var(--bg-sidebar);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid var(--border-subtle, rgba(255,255,255,0.05));
         flex-shrink: 0;
         overflow: hidden;
-        transition: width 0.2s ease;
+        transition: width 0.25s var(--ease-macOS, ease);
       `}
     >
       {/* Logo / Title */}

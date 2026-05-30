@@ -65,12 +65,12 @@ export const MyTextField: FC<MyTextFieldProps> = ({
 
   const sizeStyles = {
     small: {
-      padding: `${theme.spacing(0.75)} ${theme.spacing(1)}`,
+      padding: '6px 12px',
       fontSize: '13px',
       minHeight: '32px',
     },
     medium: {
-      padding: `${theme.spacing(1)} ${theme.spacing(1.5)}`,
+      padding: '8px 16px',
       fontSize: '14px',
       minHeight: '40px',
     },
@@ -78,10 +78,10 @@ export const MyTextField: FC<MyTextFieldProps> = ({
 
   const currentSize = sizeStyles[size];
   const borderColor = error
-    ? '#ef5350'
+    ? 'var(--system-red, #ef5350)'
     : isFocused
-    ? (theme.palette.primary?.main || '#5e6ad2')
-    : theme.palette.divider || 'rgba(255,255,255,0.1)';
+    ? 'var(--system-blue, #007AFF)'
+    : 'var(--border-default, rgba(255,255,255,0.1))';
 
   const getOutlinedStyles = () => ({
     container: {
@@ -94,12 +94,12 @@ export const MyTextField: FC<MyTextFieldProps> = ({
       alignItems: 'center',
       width: '100%',
       border: `1px solid ${borderColor}`,
-      borderRadius: borderRadius.md,
+      borderRadius: 'var(--radius-md, 6px)',
       backgroundColor: disabled
         ? 'rgba(255,255,255,0.04)'
         : theme.palette.background?.paper || '#0f1011',
       transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-      boxShadow: isFocused ? `0 0 0 2px ${theme.palette.primary?.main}20` : 'none',
+      boxShadow: isFocused ? `0 0 0 3px rgba(0,122,255,0.15)` : 'none',
       ...currentSize,
     },
     input: {
@@ -129,7 +129,7 @@ export const MyTextField: FC<MyTextFieldProps> = ({
       width: '100%',
       border: `1px solid transparent`,
       borderBottomColor: borderColor,
-      borderRadius: `${borderRadius.md} ${borderRadius.md} 0 0`,
+      borderRadius: 'var(--radius-md, 6px) var(--radius-md, 6px) 0 0',
       backgroundColor: disabled
         ? 'rgba(255,255,255,0.04)'
         : 'rgba(255,255,255,0.08)',

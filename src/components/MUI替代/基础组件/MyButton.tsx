@@ -36,12 +36,12 @@ export const MyButton: FC<MyButtonProps> = ({
   };
 
   const colorMap: Record<string, { bg: string; text: string; border: string }> = {
-    primary: { bg: '#5e6ad2', text: '#fff', border: '#5e6ad2' },
-    secondary: { bg: '#7170ff', text: '#fff', border: '#7170ff' },
-    error: { bg: '#ef5350', text: '#fff', border: '#ef5350' },
-    warning: { bg: '#ff9800', text: '#fff', border: '#ff9800' },
-    success: { bg: '#4caf50', text: '#fff', border: '#4caf50' },
-    info: { bg: '#2196f3', text: '#fff', border: '#2196f3' },
+    primary: { bg: 'var(--system-blue, #007AFF)', text: '#fff', border: 'var(--system-blue, #007AFF)' },
+    secondary: { bg: 'var(--system-purple, #AF52DE)', text: '#fff', border: 'var(--system-purple, #AF52DE)' },
+    error: { bg: 'var(--system-red, #FF3B30)', text: '#fff', border: 'var(--system-red, #FF3B30)' },
+    warning: { bg: 'var(--system-orange, #FF9500)', text: '#fff', border: 'var(--system-orange, #FF9500)' },
+    success: { bg: 'var(--system-green, #34C759)', text: '#fff', border: 'var(--system-green, #34C759)' },
+    info: { bg: 'var(--system-blue, #007AFF)', text: '#fff', border: 'var(--system-blue, #007AFF)' },
     inherit: { bg: 'transparent', text: 'currentColor', border: 'transparent' },
   };
 
@@ -53,7 +53,7 @@ export const MyButton: FC<MyButtonProps> = ({
     justifyContent: 'center',
     gap: '8px',
     border: variant !== 'text' ? `1px solid ${colors.border}` : 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md, 6px)',
     fontWeight: 500,
     fontFamily: 'Inter, system-ui, sans-serif',
     cursor: disabled ? 'not-allowed' : 'pointer',
