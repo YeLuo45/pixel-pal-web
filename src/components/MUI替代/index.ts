@@ -69,5 +69,8 @@ export { MyBadge } from './MyBadge';
 // Alpha
 export { MyAlpha } from './MyAlpha';
 
+// ClickAwayListener
+export { MyClickAwayListener } from './MyClickAwayListener';
+
 // Hooks
 export { useMediaQuery } from './useMediaQuery';
