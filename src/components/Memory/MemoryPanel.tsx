@@ -1104,9 +1104,13 @@ function AllMemoriesTab({
             </Paper>
           </Popper>
         )}
-        <ClickAwayListener onClickAway={() => { onTagSearchAnchorChange(null); onTagSearchQueryChange(''); }}>
-          <Box />
-        </ClickAwayListener>
+        {/* ClickAwayListener replacement: close tag search on outside click */}
+        {tagSearchAnchor && (
+          <Box
+            sx={{ position: 'fixed', inset: 0, zIndex: -1 }}
+            onClick={() => { onTagSearchAnchorChange(null); onTagSearchQueryChange(''); }}
+          />
+        )}
       </Stack>
 
       {/* Popular Tags */}
