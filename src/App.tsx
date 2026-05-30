@@ -25,18 +25,19 @@ import { CostAlertToast } from './components/Usage/CostAlertToast';
 import { unifiedMessageBus, webChannelAdapter, botConfigManager } from './services/bus';
 import './services/i18n';
 import './styles/mobile.css';
+import './styles/macos-tokens.css';
 
 const linearDarkTheme = {
   palette: {
     mode: 'dark',
     primary: {
-      main: '#5e6ad2',
-      light: '#7170ff',
-      dark: '#4a52b8',
+      main: '#007AFF',
+      light: '#3395FF',
+      dark: '#0055B3',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#7170ff',
+      main: '#007AFF',
       contrastText: '#ffffff',
     },
     background: {
@@ -59,11 +60,11 @@ const linearDarkTheme = {
       main: '#52c775',
     },
     info: {
-      main: '#5e6ad2',
+      main: '#007AFF',
     },
   },
   typography: {
-    fontFamily: '"Inter", "Segoe UI", system-ui, sans-serif',
+    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif',
     fontSize: 14,
     h1: { fontWeight: 590, letterSpacing: '-0.056em' },
     h2: { fontWeight: 590, letterSpacing: '-0.048em' },
@@ -158,7 +159,7 @@ const linearDarkTheme = {
               borderColor: 'rgba(255, 255, 255, 0.15)',
             },
             '&.Mui-focused': {
-              borderColor: '#5e6ad2',
+              borderColor: '#007AFF',
               '& .MuiInputBase-input': {
                 color: '#f7f8f8',
               },
@@ -175,7 +176,7 @@ const linearDarkTheme = {
           '& .MuiInputLabel-root': {
             color: '#8a8f98',
             '&.Mui-focused': {
-              color: '#5e6ad2',
+              color: '#007AFF',
             },
           },
           '& .MuiOutlinedInput-notchedOutline': {
@@ -223,7 +224,7 @@ const linearDarkTheme = {
           transition: 'all 0.15s ease',
         },
         containedPrimary: {
-          backgroundColor: '#5e6ad2',
+          backgroundColor: '#007AFF',
           color: '#ffffff',
           border: 'none',
           '&:hover': {
@@ -234,7 +235,7 @@ const linearDarkTheme = {
           },
         },
         containedSecondary: {
-          backgroundColor: '#7170ff',
+          backgroundColor: '#007AFF',
           color: '#ffffff',
           '&:hover': {
             backgroundColor: '#5e5ae6',
@@ -250,7 +251,7 @@ const linearDarkTheme = {
           },
         },
         text: {
-          color: '#7170ff',
+          color: '#007AFF',
           '&:hover': {
             backgroundColor: 'rgba(113, 112, 255, 0.08)',
           },
@@ -329,7 +330,7 @@ const linearDarkTheme = {
             borderColor: 'rgba(255, 255, 255, 0.15)',
           },
           '&.Mui-focused': {
-            borderColor: '#5e6ad2',
+            borderColor: '#007AFF',
           },
         },
         select: {
@@ -360,9 +361,9 @@ const linearDarkTheme = {
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
           },
           '&.Mui-selected': {
-            backgroundColor: 'rgba(94, 106, 210, 0.15)',
+            backgroundColor: 'rgba(0, 122, 255, 0.15)',
             '&:hover': {
-              backgroundColor: 'rgba(94, 106, 210, 0.2)',
+              backgroundColor: 'rgba(0, 122, 255, 0.2)',
             },
           },
         },
@@ -385,9 +386,9 @@ const linearDarkTheme = {
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
           },
           '&.Mui-selected': {
-            backgroundColor: 'rgba(94, 106, 210, 0.15)',
+            backgroundColor: 'rgba(0, 122, 255, 0.15)',
             '&:hover': {
-              backgroundColor: 'rgba(94, 106, 210, 0.2)',
+              backgroundColor: 'rgba(0, 122, 255, 0.2)',
             },
           },
         },
@@ -399,7 +400,7 @@ const linearDarkTheme = {
           '& .MuiSwitch-switchBase': {
             '&.Mui-checked': {
               '& + .MuiSwitch-track': {
-                backgroundColor: '#5e6ad2',
+                backgroundColor: '#007AFF',
               },
             },
           },
@@ -407,7 +408,7 @@ const linearDarkTheme = {
         switchBase: {
           '&.Mui-checked': {
             '& + .MuiSwitch-track': {
-              backgroundColor: '#5e6ad2',
+              backgroundColor: '#007AFF',
             },
           },
         },
@@ -423,19 +424,19 @@ const linearDarkTheme = {
     MuiSlider: {
       styleOverrides: {
         root: {
-          color: '#5e6ad2',
+          color: '#007AFF',
         },
         track: {
-          backgroundColor: '#5e6ad2',
+          backgroundColor: '#007AFF',
         },
         rail: {
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
         },
         thumb: {
           backgroundColor: '#f7f8f8',
-          border: '2px solid #5e6ad2',
+          border: '2px solid #007AFF',
           '&:hover': {
-            boxShadow: '0 0 0 4px rgba(94, 106, 210, 0.2)',
+            boxShadow: '0 0 0 4px rgba(0, 122, 255, 0.2)',
           },
         },
       },
@@ -461,15 +462,15 @@ const linearDarkTheme = {
           border: '1px solid rgba(82, 199, 117, 0.2)',
         },
         standardInfo: {
-          backgroundColor: 'rgba(94, 106, 210, 0.1)',
-          border: '1px solid rgba(94, 106, 210, 0.2)',
+          backgroundColor: 'rgba(0, 122, 255, 0.1)',
+          border: '1px solid rgba(0, 122, 255, 0.2)',
         },
       },
     },
     MuiBadge: {
       styleOverrides: {
         badge: {
-          backgroundColor: '#5e6ad2',
+          backgroundColor: '#007AFF',
           color: '#ffffff',
           fontWeight: 510,
         },
@@ -490,7 +491,7 @@ const linearDarkTheme = {
     MuiTabs: {
       styleOverrides: {
         indicator: {
-          backgroundColor: '#5e6ad2',
+          backgroundColor: '#007AFF',
         },
       },
     },
