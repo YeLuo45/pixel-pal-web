@@ -61,6 +61,12 @@ export default defineConfig({
   build: {
     outDir: 'dist/renderer',
     emptyOutDir: true,
+    rollupOptions: {
+      // V172: Externalize node-telegram-bot-api and discord.js for GitHub Pages builds
+      // These packages require Node.js APIs and cannot run in browser environment
+      // They are loaded via dynamic import() at runtime and should not be bundled
+      external: isGitHubPages ? ['discord.js', 'node-telegram-bot-api'] : [],
+    },
   },
   resolve: {
     alias: [

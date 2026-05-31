@@ -1054,16 +1054,16 @@ function App() {
       const config = botConfigManager.getConfig();
       if (config.telegram.enabled && config.telegram.token) {
         // Dynamic import to avoid bundling node-telegram-bot-api in GitHub Pages
-        import('./services/bus/adapters/TelegramChannelAdapter').then(({ telegramChannelAdapter }) => {
-          telegramChannelAdapter.initialize(config.telegram.token);
+        import('./services/bus/adapters/TelegramChannelAdapter').then(async ({ telegramChannelAdapter }) => {
+          await telegramChannelAdapter.start();
           unifiedMessageBus.registerAdapter(telegramChannelAdapter);
           console.log('[App] Telegram channel adapter registered');
         }).catch((e) => console.warn('[App] Failed to load Telegram adapter:', e));
       }
       if (config.discord.enabled && config.discord.token) {
         // Dynamic import to avoid bundling discord.js in GitHub Pages
-        import('./services/bus/adapters/DiscordChannelAdapter').then(({ discordChannelAdapter }) => {
-          discordChannelAdapter.initialize(config.discord.token);
+        import('./services/bus/adapters/DiscordChannelAdapter').then(async ({ discordChannelAdapter }) => {
+          await discordChannelAdapter.start();
           unifiedMessageBus.registerAdapter(discordChannelAdapter);
           console.log('[App] Discord channel adapter registered');
         }).catch((e) => console.warn('[App] Failed to load Discord adapter:', e));
