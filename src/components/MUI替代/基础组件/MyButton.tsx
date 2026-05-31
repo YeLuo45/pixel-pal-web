@@ -36,7 +36,7 @@ export const MyButton: FC<MyButtonProps> = ({
   };
 
   const colorMap: Record<string, { bg: string; text: string; border: string }> = {
-    primary: { bg: '#5e6ad2', text: '#fff', border: '#5e6ad2' },
+    primary: { bg: '#007AFF', text: '#fff', border: '#007AFF' },
     secondary: { bg: '#7170ff', text: '#fff', border: '#7170ff' },
     error: { bg: '#ef5350', text: '#fff', border: '#ef5350' },
     warning: { bg: '#ff9800', text: '#fff', border: '#ff9800' },
@@ -53,9 +53,9 @@ export const MyButton: FC<MyButtonProps> = ({
     justifyContent: 'center',
     gap: '8px',
     border: variant !== 'text' ? `1px solid ${colors.border}` : 'none',
-    borderRadius: '8px',
+    borderRadius: '6px',
     fontWeight: 500,
-    fontFamily: 'Inter, system-ui, sans-serif',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif',
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.5 : 1,
     transition: 'all 0.2s ease',
@@ -82,6 +82,26 @@ export const MyButton: FC<MyButtonProps> = ({
       disabled={disabled}
       className={className}
       style={baseStyle}
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.transform = 'scale(1.02)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+      onMouseDown={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.transform = 'scale(0.97)';
+        }
+      }}
+      onMouseUp={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.transform = 'scale(1.02)';
+        }
+      }}
     >
       {startIcon && <span style={{ display: 'flex' }}>{startIcon}</span>}
       {children}
