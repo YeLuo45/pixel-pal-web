@@ -72,7 +72,7 @@ export const MyTextField: FC<MyTextFieldProps> = ({
     medium: {
       padding: `${theme.spacing(1)} ${theme.spacing(1.5)}`,
       fontSize: '14px',
-      minHeight: '40px',
+      minHeight: '32px',
     },
   };
 
@@ -80,7 +80,7 @@ export const MyTextField: FC<MyTextFieldProps> = ({
   const borderColor = error
     ? '#ef5350'
     : isFocused
-    ? (theme.palette.primary?.main || '#5e6ad2')
+    ? '#007AFF'
     : theme.palette.divider || 'rgba(255,255,255,0.1)';
 
   const getOutlinedStyles = () => ({
@@ -99,7 +99,7 @@ export const MyTextField: FC<MyTextFieldProps> = ({
         ? 'rgba(255,255,255,0.04)'
         : theme.palette.background?.paper || '#0f1011',
       transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-      boxShadow: isFocused ? `0 0 0 2px ${theme.palette.primary?.main}20` : 'none',
+      boxShadow: isFocused ? '0 0 0 3px rgba(0,122,255,0.15)' : 'none',
       ...currentSize,
     },
     input: {

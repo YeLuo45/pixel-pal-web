@@ -77,15 +77,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   return (
     <Box
       css={css`
-        width: ${collapsed ? 60 : 160}px;
+        width: ${collapsed ? 'var(--sidebar-collapsed-width, 43px)' : 'var(--sidebar-expanded-width, 144px)'};
         height: 100%;
         display: flex;
         flex-direction: column;
-        background: var(--color-bg-primary, #0f1011);
+        background: var(--bg-sidebar, rgba(30, 30, 30, 0.72));
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
         border-right: 1px solid var(--color-border, rgba(255,255,255,0.05));
         flex-shrink: 0;
         overflow: hidden;
-        transition: width 0.2s ease;
+        transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       `}
     >
       {/* Logo / Title */}
