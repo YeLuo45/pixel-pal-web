@@ -1,380 +1,387 @@
 /**
- * V153: SkillCrystallizer - Pattern to Skill Rule Conversion
+ * V178: SkillCrystallizer - Self-Crystallization Engine
  * 
- * Converts high-frequency, high-confidence patterns into executable skill rules.
- * Stores crystallized skills in SQLite and integrates with KnowledgeGraph (V148).
+ * Converts high-frequency memory patterns into reusable skill fragments.
+ * Based on generic-agent Self-Evolution architecture with fragment management.
  */
 
-import type { Database } from 'wa-sqlite';
-import { getDatabase, generateChangeId, now } from '../db/index';
-import { addChangeLogEntry } from '../db/syncLog';
 import { hookManager } from '../core/hooks/HookManager';
-import { getKnowledgeGraphStore } from '../services/knowledge/KnowledgeGraphStore';
-import type { CrystallizedSkill, CreateCrystallizedSkillInput, SkillCrystallizationResult } from './types';
-import type { InteractionPattern, OptimizationStrategy } from './types';
-
-// Skill storage table name
-const SKILLS_TABLE = 'evolution_skills';
 
 /**
- * SkillCrystallizer converts patterns into executable skill rules
+ * SkillFragment represents a crystallized skill unit from memory
+ */
+export interface SkillFragment {
+  id: string;
+  name: string;
+  description: string;
+  trigger: string[];        // Trigger keywords
+  action: string;           // Execution action
+  confidence: number;        // 0-100 confidence score
+  usage_count: number;      // Number of times used
+  last_used: number | null; // Last used timestamp
+  crystallized_from: string; // Source memory ID
+  created_at: number;
+}
+
+/**
+ * Configuration for SkillCrystallizer
+ */
+export interface SkillCrystallizerConfig {
+  /** Minimum access count to allow crystallization */
+  minAccessCount: number;
+  /** Minimum confidence threshold for fragments */
+  minConfidence: number;
+  /** Maximum fragments to store */
+  maxFragments: number;
+}
+
+/**
+ * Default configuration
+ */
+const DEFAULT_CONFIG: SkillCrystallizerConfig = {
+  minAccessCount: 5,
+  minConfidence: 50,
+  maxFragments: 100,
+};
+
+/**
+ * Trigger keywords for pattern extraction
+ */
+const TRIGGER_PATTERNS = [
+  'when', 'if', 'ask', 'request', 'show', 'tell', 'give', 'find',
+  'how', 'what', 'why', 'where', 'can you', 'please', 'help',
+];
+
+/**
+ * Action templates for fragment generation
+ */
+const ACTION_TEMPLATES = [
+  'Provide {topic} information',
+  'Execute {action} command',
+  'Display {resource} details',
+  'Analyze {subject} patterns',
+  'Generate {output} report',
+];
+
+/**
+ * SkillCrystallizer manages skill fragment lifecycle
  */
 export class SkillCrystallizer {
-  private db: Database | null;
-  private skills: Map<string, CrystallizedSkill> = new Map();
+  private fragments: Map<string, SkillFragment> = new Map();
+  private config: SkillCrystallizerConfig;
 
-  constructor() {
-    this.db = getDatabase();
-    this.initTable();
+  constructor(config: Partial<SkillCrystallizerConfig> = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
   /**
-   * Initialize the skills table
+   * Check if memory can be crystallized based on access count
    */
-  private initTable(): void {
-    const db = this.db;
-    if (!db) return;
-
-    const SQL = db.getSQL();
-    SQL`
-      CREATE TABLE IF NOT EXISTS evolution_skills (
-        id TEXT PRIMARY KEY,
-        condition TEXT NOT NULL,
-        action TEXT NOT NULL,
-        expected_result TEXT NOT NULL,
-        pattern_ids TEXT NOT NULL,
-        version INTEGER NOT NULL DEFAULT 1,
-        created_at INTEGER NOT NULL
-      )
-    `;
-    SQL`CREATE INDEX IF NOT EXISTS idx_skills_version ON evolution_skills(version)`;
+  canCrystallize(memoryId: string, accessCount: number): boolean {
+    return accessCount >= this.config.minAccessCount;
   }
 
   /**
-   * Create a new crystallized skill from patterns
+   * Crystallize memory content into a skill fragment
    */
-  createSkill(input: CreateCrystallizedSkillInput): CrystallizedSkill | null {
-    const db = this.db;
-    if (!db) return null;
+  crystallize(memoryId: string, content: string, accessCount?: number): SkillFragment | null {
+    // Use provided accessCount or default to threshold
+    const count = accessCount ?? this.config.minAccessCount;
+    
+    if (!this.canCrystallize(memoryId, count)) {
+      return null;
+    }
 
     const id = crypto.randomUUID();
-    const ts = now();
-    const skill: CrystallizedSkill = {
+    const now = Date.now();
+    
+    // Extract triggers from content
+    const triggers = this.extractTriggers(content);
+    
+    // Calculate initial confidence based on content analysis
+    const confidence = this.calculateConfidence(content, triggers);
+    
+    // Generate name from content
+    const name = this.generateName(content);
+    
+    // Generate description
+    const description = this.generateDescription(content);
+    
+    // Generate action
+    const action = this.generateAction(content);
+    
+    const fragment: SkillFragment = {
       id,
-      condition: input.condition,
-      action: input.action,
-      expected_result: input.expected_result,
-      pattern_ids: input.pattern_ids,
-      version: 1,
-      created_at: ts,
+      name,
+      description,
+      trigger: triggers,
+      action,
+      confidence,
+      usage_count: 0,
+      last_used: null,
+      crystallized_from: memoryId,
+      created_at: now,
     };
 
-    const SQL = db.getSQL();
-    SQL`
-      INSERT INTO evolution_skills (id, condition, action, expected_result, pattern_ids, version, created_at)
-      VALUES (${skill.id}, ${skill.condition}, ${skill.action}, ${skill.expected_result}, ${JSON.stringify(skill.pattern_ids)}, ${skill.version}, ${ts})
-    `;
-
-    addChangeLogEntry('evolution_skills', id, 'INSERT', skill);
-    this.skills.set(id, skill);
-
-    // Trigger hook for skill crystallization
-    hookManager.trigger('onSkillCrystallized', {
-      data: skill,
+    this.fragments.set(id, fragment);
+    
+    // Trigger hook for monitoring
+    hookManager.trigger('onSkillFragmentCrystallized', {
+      data: fragment,
     }).catch(console.error);
-
-    return skill;
+    
+    return fragment;
   }
 
   /**
-   * Get a skill by id
+   * Get all skill fragments
    */
-  getSkill(id: string): CrystallizedSkill | null {
-    const db = this.db;
-    if (!db) return null;
+  getAllFragments(): SkillFragment[] {
+    return Array.from(this.fragments.values());
+  }
 
-    if (this.skills.has(id)) {
-      return this.skills.get(id)!;
+  /**
+   * Get a specific fragment by ID
+   */
+  getFragment(id: string): SkillFragment | null {
+    return this.fragments.get(id) ?? null;
+  }
+
+  /**
+   * Use a skill fragment, returns action string
+   */
+  useFragment(id: string): string | null {
+    const fragment = this.fragments.get(id);
+    if (!fragment) {
+      return null;
     }
 
-    const SQL = db.getSQL();
-    try {
-      const stmt = SQL`SELECT * FROM evolution_skills WHERE id = ${id}`;
-      const rows = stmt.toArray() as CrystallizedSkill[];
-      if (rows[0]) {
-        // Parse pattern_ids JSON
-        const skill = { ...rows[0] };
-        if (typeof skill.pattern_ids === 'string') {
-          skill.pattern_ids = JSON.parse(skill.pattern_ids);
-        }
-        return skill;
+    // Update usage statistics
+    fragment.usage_count++;
+    fragment.last_used = Date.now();
+    
+    // Update confidence based on usage
+    this.updateConfidence(id, 1);
+
+    return fragment.action;
+  }
+
+  /**
+   * Update fragment confidence score
+   */
+  updateConfidence(id: string, delta: number): void {
+    const fragment = this.fragments.get(id);
+    if (!fragment) return;
+
+    // Adjust confidence within bounds
+    fragment.confidence = Math.max(0, Math.min(100, fragment.confidence + delta));
+  }
+
+  /**
+   * Fuse multiple fragments into one enhanced fragment
+   */
+  fuse(fragmentIds: string[]): SkillFragment | null {
+    if (fragmentIds.length < 2) {
+      return null;
+    }
+
+    // Collect all fragments
+    const fragments: SkillFragment[] = [];
+    for (const id of fragmentIds) {
+      const fragment = this.fragments.get(id);
+      if (fragment) {
+        fragments.push(fragment);
       }
+    }
+
+    if (fragments.length < 2) {
       return null;
-    } catch {
-      return null;
     }
-  }
 
-  /**
-   * Get all crystallized skills
-   */
-  getAllSkills(): CrystallizedSkill[] {
-    const db = this.db;
-    if (!db) return [];
-
-    const SQL = db.getSQL();
-    try {
-      const stmt = SQL`SELECT * FROM evolution_skills ORDER BY created_at DESC`;
-      const rows = stmt.toArray() as CrystallizedSkill[];
-      return rows.map(row => {
-        if (typeof row.pattern_ids === 'string') {
-          return { ...row, pattern_ids: JSON.parse(row.pattern_ids) };
-        }
-        return row;
-      });
-    } catch {
-      return [];
+    // Merge triggers
+    const allTriggers = new Set<string>();
+    for (const frag of fragments) {
+      for (const trigger of frag.trigger) {
+        allTriggers.add(trigger);
+      }
     }
-  }
 
-  /**
-   * Get skills by version
-   */
-  getSkillsByVersion(version: number): CrystallizedSkill[] {
-    const db = this.db;
-    if (!db) return [];
+    // Calculate average confidence
+    const avgConfidence = fragments.reduce((sum, f) => sum + f.confidence, 0) / fragments.length;
+    
+    // Calculate total usage
+    const totalUsage = fragments.reduce((sum, f) => sum + f.usage_count, 0);
 
-    const SQL = db.getSQL();
-    try {
-      const stmt = SQL`SELECT * FROM evolution_skills WHERE version = ${version} ORDER BY created_at DESC`;
-      return stmt.toArray() as CrystallizedSkill[];
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Update a skill (creates new version)
-   */
-  updateSkill(id: string, updates: Partial<Pick<CrystallizedSkill, 'condition' | 'action' | 'expected_result'>>): CrystallizedSkill | null {
-    const db = this.db;
-    if (!db) return null;
-
-    const existing = this.getSkill(id);
-    if (!existing) return null;
-
-    const SQL = db.getSQL();
-    const newVersion = existing.version + 1;
-    const ts = now();
-
-    const newData = {
-      condition: updates.condition ?? existing.condition,
-      action: updates.action ?? existing.action,
-      expected_result: updates.expected_result ?? existing.expected_result,
-      version: newVersion,
+    // Create fused fragment
+    const fused: SkillFragment = {
+      id: crypto.randomUUID(),
+      name: `Fused: ${fragments[0].name}`,
+      description: `Combined from ${fragments.length} fragments`,
+      trigger: Array.from(allTriggers),
+      action: fragments.map(f => f.action).join(' | '),
+      confidence: Math.round(avgConfidence),
+      usage_count: totalUsage,
+      last_used: Date.now(),
+      crystallized_from: fragments.map(f => f.crystallized_from).join(','),
+      created_at: Date.now(),
     };
 
-    SQL`
-      UPDATE evolution_skills
-      SET condition = ${newData.condition}, action = ${newData.action}, 
-          expected_result = ${newData.expected_result}, version = ${newVersion}
-      WHERE id = ${id}
-    `;
-
-    addChangeLogEntry('evolution_skills', id, 'UPDATE', newData);
-
-    const updated: CrystallizedSkill = {
-      ...existing,
-      ...newData,
-      created_at: ts,
-    };
-    this.skills.set(id, updated);
-    return updated;
+    this.fragments.set(fused.id, fused);
+    
+    // Trigger hook
+    hookManager.trigger('onSkillFragmentFused', {
+      data: fused,
+      fragments: fragments.length,
+    }).catch(console.error);
+    
+    return fused;
   }
 
   /**
-   * Delete a skill
+   * Delete a fragment
    */
-  deleteSkill(id: string): boolean {
-    const db = this.db;
-    if (!db) return null;
-
-    const SQL = db.getSQL();
-    SQL`DELETE FROM evolution_skills WHERE id = ${id}`;
-    addChangeLogEntry('evolution_skills', id, 'DELETE', { id });
-    this.skills.delete(id);
-    return true;
+  deleteFragment(id: string): boolean {
+    return this.fragments.delete(id);
   }
 
   /**
-   * Crystallize patterns into skills
-   * Only high-confidence, high-frequency patterns become skills
+   * Find fragments by trigger keyword
    */
-  crystallize(patterns: InteractionPattern[], options?: {
-    minConfidence?: number;
-    minFrequency?: number;
-  }): SkillCrystallizationResult {
-    const minConfidence = options?.minConfidence ?? 0.7;
-    const minFrequency = options?.minFrequency ?? 5;
-    const skills: CrystallizedSkill[] = [];
-
-    // Filter patterns that meet crystallization threshold
-    const crystallizable = patterns.filter(p => 
-      p.confidence >= minConfidence && p.frequency >= minFrequency
+  findByTrigger(trigger: string): SkillFragment[] {
+    const normalizedTrigger = trigger.toLowerCase();
+    return this.getAllFragments().filter(frag =>
+      frag.trigger.some(t => t.toLowerCase().includes(normalizedTrigger))
     );
-
-    for (const pattern of crystallizable) {
-      const skill = this.createSkill({
-        condition: this.generateConditionFromPattern(pattern),
-        action: this.generateActionFromPattern(pattern),
-        expected_result: this.generateExpectedResultFromPattern(pattern),
-        pattern_ids: [pattern.id],
-      });
-
-      if (skill) {
-        skills.push(skill);
-      }
-    }
-
-    return {
-      skills,
-      crystallized_count: skills.length,
-    };
   }
 
   /**
-   * Crystallize from multiple patterns combined
-   */
-  crystallizeFromStrategies(strategies: OptimizationStrategy[], patterns: InteractionPattern[]): SkillCrystallizationResult {
-    const skills: CrystallizedSkill[] = [];
-    const kgStore = getKnowledgeGraphStore();
-
-    for (const strategy of strategies) {
-      if (strategy.implemented) continue; // Skip already implemented
-
-      // Find related patterns
-      const relatedPatterns = patterns.filter(p => {
-        if (strategy.type === 'speed') return p.type === 'temporal';
-        if (strategy.type === 'empathy') return p.type === 'preference';
-        if (strategy.type === 'memory') return p.type === 'causal';
-        return false;
-      });
-
-      if (relatedPatterns.length === 0) continue;
-
-      // Create skill from strategy and patterns
-      const skill = this.createSkill({
-        condition: `When optimizing ${strategy.type} with target ${strategy.target_metric}`,
-        action: `Apply ${strategy.type} optimization based on ${relatedPatterns.length} patterns`,
-        expected_result: `Expected ${(strategy.expected_improvement * 100).toFixed(0)}% improvement in ${strategy.target_metric}`,
-        pattern_ids: relatedPatterns.map(p => p.id),
-      });
-
-      if (skill) {
-        skills.push(skill);
-
-        // Store in knowledge graph
-        const entityId = `skill_${skill.id}`;
-        kgStore.createEntity({
-          id: entityId,
-          type: 'crystallized_skill',
-          name: `${strategy.type}_skill_v${skill.version}`,
-          properties: {
-            condition: skill.condition,
-            action: skill.action,
-            expected_result: skill.expected_result,
-            version: skill.version,
-          },
-        });
-      }
-    }
-
-    return {
-      skills,
-      crystallized_count: skills.length,
-    };
-  }
-
-  /**
-   * Generate condition string from pattern
-   */
-  private generateConditionFromPattern(pattern: InteractionPattern): string {
-    switch (pattern.type) {
-      case 'temporal':
-        return `When user interaction occurs at detected temporal window (confidence: ${(pattern.confidence * 100).toFixed(0)}%)`;
-      case 'causal':
-        return `When causal trigger pattern "${pattern.description}" is detected`;
-      case 'preference':
-        return `When user preference for ${pattern.description.split(' ')[0]} is observed`;
-      default:
-        return `When pattern "${pattern.id}" is detected`;
-    }
-  }
-
-  /**
-   * Generate action string from pattern
-   */
-  private generateActionFromPattern(pattern: InteractionPattern): string {
-    switch (pattern.type) {
-      case 'temporal':
-        return `Pre-load relevant context during detected time windows to reduce latency`;
-      case 'causal':
-        return `Enable proactive assistance based on detected cause-effect relationship`;
-      case 'preference':
-        return `Adjust content presentation to match observed preference pattern`;
-      default:
-        return `Execute appropriate response based on detected pattern`;
-    }
-  }
-
-  /**
-   * Generate expected result string from pattern
-   */
-  private generateExpectedResultFromPattern(pattern: InteractionPattern): string {
-    const improvement = (pattern.confidence * 100).toFixed(0);
-    switch (pattern.type) {
-      case 'temporal':
-        return `Reduced response latency by approximately ${improvement}% during active periods`;
-      case 'causal':
-        return `Improved user satisfaction through proactive assistance (${improvement}% expected)`;
-      case 'preference':
-        return `Better content alignment with user preferences (${improvement}% improvement expected)`;
-      default:
-        return `Expected improvement: ${improvement}%`;
-    }
-  }
-
-  /**
-   * Get skills statistics
+   * Get fragment statistics
    */
   getStats(): {
     total: number;
-    byVersion: Record<number, number>;
-    avgPatternCount: number;
+    avgConfidence: number;
+    totalUsage: number;
+    highConfidence: number;
   } {
-    const skills = this.getAllSkills();
-    const byVersion: Record<number, number> = {};
-    let totalPatterns = 0;
-
-    for (const skill of skills) {
-      byVersion[skill.version] = (byVersion[skill.version] ?? 0) + 1;
-      totalPatterns += skill.pattern_ids.length;
+    const fragments = this.getAllFragments();
+    if (fragments.length === 0) {
+      return { total: 0, avgConfidence: 0, totalUsage: 0, highConfidence: 0 };
     }
 
+    const totalConfidence = fragments.reduce((sum, f) => sum + f.confidence, 0);
+    const totalUsage = fragments.reduce((sum, f) => sum + f.usage_count, 0);
+    const highConfidence = fragments.filter(f => f.confidence >= 80).length;
+
     return {
-      total: skills.length,
-      byVersion,
-      avgPatternCount: skills.length > 0 ? totalPatterns / skills.length : 0,
+      total: fragments.length,
+      avgConfidence: Math.round(totalConfidence / fragments.length),
+      totalUsage,
+      highConfidence,
     };
+  }
+
+  /**
+   * Extract trigger keywords from content
+   */
+  private extractTriggers(content: string): string[] {
+    const triggers: string[] = [];
+    const lowerContent = content.toLowerCase();
+    
+    for (const pattern of TRIGGER_PATTERNS) {
+      if (lowerContent.includes(pattern)) {
+        triggers.push(pattern);
+      }
+    }
+    
+    // Extract quoted phrases as high-priority triggers
+    const quotedPhrases = content.match(/"([^"]+)"/g);
+    if (quotedPhrases) {
+      for (const phrase of quotedPhrases) {
+        const clean = phrase.replace(/"/g, '').trim();
+        if (clean.length > 2 && clean.length < 30) {
+          triggers.push(clean);
+        }
+      }
+    }
+    
+    // Remove duplicates
+    return [...new Set(triggers)];
+  }
+
+  /**
+   * Calculate confidence based on content and triggers
+   */
+  private calculateConfidence(content: string, triggers: string[]): number {
+    let score = 50; // Base score
+    
+    // More triggers = higher confidence
+    score += Math.min(triggers.length * 5, 25);
+    
+    // Longer content tends to be more specific
+    if (content.length > 100) score += 10;
+    if (content.length > 500) score += 10;
+    
+    // Specific keywords increase confidence
+    const specificTerms = ['always', 'never', 'exact', 'specific', 'precise'];
+    for (const term of specificTerms) {
+      if (content.toLowerCase().includes(term)) {
+        score += 5;
+      }
+    }
+    
+    return Math.min(score, 95);
+  }
+
+  /**
+   * Generate name from content
+   */
+  private generateName(content: string): string {
+    // Take first meaningful words
+    const words = content.split(/\s+/).slice(0, 4);
+    const name = words.join(' ');
+    return name.length > 40 ? name.substring(0, 40) + '...' : name;
+  }
+
+  /**
+   * Generate description from content
+   */
+  private generateDescription(content: string): string {
+    // Take a summary from the content
+    const sentences = content.split(/[.!?]+/);
+    const firstSentence = sentences[0]?.trim() || content;
+    return firstSentence.length > 200 
+      ? firstSentence.substring(0, 200) + '...' 
+      : firstSentence;
+  }
+
+  /**
+   * Generate action from content
+   */
+  private generateAction(content: string): string {
+    // Pick an action template and fill in
+    const template = ACTION_TEMPLATES[Math.floor(Math.random() * ACTION_TEMPLATES.length)];
+    
+    // Extract key terms from content
+    const words = content.split(/\s+/).filter(w => w.length > 4);
+    const topic = words[0] || 'general';
+    const action = words[1] || 'execute';
+    const resource = words[2] || 'information';
+    
+    return template
+      .replace('{topic}', topic)
+      .replace('{action}', action)
+      .replace('{resource}', resource)
+      .replace('{subject}', topic)
+      .replace('{output}', topic);
   }
 }
 
 // Singleton instance
 let skillCrystallizerInstance: SkillCrystallizer | null = null;
 
-export function getSkillCrystallizer(): SkillCrystallizer {
+export function getSkillCrystallizer(config?: Partial<SkillCrystallizerConfig>): SkillCrystallizer {
   if (!skillCrystallizerInstance) {
-    skillCrystallizerInstance = new SkillCrystallizer();
+    skillCrystallizerInstance = new SkillCrystallizer(config);
   }
   return skillCrystallizerInstance;
 }
