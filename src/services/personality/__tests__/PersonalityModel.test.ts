@@ -343,7 +343,7 @@ describe('PersonalityModel', () => {
 
     it('should serialize energy correctly', () => {
       const model = new PersonalityModel();
-      model.adjustEnergy(75);
+      model.adjustEnergy(25);  // 50 + 25 = 75
       const json = model.toJSON() as any;
       expect(json.energy).toBe(75);
     });
@@ -357,7 +357,7 @@ describe('PersonalityModel', () => {
         neuroticism: 0.2,
       });
       model.updateMood('happy');
-      model.adjustEnergy(75);
+      model.adjustEnergy(25);  // 50 + 25 = 75
       const json = model.toJSON();
       const restored = PersonalityModel.fromJSON(json);
       expect(restored.getTraits().openness).toBe(0.7);
