@@ -139,8 +139,8 @@ importers:
         specifier: ^0.33.0
         version: 0.33.0(vitest@2.0.0)
       '@vitest/coverage-v8':
-        specifier: ^2.0.0
-        version: 2.1.9(vitest@2.0.0)
+        specifier: ^2.0.5
+        version: 2.0.5(vitest@2.0.0)
       '@vitest/ui':
         specifier: ^2.0.0
         version: 2.1.9(vitest@2.0.0)
@@ -1789,14 +1789,10 @@ packages:
     peerDependencies:
       vitest: '>=0.30.0 <1'
 
-  '@vitest/coverage-v8@2.1.9':
-    resolution: {integrity: sha512-Z2cOr0ksM00MpEfyVE8KXIYPEcBFxdbLSs56L8PO0QQMxt/6bDj45uQfxoc96v05KW3clk7vvgP0qfDit9DmfQ==}
+  '@vitest/coverage-v8@2.0.5':
+    resolution: {integrity: sha512-qeFcySCg5FLO2bHHSa0tAZAOnAUbp4L6/A5JDuj9+bt53JREl8hpLjLHEWF0e/gWc8INVpJaqA7+Ene2rclpZg==}
     peerDependencies:
-      '@vitest/browser': 2.1.9
-      vitest: 2.1.9
-    peerDependenciesMeta:
-      '@vitest/browser':
-        optional: true
+      vitest: 2.0.5
 
   '@vitest/expect@2.0.0':
     resolution: {integrity: sha512-5BSfZ0+dAVmC6uPF7s+TcKx0i7oyYHb1WQQL5gg6G2c+Qkaa5BNrdRM74sxDfUIZUgYCr6bfCqmJp+X5bfcNxQ==}
@@ -5750,7 +5746,7 @@ snapshots:
       std-env: 3.10.0
       vitest: 2.0.0(@types/node@24.12.4)(@vitest/ui@2.1.9)(happy-dom@20.9.0)(jsdom@29.1.1)(lightningcss@1.32.0)
 
-  '@vitest/coverage-v8@2.1.9(vitest@2.0.0)':
+  '@vitest/coverage-v8@2.0.5(vitest@2.0.0)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
