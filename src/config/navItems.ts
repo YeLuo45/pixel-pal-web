@@ -47,7 +47,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'multiagent', labelKey: 'nav.multiAgent', icon: MultiAgentIcon },
   { id: 'tools', labelKey: 'nav.tools', icon: ExtensionIcon },
   { id: 'execution', labelKey: 'nav.execution', icon: ExecutionIcon },
-  { id: 'mcp', labelKey: 'nav.mcp', icon: NetworkIcon },
+  { id: 'mcp', labelKey: 'nav.mcp.title', icon: NetworkIcon },
   { id: 'evolution', labelKey: 'nav.evolution', icon: AutoAwesomeIcon },
   { id: 'settings', labelKey: 'nav.settings', icon: SettingsIcon },
 ];
