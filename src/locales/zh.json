@@ -630,6 +630,7 @@
     "subtitle": "你的互动洞察和习惯分析",
     "interactionHeatmap": "互动活跃度",
     "moodTrend": {
+      "label": "心情趋势",
       "weekly": "近7天",
       "monthly": "近30天",
       "allTime": "全部"

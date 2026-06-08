@@ -234,7 +234,7 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({ collapsed }) =
             <MySwitch
               size="small"
               checked={collaborationMode}
-              onChange={(e) => setCollaborationMode(e.target.checked)}
+              onChange={(checked) => setCollaborationMode(checked)}
             />
           }
           label={
@@ -404,7 +404,7 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({ collapsed }) =
             <Typography variant="caption" sx={{ mb: 0.5, display: 'block', color: 'text.secondary' }}>{t('persona.voice', '语气')}</Typography>
             <Select
               value={newVoice}
-              onChange={(e) => setNewVoice(e.target.value as typeof newVoice)}
+              onChange={(value) => setNewVoice(value as typeof newVoice)}
               size="small"
               fullWidth
             >

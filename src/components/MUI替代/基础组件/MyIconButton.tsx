@@ -1,11 +1,11 @@
-import { type FC, type CSSProperties, useState } from 'react';
+import { type FC, type CSSProperties, type MouseEvent, useState } from 'react';
 
 export interface MyIconButtonProps {
   children?: React.ReactNode;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'success' | 'info' | 'inherit';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   sx?: CSSProperties;
   edge?: 'start' | 'end' | false;

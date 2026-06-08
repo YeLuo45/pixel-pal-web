@@ -1,4 +1,4 @@
-import { type FC, type ReactNode, type CSSProperties, useState } from 'react';
+import { type FC, type ReactNode, type CSSProperties, type MouseEvent, useState } from 'react';
 
 export interface MyButtonProps {
   children?: ReactNode;
@@ -9,7 +9,7 @@ export interface MyButtonProps {
   startIcon?: ReactNode;
   endIcon?: ReactNode;
   fullWidth?: boolean;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   type?: 'button' | 'submit' | 'reset';
   className?: string;
   sx?: CSSProperties;
