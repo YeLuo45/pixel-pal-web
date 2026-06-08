@@ -630,6 +630,7 @@
     "subtitle": "Your interaction insights and habits",
     "interactionHeatmap": "Interaction Activity",
     "moodTrend": {
+      "label": "Mood Trend",
       "weekly": "Last 7 days",
       "monthly": "Last 30 days",
       "allTime": "All time"

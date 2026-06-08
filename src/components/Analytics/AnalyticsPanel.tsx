@@ -609,7 +609,7 @@ export const AnalyticsPanel: React.FC<{ splitLayout?: boolean }> = ({ splitLayou
             }}
           >
             <Typography variant="subtitle2" sx={{ mb: 1, fontSize: 12, color: 'text.secondary' }}>
-              {t('analytics.moodTrend')}
+              {t('analytics.moodTrend.label')}
             </Typography>
             <MoodTrendChart data={moodData} />
           </Paper>

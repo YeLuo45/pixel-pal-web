@@ -5,12 +5,12 @@
  * Supports: value, onClick, disabled, children
  */
 
-import { type FC, type ReactNode } from 'react';
+import { type FC, type ReactNode, type MouseEvent } from 'react';
 import { useTheme } from '@mui/material/styles';
 
 export interface MyMenuItemProps {
   value?: string | number;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
   disabled?: boolean;
   children?: ReactNode;
   className?: string;
